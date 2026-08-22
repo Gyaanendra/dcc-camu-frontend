@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google';
 import './globals.css';
 import { AuthProvider } from '@/context/AuthContext';
 import { ThemeProvider } from '@/context/ThemeContext';
+import { MobileNav } from '@/components/layout/MobileNav';
 import { Toaster } from 'sonner';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
@@ -22,7 +23,10 @@ export default function RootLayout({
       <body className={`${inter.variable} font-sans min-h-full bg-slate-50 dark:bg-zinc-950 text-slate-900 dark:text-zinc-100 flex flex-col antialiased transition-colors duration-150`}>
         <ThemeProvider>
           <AuthProvider>
-            {children}
+            <div className="flex-1 pb-16 lg:pb-0">
+              {children}
+            </div>
+            <MobileNav />
             <Toaster position="top-right" richColors />
           </AuthProvider>
         </ThemeProvider>
