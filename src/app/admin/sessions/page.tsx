@@ -6,7 +6,7 @@ import { Sidebar } from '@/components/layout/Sidebar';
 import { CreateSessionModal } from '@/components/sessions/CreateSessionModal';
 import { QRDisplayCard } from '@/components/qr/QRDisplayCard';
 import { api } from '@/lib/api';
-import { Calendar, MapPin, Users } from 'lucide-react';
+import { Calendar, MapPin, Users, PowerOff, Play } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function AdminSessionsPage() {
@@ -15,6 +15,7 @@ export default function AdminSessionsPage() {
   const [selectedSession, setSelectedSession] = useState<any>(null);
   const [sessionDetail, setSessionDetail] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
 
   const loadData = async () => {
     setIsLoading(true);
@@ -23,9 +24,11 @@ export default function AdminSessionsPage() {
       setSessions(sessionsRes.sessions || []);
       setTeams(teamsRes.teams || []);
 
-      if (sessionsRes.sessions?.length > 0 && !selectedSession) {
-        setSelectedSession(sessionsRes.sessions[0]);
-        loadSessionDetail(sessionsRes.sessions[0].id);
+      if (sessionsRes.sessions?.length > 0) {
+        const currentId = selectedSession?.id || sessionsRes.sessions[0].id;
+        const matching = sessionsRes.sessions.find((s: any) => s.id === currentId) || sessionsRes.sessions[0];
+        setSelectedSession(matching);
+        loadSessionDetail(matching.id);
       }
     } catch (error: any) {
       toast.error('Failed to load sessions');
@@ -48,6 +51,23 @@ export default function AdminSessionsPage() {
   const handleSelectSession = (s: any) => {
     setSelectedSession(s);
     loadSessionDetail(s.id);
+  };
+
+  const handleToggleSessionStatus = async () => {
+    if (!selectedSession) return;
+    const isCurrentlyActive = selectedSession.isActive === 'true';
+    const nextStatus = !isCurrentlyActive;
+
+    setIsUpdatingStatus(true);
+    try {
+      const res = await api.updateSessionStatus(selectedSession.id, { isActive: nextStatus });
+      toast.success(res.message || 'Session status updated');
+      await loadData();
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to update status');
+    } finally {
+      setIsUpdatingStatus(false);
+    }
   };
 
   return (
@@ -138,10 +158,44 @@ export default function AdminSessionsPage() {
             <div className="lg:col-span-2 space-y-6">
               {selectedSession ? (
                 <>
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 rounded-2xl dash-card bg-white dark:bg-zinc-900/90 border border-slate-200 dark:border-zinc-800">
+                    <div className="flex items-center gap-3">
+                      <div className={`p-2 rounded-xl ${selectedSession.isActive === 'true' ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600' : 'bg-slate-100 dark:bg-zinc-800 text-slate-500'}`}>
+                        <Calendar className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <div className="text-xs font-bold text-slate-900 dark:text-zinc-100">{selectedSession.title}</div>
+                        <div className="text-[11px] text-slate-500 dark:text-zinc-400">Status: <strong className={selectedSession.isActive === 'true' ? 'text-emerald-600' : 'text-slate-500'}>{selectedSession.isActive === 'true' ? 'Active Live QR' : 'Session Ended / QR Closed'}</strong></div>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={handleToggleSessionStatus}
+                      disabled={isUpdatingStatus}
+                      className={`px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all shadow-sm ${
+                        selectedSession.isActive === 'true'
+                          ? 'bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-400 border border-rose-200 dark:border-rose-800 hover:bg-rose-100'
+                          : 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100'
+                      }`}
+                    >
+                      {selectedSession.isActive === 'true' ? (
+                        <>
+                          <PowerOff className="w-3.5 h-3.5" />
+                          <span>Close Live QR / End Session</span>
+                        </>
+                      ) : (
+                        <>
+                          <Play className="w-3.5 h-3.5" />
+                          <span>Re-activate Session QR</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+
                   <QRDisplayCard
                     title={selectedSession.title}
                     qrCodeToken={selectedSession.qrCodeToken}
-                    subtitle="Broadcast on Screen for Member Check-in"
+                    subtitle={selectedSession.isActive === 'true' ? "Broadcast on Screen for Member Check-in" : "Session Closed (Attendance Disabled)"}
                     location={selectedSession.location}
                   />
 

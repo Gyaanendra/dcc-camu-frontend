@@ -7,6 +7,7 @@ import { Sidebar } from '@/components/layout/Sidebar';
 import { QRDisplayCard } from '@/components/qr/QRDisplayCard';
 import { TeamAnalyticsCharts } from '@/components/analytics/TeamAnalyticsCharts';
 import { api } from '@/lib/api';
+import { toast } from 'sonner';
 import {
   QrCode,
   Award,
@@ -19,6 +20,7 @@ import {
   TrendingUp,
   Users,
   Radio,
+  PowerOff,
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -28,6 +30,7 @@ export default function DashboardPage() {
   const [userStats, setUserStats] = useState<any>(null);
   const [activeSessions, setActiveSessions] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isClosingSession, setIsClosingSession] = useState(false);
 
   // Position edit state
   const [isEditingPosition, setIsEditingPosition] = useState(false);
@@ -64,6 +67,19 @@ export default function DashboardPage() {
     if (!positionInput.trim()) return;
     await updateUserPosition(positionInput.trim());
     setIsEditingPosition(false);
+  };
+
+  const handleCloseActiveSession = async (sessionId: string) => {
+    setIsClosingSession(true);
+    try {
+      await api.updateSessionStatus(sessionId, { isActive: false });
+      toast.success('Live Session QR closed and attendance ended.');
+      await loadDashboardData();
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to close session');
+    } finally {
+      setIsClosingSession(false);
+    }
   };
 
   const activeLiveSession = activeSessions.find(s => s.isActive === 'true');
@@ -160,13 +176,26 @@ export default function DashboardPage() {
                 </div>
               </div>
 
-              <Link
-                href="/scan"
-                className="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold transition-colors flex items-center gap-1.5 shadow-sm"
-              >
-                <span>Mark Attendance Now</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </Link>
+              <div className="flex items-center gap-2">
+                {user?.role === 'admin' && (
+                  <button
+                    onClick={() => handleCloseActiveSession(activeLiveSession.id)}
+                    disabled={isClosingSession}
+                    className="px-3 py-2 rounded-lg bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-400 hover:bg-rose-100 text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-sm"
+                    title="End Session and close QR"
+                  >
+                    <PowerOff className="w-3.5 h-3.5" />
+                    <span>Close Live QR</span>
+                  </button>
+                )}
+                <Link
+                  href="/scan"
+                  className="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold transition-colors flex items-center gap-1.5 shadow-sm"
+                >
+                  <span>Mark Attendance</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
+              </div>
             </div>
           )}
 
@@ -198,9 +227,20 @@ export default function DashboardPage() {
                   </div>
 
                   <div className="lg:col-span-2 p-6 rounded-2xl dash-card bg-white dark:bg-zinc-900/90 space-y-4">
-                    <h3 className="text-base font-bold text-slate-900 dark:text-zinc-100 flex items-center gap-2">
-                      <Calendar className="w-4 h-4 text-blue-600 dark:text-blue-400" /> Active Session Details
-                    </h3>
+                    <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-zinc-800">
+                      <h3 className="text-base font-bold text-slate-900 dark:text-zinc-100 flex items-center gap-2">
+                        <Calendar className="w-4 h-4 text-blue-600 dark:text-blue-400" /> Active Session Details
+                      </h3>
+                      <button
+                        onClick={() => handleCloseActiveSession(activeLiveSession.id)}
+                        disabled={isClosingSession}
+                        className="px-3 py-1.5 rounded-lg bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-400 hover:bg-rose-100 text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-sm"
+                      >
+                        <PowerOff className="w-3.5 h-3.5" />
+                        <span>End Session</span>
+                      </button>
+                    </div>
+
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
                       <div className="p-3 rounded-xl bg-slate-50 dark:bg-zinc-800/80 border border-slate-200/80 dark:border-zinc-700">
                         <span className="text-slate-400 dark:text-zinc-400 block text-[10px] uppercase font-bold">Wing Target</span>
