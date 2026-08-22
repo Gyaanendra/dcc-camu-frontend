@@ -17,6 +17,9 @@ import {
   Users,
   Volume2,
   VolumeX,
+  ZoomIn,
+  ZoomOut,
+  Sliders,
 } from 'lucide-react';
 
 interface QRScannerModalProps {
@@ -40,6 +43,10 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({ activeSessionId,
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [isSoundEnabled, setIsSoundEnabled] = useState<boolean>(true);
 
+  // Zoom Controls (1x to 3.5x)
+  const [zoomLevel, setZoomLevel] = useState<number>(1);
+  const [isZoomSupported, setIsZoomSupported] = useState<boolean>(true);
+
   // Rapid Scan Feedback States
   const [recentScans, setRecentScans] = useState<ScannedRecord[]>([]);
   const [activePopup, setActivePopup] = useState<{
@@ -54,12 +61,47 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({ activeSessionId,
   const isStartingRef = useRef<boolean>(false);
   const isMountedRef = useRef<boolean>(true);
   
-  // Anti-Spam & Concurrency Locks
+  // Anti-Spam & Concurrency Locks (100% continuous multi-user scanning)
   const isScanningLockedRef = useRef<boolean>(false);
-  const scannedInSessionRef = useRef<Set<string>>(new Set());
+  const lastScannedBadgeMapRef = useRef<Map<string, number>>(new Map());
   const readerElementId = 'qr-camera-viewport';
 
-  // Web Audio API Synthesizer
+  // Apply Zoom (both native hardware track constraints + CSS transform fallback)
+  const applyZoom = useCallback(async (zoomValue: number) => {
+    setZoomLevel(zoomValue);
+    try {
+      const container = document.getElementById(readerElementId);
+      const videoElem = container?.querySelector('video') as HTMLVideoElement | null;
+      
+      if (videoElem) {
+        // CSS transform fallback ensures smooth zoom on all mobile browsers
+        videoElem.style.transform = `scale(${zoomValue})`;
+        videoElem.style.transformOrigin = 'center center';
+        videoElem.style.transition = 'transform 0.15s ease-out';
+
+        // Try hardware native zoom if supported by track
+        if (videoElem.srcObject) {
+          const stream = videoElem.srcObject as MediaStream;
+          const track = stream.getVideoTracks()[0];
+          if (track && track.getCapabilities) {
+            const capabilities: any = track.getCapabilities();
+            if (capabilities && capabilities.zoom) {
+              const minZ = capabilities.zoom.min || 1;
+              const maxZ = capabilities.zoom.max || 5;
+              const clamped = Math.min(Math.max(zoomValue, minZ), maxZ);
+              await track.applyConstraints({
+                advanced: [{ zoom: clamped } as any],
+              });
+            }
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('Hardware zoom error, using CSS zoom fallback:', e);
+    }
+  }, []);
+
+  // Web Audio API Synthesizer (instant feedback chime)
   const playAudioFeedback = useCallback((type: 'success' | 'error' | 'warning') => {
     if (!isSoundEnabled || typeof window === 'undefined') return;
     try {
@@ -97,7 +139,6 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({ activeSessionId,
       const devices = await Html5Qrcode.getCameras();
       if (devices && devices.length > 0) {
         setCameras(devices);
-        // Default to back / environment camera on mobile
         const backCam = devices.find(d => 
           d.label.toLowerCase().includes('back') || 
           d.label.toLowerCase().includes('environment') || 
@@ -159,7 +200,7 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({ activeSessionId,
         fps: 15,
         qrbox: (viewfinderWidth: number, viewfinderHeight: number) => {
           const minEdge = Math.min(viewfinderWidth, viewfinderHeight);
-          const size = Math.floor(minEdge * 0.75);
+          const size = Math.floor(minEdge * 0.72);
           return { width: Math.max(180, size), height: Math.max(180, size) };
         },
         aspectRatio: 1.0,
@@ -169,7 +210,8 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({ activeSessionId,
         cameraConfig,
         config,
         (decodedText) => {
-          handleSingleScan(decodedText);
+          // Process continuous scan without pausing or closing camera
+          handleContinuousScan(decodedText);
         },
         () => {
           // Ignore non-QR frame ticks
@@ -178,6 +220,10 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({ activeSessionId,
 
       if (isMountedRef.current) {
         setIsCameraActive(true);
+        // Reapply current zoom level to newly mounted stream
+        setTimeout(() => {
+          applyZoom(zoomLevel);
+        }, 300);
       }
     } catch (err: any) {
       console.error('Camera startup error:', err);
@@ -222,36 +268,30 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({ activeSessionId,
     }
   };
 
-  // Single Guarded Scan Request (No spam / No multi-request from one device)
-  const handleSingleScan = async (payloadToken: string) => {
+  // ⚡ 100% Continuous High-Speed Multi-User Scanner
+  const handleContinuousScan = async (payloadToken: string) => {
     const cleanToken = payloadToken.trim();
     if (!cleanToken) return;
 
-    // Concurrency Lock: Prevent multiple concurrent requests from overlapping camera frames
+    // In-flight concurrency lock (never send multiple API calls concurrently)
     if (isScanningLockedRef.current) {
       return;
     }
 
-    // Check if this badge/token was already successfully marked on this device during this session
-    if (scannedInSessionRef.current.has(cleanToken)) {
-      playAudioFeedback('warning');
-      setActivePopup({
-        type: 'warning',
-        title: 'Already Marked',
-        message: 'Attendance already recorded for this badge in this session.',
-      });
-      setTimeout(() => {
-        setActivePopup((cur) => (cur?.title === 'Already Marked' ? null : cur));
-      }, 1500);
+    // Cooldown per badge: ignore the exact same QR token within 2.5 seconds
+    const now = Date.now();
+    const lastScannedTime = lastScannedBadgeMapRef.current.get(cleanToken) || 0;
+    if (now - lastScannedTime < 2500) {
       return;
     }
 
-    // Acquire lock immediately
+    // Lock scan and record scan time
     isScanningLockedRef.current = true;
+    lastScannedBadgeMapRef.current.set(cleanToken, now);
 
     try {
       if (typeof window !== 'undefined' && 'vibrate' in navigator) {
-        navigator.vibrate([70]);
+        navigator.vibrate([60]);
       }
 
       const res = await api.scanQrPayload({
@@ -259,25 +299,21 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({ activeSessionId,
         sessionId: activeSessionId,
       });
 
-      // Mark token in local session set so duplicate requests are never sent again
-      scannedInSessionRef.current.add(cleanToken);
-      if (res.user?.rollNumber) {
-        scannedInSessionRef.current.add(res.user.rollNumber.toUpperCase());
-      }
-
       playAudioFeedback('success');
 
       const newRecord: ScannedRecord = {
-        id: res.user?.id || String(Date.now()),
+        id: res.user?.id || String(now),
         name: res.user?.name || 'Member',
         rollNumber: res.user?.rollNumber || '',
         status: res.status === 'late' ? 'Late Arrival' : 'Present',
-        time: new Date(res.record?.scannedAt || Date.now()).toLocaleTimeString(),
+        time: new Date(res.record?.scannedAt || now).toLocaleTimeString(),
         sessionTitle: res.session?.title || 'Live Session',
       };
 
+      // Add to live scanned session feed
       setRecentScans((prev) => [newRecord, ...prev.slice(0, 14)]);
 
+      // Display non-blocking floating glassmorphism banner over camera
       setActivePopup({
         type: 'success',
         title: res.user?.name || 'Attendance Verified!',
@@ -300,15 +336,15 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({ activeSessionId,
 
       toast.error(msg);
     } finally {
-      // Release lock after cooldown to allow scanning the next attendee
+      // Release lock quickly (after 800ms) so the NEXT student can be scanned immediately!
       setTimeout(() => {
         isScanningLockedRef.current = false;
-      }, 1500);
+      }, 800);
 
-      // Auto-dismiss popup
+      // Auto-hide popup after 1.8s
       setTimeout(() => {
         setActivePopup((cur) => (cur?.message === activePopup?.message ? null : cur));
-      }, 2000);
+      }, 1800);
     }
   };
 
@@ -322,12 +358,12 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({ activeSessionId,
           </div>
           <div>
             <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-zinc-100 flex items-center gap-1.5 flex-wrap">
-              <span>Rapid QR Scanner</span>
+              <span>Continuous QR Scanner</span>
               <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 text-[10px] font-bold">
-                <Zap className="w-3 h-3" /> Live
+                <Zap className="w-3 h-3" /> Auto-Scan Active
               </span>
             </h2>
-            <p className="text-[11px] sm:text-xs text-slate-500 dark:text-zinc-400">Point at attendee QR codes for instant check-in</p>
+            <p className="text-[11px] sm:text-xs text-slate-500 dark:text-zinc-400">Point at attendee QR codes in rapid succession</p>
           </div>
         </div>
 
@@ -337,7 +373,7 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({ activeSessionId,
           <button
             onClick={() => setIsSoundEnabled(!isSoundEnabled)}
             className="p-2 rounded-lg bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-300 hover:bg-slate-200 dark:hover:bg-zinc-700 transition-colors shadow-xs"
-            title={isSoundEnabled ? 'Mute Chime' : 'Unmute Chime'}
+            title={isSoundEnabled ? 'Mute Audio Chime' : 'Enable Audio Chime'}
           >
             {isSoundEnabled ? <Volume2 className="w-4 h-4 text-blue-600 dark:text-blue-400" /> : <VolumeX className="w-4 h-4" />}
           </button>
@@ -384,9 +420,9 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({ activeSessionId,
         </div>
       </div>
 
-      {/* Viewfinder with Strict CSS Overrides to Completely Hide Injected Zoom Sliders */}
+      {/* Viewfinder with Live Floating Popup & Zoom Support */}
       <div className="relative rounded-2xl overflow-hidden border border-slate-200 dark:border-zinc-800 bg-slate-950 min-h-[260px] sm:min-h-[320px] max-h-[340px] flex items-center justify-center shadow-inner">
-        {/* Html5Qrcode video container with CSS overrides for zoom sliders/selects */}
+        {/* Html5Qrcode video container with CSS overrides for default library clutter */}
         <div
           id={readerElementId}
           className="w-full h-full [&_video]:max-h-[340px] [&_video]:w-full [&_video]:object-cover overflow-hidden [&_input[type=range]]:!hidden [&_.zoom-range-selector]:!hidden [&_select]:!hidden [&_span]:!hidden [&_button]:!hidden [&_img]:!hidden"
@@ -401,15 +437,15 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({ activeSessionId,
               <div className="absolute -bottom-1 -left-1 w-4 h-4 border-b-2 border-l-2 border-blue-500" />
               <div className="absolute -bottom-1 -right-1 w-4 h-4 border-b-2 border-r-2 border-blue-500" />
               <span className="text-[10px] text-white/80 font-mono uppercase tracking-widest bg-black/50 px-2 py-0.5 rounded-full backdrop-blur-xs">
-                Scan QR Code
+                Continuous Scan
               </span>
             </div>
           </div>
         )}
 
-        {/* Instant Floating Success / Error / Warning Popup */}
+        {/* Instant Non-Blocking Floating Success / Error Popup */}
         {activePopup && (
-          <div className="absolute inset-x-3 top-3 sm:inset-x-4 sm:top-4 z-20 transition-all duration-300 animate-in fade-in slide-in-from-top-3">
+          <div className="absolute inset-x-3 top-3 sm:inset-x-4 sm:top-4 z-20 transition-all duration-300 animate-in fade-in slide-in-from-top-3 pointer-events-none">
             <div
               className={`p-3 sm:p-3.5 rounded-xl border backdrop-blur-md shadow-lg flex items-center gap-3 text-xs ${
                 activePopup.type === 'success'
@@ -486,9 +522,49 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({ activeSessionId,
         )}
       </div>
 
+      {/* 🔍 Sleek Custom Camera Zoom Controller (1x, 1.5x, 2x, 3x + Slider) */}
+      {isCameraActive && (
+        <div className="p-3 rounded-xl bg-slate-50 dark:bg-zinc-800/60 border border-slate-200/80 dark:border-zinc-700 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <ZoomOut className="w-3.5 h-3.5 text-slate-400" />
+            <input
+              type="range"
+              min="1"
+              max="3"
+              step="0.1"
+              value={zoomLevel}
+              onChange={(e) => applyZoom(parseFloat(e.target.value))}
+              className="flex-1 sm:w-36 h-1.5 bg-slate-200 dark:bg-zinc-700 rounded-lg appearance-none cursor-pointer accent-blue-600 dark:accent-blue-400"
+              aria-label="Camera Zoom"
+            />
+            <ZoomIn className="w-3.5 h-3.5 text-slate-400" />
+            <span className="font-mono font-bold text-slate-700 dark:text-zinc-300 text-[11px] min-w-[32px] text-right">
+              {zoomLevel.toFixed(1)}x
+            </span>
+          </div>
+
+          {/* Quick Zoom Presets */}
+          <div className="flex items-center gap-1.5 self-end sm:self-auto">
+            {[1.0, 1.5, 2.0, 2.5].map((preset) => (
+              <button
+                key={preset}
+                onClick={() => applyZoom(preset)}
+                className={`px-2.5 py-1 rounded-lg text-[10px] font-bold font-mono transition-all ${
+                  Math.abs(zoomLevel - preset) < 0.05
+                    ? 'bg-slate-900 dark:bg-zinc-100 text-white dark:text-zinc-900 shadow-xs'
+                    : 'bg-white dark:bg-zinc-800 text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-zinc-700 border border-slate-200 dark:border-zinc-700'
+                }`}
+              >
+                {preset}x
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className="flex items-center justify-center gap-1.5 text-[11px] text-slate-400 dark:text-zinc-500 font-medium text-center">
         <ScanLine className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 animate-pulse shrink-0" />
-        <span>Continuous scanning • Automatic single-request per badge lock</span>
+        <span>Continuous scanning active • Point at consecutive badges with 0 delay</span>
       </div>
 
       {/* Live Scan Queue (Shows up to 15 recent attendees checked in) */}
