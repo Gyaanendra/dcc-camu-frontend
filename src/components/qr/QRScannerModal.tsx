@@ -14,12 +14,13 @@ import {
   ScanLine,
   SwitchCamera,
   Zap,
-  Users,
+  RotateCcw,
   Volume2,
   VolumeX,
   ZoomIn,
   ZoomOut,
-  Sliders,
+  Loader2,
+  Clock,
 } from 'lucide-react';
 
 interface QRScannerModalProps {
@@ -27,13 +28,17 @@ interface QRScannerModalProps {
   onScanSuccess?: (data: any) => void;
 }
 
-interface ScannedRecord {
-  id: string;
-  name: string;
-  rollNumber: string;
-  status: string;
-  time: string;
-  sessionTitle: string;
+type ScanState = 'scanning' | 'processing' | 'success' | 'error';
+
+interface ScanResult {
+  type: 'success' | 'error';
+  name?: string;
+  rollNumber?: string;
+  status?: string;
+  sessionTitle?: string;
+  time?: string;
+  message: string;
+  isEnded?: boolean;
 }
 
 export const QRScannerModal: React.FC<QRScannerModalProps> = ({ activeSessionId, onScanSuccess }) => {
@@ -42,67 +47,20 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({ activeSessionId,
   const [isCameraActive, setIsCameraActive] = useState<boolean>(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [isSoundEnabled, setIsSoundEnabled] = useState<boolean>(true);
-
-  // Zoom Controls (1x to 3.5x)
   const [zoomLevel, setZoomLevel] = useState<number>(1);
-  const [isZoomSupported, setIsZoomSupported] = useState<boolean>(true);
 
-  // Rapid Scan Feedback States
-  const [recentScans, setRecentScans] = useState<ScannedRecord[]>([]);
-  const [activePopup, setActivePopup] = useState<{
-    type: 'success' | 'error' | 'warning';
-    title: string;
-    message: string;
-    subText?: string;
-    status?: string;
-  } | null>(null);
+  // Core Flow State
+  const [scanState, setScanState] = useState<ScanState>('scanning');
+  const [scanResult, setScanResult] = useState<ScanResult | null>(null);
 
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const isStartingRef = useRef<boolean>(false);
   const isMountedRef = useRef<boolean>(true);
-  
-  // Anti-Spam & Concurrency Locks (100% continuous multi-user scanning)
-  const isScanningLockedRef = useRef<boolean>(false);
-  const lastScannedBadgeMapRef = useRef<Map<string, number>>(new Map());
+  const hasScannedRef = useRef<boolean>(false);
   const readerElementId = 'qr-camera-viewport';
 
-  // Apply Zoom (both native hardware track constraints + CSS transform fallback)
-  const applyZoom = useCallback(async (zoomValue: number) => {
-    setZoomLevel(zoomValue);
-    try {
-      const container = document.getElementById(readerElementId);
-      const videoElem = container?.querySelector('video') as HTMLVideoElement | null;
-      
-      if (videoElem) {
-        // CSS transform fallback ensures smooth zoom on all mobile browsers
-        videoElem.style.transform = `scale(${zoomValue})`;
-        videoElem.style.transformOrigin = 'center center';
-        videoElem.style.transition = 'transform 0.15s ease-out';
-
-        // Try hardware native zoom if supported by track
-        if (videoElem.srcObject) {
-          const stream = videoElem.srcObject as MediaStream;
-          const track = stream.getVideoTracks()[0];
-          if (track && track.getCapabilities) {
-            const capabilities: any = track.getCapabilities();
-            if (capabilities && capabilities.zoom) {
-              const minZ = capabilities.zoom.min || 1;
-              const maxZ = capabilities.zoom.max || 5;
-              const clamped = Math.min(Math.max(zoomValue, minZ), maxZ);
-              await track.applyConstraints({
-                advanced: [{ zoom: clamped } as any],
-              });
-            }
-          }
-        }
-      }
-    } catch (e) {
-      console.warn('Hardware zoom error, using CSS zoom fallback:', e);
-    }
-  }, []);
-
-  // Web Audio API Synthesizer (instant feedback chime)
-  const playAudioFeedback = useCallback((type: 'success' | 'error' | 'warning') => {
+  // Audio Feedback
+  const playAudio = useCallback((type: 'success' | 'error') => {
     if (!isSoundEnabled || typeof window === 'undefined') return;
     try {
       const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
@@ -112,132 +70,130 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({ activeSessionId,
       const gain = ctx.createGain();
       osc.connect(gain);
       gain.connect(ctx.destination);
-
       if (type === 'success') {
         osc.type = 'sine';
         osc.frequency.setValueAtTime(880, ctx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(1320, ctx.currentTime + 0.12);
+        osc.frequency.exponentialRampToValueAtTime(1320, ctx.currentTime + 0.15);
         gain.gain.setValueAtTime(0.2, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.18);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25);
         osc.start();
-        osc.stop(ctx.currentTime + 0.18);
+        osc.stop(ctx.currentTime + 0.25);
       } else {
         osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(240, ctx.currentTime);
+        osc.frequency.setValueAtTime(280, ctx.currentTime);
         osc.frequency.linearRampToValueAtTime(160, ctx.currentTime + 0.2);
-        gain.gain.setValueAtTime(0.25, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.25);
+        gain.gain.setValueAtTime(0.2, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25);
         osc.start();
         osc.stop(ctx.currentTime + 0.25);
       }
     } catch (_) {}
   }, [isSoundEnabled]);
 
-  // Discover and list cameras
+  // Camera Zoom via CSS + native track constraints
+  const applyZoom = useCallback(async (value: number) => {
+    setZoomLevel(value);
+    try {
+      const container = document.getElementById(readerElementId);
+      const video = container?.querySelector('video') as HTMLVideoElement | null;
+      if (video) {
+        video.style.transform = `scale(${value})`;
+        video.style.transformOrigin = 'center center';
+        video.style.transition = 'transform 0.15s ease-out';
+        if (video.srcObject) {
+          const track = (video.srcObject as MediaStream).getVideoTracks()[0];
+          if (track?.getCapabilities) {
+            const caps: any = track.getCapabilities();
+            if (caps?.zoom) {
+              await track.applyConstraints({ advanced: [{ zoom: Math.min(Math.max(value, caps.zoom.min), caps.zoom.max) } as any] });
+            }
+          }
+        }
+      }
+    } catch (_) {}
+  }, []);
+
   const discoverCameras = async () => {
     try {
       const devices = await Html5Qrcode.getCameras();
-      if (devices && devices.length > 0) {
+      if (devices?.length > 0) {
         setCameras(devices);
-        const backCam = devices.find(d => 
-          d.label.toLowerCase().includes('back') || 
-          d.label.toLowerCase().includes('environment') || 
-          d.label.toLowerCase().includes('rear') ||
-          d.label.toLowerCase().includes('0')
+        const back = devices.find(d =>
+          d.label.toLowerCase().includes('back') ||
+          d.label.toLowerCase().includes('environment') ||
+          d.label.toLowerCase().includes('rear')
         );
-        setSelectedCameraId(backCam ? backCam.id : devices[0].id);
+        setSelectedCameraId(back ? back.id : devices[0].id);
       }
-    } catch (e) {
-      console.warn('Unable to enumerate cameras:', e);
-    }
+    } catch (_) {}
   };
 
   const stopCamera = async () => {
     isStartingRef.current = false;
     if (scannerRef.current) {
       try {
-        if (scannerRef.current.isScanning) {
-          await scannerRef.current.stop();
-        }
+        if (scannerRef.current.isScanning) await scannerRef.current.stop();
         await scannerRef.current.clear();
-      } catch (err) {
-        console.warn('Camera stop warning:', err);
-      } finally {
+      } catch (_) {} finally {
         scannerRef.current = null;
       }
     }
-
-    const container = document.getElementById(readerElementId);
-    if (container) container.innerHTML = '';
-
-    if (isMountedRef.current) {
-      setIsCameraActive(false);
-    }
+    const el = document.getElementById(readerElementId);
+    if (el) el.innerHTML = '';
+    if (isMountedRef.current) setIsCameraActive(false);
   };
 
-  const startCamera = async (cameraIdToUse?: string) => {
+  const startCamera = async (camId?: string) => {
     if (isStartingRef.current) return;
     isStartingRef.current = true;
     setCameraError(null);
+    hasScannedRef.current = false;
+    setScanState('scanning');
+    setScanResult(null);
 
     try {
       await stopCamera();
+      const el = document.getElementById(readerElementId);
+      if (!el) { isStartingRef.current = false; return; }
+      el.innerHTML = '';
 
-      const container = document.getElementById(readerElementId);
-      if (!container) {
-        isStartingRef.current = false;
-        return;
-      }
-      container.innerHTML = '';
+      const qr = new Html5Qrcode(readerElementId);
+      scannerRef.current = qr;
 
-      const html5QrCode = new Html5Qrcode(readerElementId);
-      scannerRef.current = html5QrCode;
+      const camConfig = (camId || selectedCameraId)
+        ? { deviceId: { exact: (camId || selectedCameraId) } }
+        : { facingMode: 'environment' };
 
-      const targetCamera = cameraIdToUse || selectedCameraId;
-      const cameraConfig = targetCamera ? { deviceId: { exact: targetCamera } } : { facingMode: 'environment' };
-
-      const config = {
-        fps: 15,
-        qrbox: (viewfinderWidth: number, viewfinderHeight: number) => {
-          const minEdge = Math.min(viewfinderWidth, viewfinderHeight);
-          const size = Math.floor(minEdge * 0.72);
-          return { width: Math.max(180, size), height: Math.max(180, size) };
+      await qr.start(
+        camConfig,
+        {
+          fps: 15,
+          qrbox: (w: number, h: number) => {
+            const s = Math.floor(Math.min(w, h) * 0.72);
+            return { width: Math.max(200, s), height: Math.max(200, s) };
+          },
+          aspectRatio: 1.0,
         },
-        aspectRatio: 1.0,
-      };
-
-      await html5QrCode.start(
-        cameraConfig,
-        config,
-        (decodedText) => {
-          // Process continuous scan without pausing or closing camera
-          handleContinuousScan(decodedText);
+        (decoded) => {
+          if (!hasScannedRef.current) {
+            hasScannedRef.current = true;
+            handleScanned(decoded);
+          }
         },
-        () => {
-          // Ignore non-QR frame ticks
-        }
+        () => {}
       );
 
       if (isMountedRef.current) {
         setIsCameraActive(true);
-        // Reapply current zoom level to newly mounted stream
-        setTimeout(() => {
-          applyZoom(zoomLevel);
-        }, 300);
+        setTimeout(() => applyZoom(zoomLevel), 300);
       }
     } catch (err: any) {
-      console.error('Camera startup error:', err);
       if (isMountedRef.current) {
-        const isInsecure = typeof window !== 'undefined' && !window.isSecureContext && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
-        if (isInsecure) {
-          setCameraError(
-            'Camera access requires HTTPS or localhost. To test over local IP on phone, enable Chrome flag: chrome://flags/#unsafely-treat-insecure-origin-as-secure'
-          );
-        } else {
-          setCameraError(
-            err?.message || 'Camera permission denied or camera not accessible.'
-          );
-        }
+        const insecure = typeof window !== 'undefined' && !window.isSecureContext && !['localhost', '127.0.0.1'].includes(window.location.hostname);
+        setCameraError(insecure
+          ? 'Camera needs HTTPS. Enable flag: chrome://flags/#unsafely-treat-insecure-origin-as-secure'
+          : err?.message || 'Camera permission denied or not accessible.'
+        );
         setIsCameraActive(false);
       }
     } finally {
@@ -245,371 +201,318 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({ activeSessionId,
     }
   };
 
+  // On QR scanned: stop camera → show loader → hit API → show result
+  const handleScanned = async (token: string) => {
+    const clean = token.trim();
+    if (!clean) return;
+
+    // Vibrate
+    if (typeof window !== 'undefined' && 'vibrate' in navigator) navigator.vibrate([80]);
+
+    // Stop camera and show processing state
+    await stopCamera();
+    setScanState('processing');
+
+    try {
+      const res = await api.scanQrPayload({
+        qrCodeToken: clean,
+        sessionId: activeSessionId,
+      });
+
+      playAudio('success');
+      setScanResult({
+        type: 'success',
+        name: res.user?.name,
+        rollNumber: res.user?.rollNumber,
+        status: res.status,
+        sessionTitle: res.session?.title,
+        time: new Date(res.record?.scannedAt || Date.now()).toLocaleTimeString(),
+        message: res.message || 'Attendance marked successfully!',
+      });
+      setScanState('success');
+      toast.success(`✓ ${res.user?.name} checked in!`);
+      if (onScanSuccess) onScanSuccess(res);
+    } catch (err: any) {
+      playAudio('error');
+      setScanResult({
+        type: 'error',
+        message: err.message || 'Failed to record attendance.',
+        isEnded: err.isEnded,
+      });
+      setScanState('error');
+    }
+  };
+
   useEffect(() => {
     isMountedRef.current = true;
     discoverCameras();
-
-    const timer = setTimeout(() => {
-      startCamera();
-    }, 150);
-
+    const t = setTimeout(() => startCamera(), 200);
     return () => {
       isMountedRef.current = false;
-      clearTimeout(timer);
+      clearTimeout(t);
       stopCamera();
     };
   }, []);
 
-  const handleCameraChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const newId = e.target.value;
-    setSelectedCameraId(newId);
-    if (isCameraActive) {
-      await startCamera(newId);
-    }
+  const handleCameraSwitch = async (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setSelectedCameraId(e.target.value);
+    if (isCameraActive) await startCamera(e.target.value);
   };
 
-  // ⚡ 100% Continuous High-Speed Multi-User Scanner
-  const handleContinuousScan = async (payloadToken: string) => {
-    const cleanToken = payloadToken.trim();
-    if (!cleanToken) return;
-
-    // In-flight concurrency lock (never send multiple API calls concurrently)
-    if (isScanningLockedRef.current) {
-      return;
-    }
-
-    // Cooldown per badge: ignore the exact same QR token within 2.5 seconds
-    const now = Date.now();
-    const lastScannedTime = lastScannedBadgeMapRef.current.get(cleanToken) || 0;
-    if (now - lastScannedTime < 2500) {
-      return;
-    }
-
-    // Lock scan and record scan time
-    isScanningLockedRef.current = true;
-    lastScannedBadgeMapRef.current.set(cleanToken, now);
-
-    try {
-      if (typeof window !== 'undefined' && 'vibrate' in navigator) {
-        navigator.vibrate([60]);
-      }
-
-      const res = await api.scanQrPayload({
-        qrCodeToken: cleanToken,
-        sessionId: activeSessionId,
-      });
-
-      playAudioFeedback('success');
-
-      const newRecord: ScannedRecord = {
-        id: res.user?.id || String(now),
-        name: res.user?.name || 'Member',
-        rollNumber: res.user?.rollNumber || '',
-        status: res.status === 'late' ? 'Late Arrival' : 'Present',
-        time: new Date(res.record?.scannedAt || now).toLocaleTimeString(),
-        sessionTitle: res.session?.title || 'Live Session',
-      };
-
-      // Add to live scanned session feed
-      setRecentScans((prev) => [newRecord, ...prev.slice(0, 14)]);
-
-      // Display non-blocking floating glassmorphism banner over camera
-      setActivePopup({
-        type: 'success',
-        title: res.user?.name || 'Attendance Verified!',
-        message: `${res.user?.rollNumber} • ${newRecord.status}`,
-        subText: res.session?.title,
-        status: res.status,
-      });
-
-      toast.success(`⚡ Checked in: ${res.user?.name} (${res.user?.rollNumber})`);
-      if (onScanSuccess) onScanSuccess(res);
-    } catch (error: any) {
-      playAudioFeedback('error');
-      const msg = error.message || 'Failed to record attendance';
-
-      setActivePopup({
-        type: 'error',
-        title: 'Check-in Denied',
-        message: msg,
-      });
-
-      toast.error(msg);
-    } finally {
-      // Release lock quickly (after 800ms) so the NEXT student can be scanned immediately!
-      setTimeout(() => {
-        isScanningLockedRef.current = false;
-      }, 800);
-
-      // Auto-hide popup after 1.8s
-      setTimeout(() => {
-        setActivePopup((cur) => (cur?.message === activePopup?.message ? null : cur));
-      }, 1800);
-    }
+  const handleScanAgain = () => {
+    setScanResult(null);
+    setScanState('scanning');
+    startCamera();
   };
+
+  // ─── UI ─────────────────────────────────────────────────────────────────────
 
   return (
-    <div className="w-full max-w-xl mx-auto rounded-2xl dash-card bg-white dark:bg-zinc-900/90 border border-slate-200 dark:border-zinc-800 p-4 sm:p-6 shadow-sm space-y-4">
-      {/* Header with Camera Switcher and Sound Toggle */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100 dark:border-zinc-800">
+    <div className="w-full max-w-lg mx-auto rounded-2xl bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 shadow-lg overflow-hidden">
+      {/* ── HEADER ── */}
+      <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-900/80">
         <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-xl bg-slate-900 dark:bg-zinc-800 text-white shrink-0 shadow-sm border border-transparent dark:border-zinc-700">
-            <QrCode className="w-4 h-4 sm:w-5 sm:h-5 text-blue-400" />
+          <div className="h-9 w-9 rounded-xl bg-slate-900 dark:bg-zinc-800 flex items-center justify-center shadow-sm border border-zinc-700">
+            <QrCode className="w-4 h-4 text-blue-400" />
           </div>
           <div>
-            <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-zinc-100 flex items-center gap-1.5 flex-wrap">
-              <span>Continuous QR Scanner</span>
-              <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 text-[10px] font-bold">
-                <Zap className="w-3 h-3" /> Auto-Scan Active
-              </span>
-            </h2>
-            <p className="text-[11px] sm:text-xs text-slate-500 dark:text-zinc-400">Point at attendee QR codes in rapid succession</p>
+            <h2 className="text-sm font-bold text-slate-900 dark:text-zinc-100 leading-tight">Live QR Scanner</h2>
+            <p className="text-[11px] text-slate-500 dark:text-zinc-400">
+              {scanState === 'scanning' && 'Point camera at a QR badge'}
+              {scanState === 'processing' && 'Processing check-in…'}
+              {scanState === 'success' && 'Attendance confirmed'}
+              {scanState === 'error' && 'Check-in failed'}
+            </p>
           </div>
         </div>
 
-        {/* Mobile-Optimized Controls */}
-        <div className="flex items-center justify-between sm:justify-end gap-2 w-full sm:w-auto">
-          {/* Sound Toggle */}
+        <div className="flex items-center gap-2">
           <button
-            onClick={() => setIsSoundEnabled(!isSoundEnabled)}
-            className="p-2 rounded-lg bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-300 hover:bg-slate-200 dark:hover:bg-zinc-700 transition-colors shadow-xs"
-            title={isSoundEnabled ? 'Mute Audio Chime' : 'Enable Audio Chime'}
+            onClick={() => setIsSoundEnabled(s => !s)}
+            className="p-2 rounded-lg bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 text-slate-500 dark:text-zinc-400 hover:text-slate-800 dark:hover:text-zinc-200 transition-colors"
           >
-            {isSoundEnabled ? <Volume2 className="w-4 h-4 text-blue-600 dark:text-blue-400" /> : <VolumeX className="w-4 h-4" />}
+            {isSoundEnabled ? <Volume2 className="w-4 h-4 text-blue-500" /> : <VolumeX className="w-4 h-4" />}
           </button>
 
-          {/* Camera Selector Dropdown */}
-          {cameras.length > 1 && (
-            <div className="relative flex-1 sm:flex-initial max-w-[170px] sm:max-w-[200px]">
+          {scanState === 'scanning' && cameras.length > 1 && (
+            <div className="relative">
               <select
                 value={selectedCameraId}
-                onChange={handleCameraChange}
-                className="w-full pl-7 pr-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 text-slate-800 dark:text-zinc-200 text-xs font-medium focus:outline-none shadow-xs truncate"
+                onChange={handleCameraSwitch}
+                className="pl-7 pr-3 py-1.5 rounded-lg bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 text-xs font-medium text-slate-700 dark:text-zinc-200 focus:outline-none max-w-[140px] truncate"
               >
-                {cameras.map((cam, i) => (
-                  <option key={cam.id} value={cam.id}>
-                    {cam.label || `Camera ${i + 1}`}
-                  </option>
+                {cameras.map((c, i) => (
+                  <option key={c.id} value={c.id}>{c.label || `Camera ${i + 1}`}</option>
                 ))}
               </select>
-              <SwitchCamera className="w-3.5 h-3.5 absolute left-2 top-2 text-slate-500 pointer-events-none" />
+              <SwitchCamera className="w-3.5 h-3.5 absolute left-2 top-2 text-slate-400 pointer-events-none" />
             </div>
           )}
 
-          {/* Start/Stop Camera Button */}
-          <button
-            onClick={isCameraActive ? stopCamera : () => startCamera()}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all shadow-sm shrink-0 ${
-              isCameraActive
-                ? 'bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-400 border border-rose-200 dark:border-rose-800 hover:bg-rose-100'
-                : 'bg-slate-900 dark:bg-zinc-100 text-white dark:text-zinc-900 hover:bg-slate-800'
-            }`}
-          >
-            {isCameraActive ? (
-              <>
-                <VideoOff className="w-3.5 h-3.5" />
-                <span>Stop</span>
-              </>
-            ) : (
-              <>
-                <Video className="w-3.5 h-3.5" />
-                <span>Start</span>
-              </>
-            )}
-          </button>
+          {scanState === 'scanning' && (
+            <button
+              onClick={isCameraActive ? stopCamera : () => startCamera()}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
+                isCameraActive
+                  ? 'bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-400 border border-rose-200 dark:border-rose-800'
+                  : 'bg-slate-900 dark:bg-zinc-100 text-white dark:text-zinc-900 hover:bg-slate-700'
+              }`}
+            >
+              {isCameraActive
+                ? <><VideoOff className="w-3.5 h-3.5" /><span>Stop</span></>
+                : <><Video className="w-3.5 h-3.5" /><span>Start</span></>
+              }
+            </button>
+          )}
         </div>
       </div>
 
-      {/* Viewfinder with Live Floating Popup & Zoom Support */}
-      <div className="relative rounded-2xl overflow-hidden border border-slate-200 dark:border-zinc-800 bg-slate-950 min-h-[260px] sm:min-h-[320px] max-h-[340px] flex items-center justify-center shadow-inner">
-        {/* Html5Qrcode video container with CSS overrides for default library clutter */}
-        <div
-          id={readerElementId}
-          className="w-full h-full [&_video]:max-h-[340px] [&_video]:w-full [&_video]:object-cover overflow-hidden [&_input[type=range]]:!hidden [&_.zoom-range-selector]:!hidden [&_select]:!hidden [&_span]:!hidden [&_button]:!hidden [&_img]:!hidden"
-        />
-
-        {/* Viewfinder Target Guide Overlay */}
-        {isCameraActive && (
-          <div className="absolute inset-0 pointer-events-none flex flex-col items-center justify-center p-4">
-            <div className="w-48 h-48 sm:w-56 sm:h-56 border-2 border-dashed border-white/60 dark:border-zinc-400/60 rounded-2xl relative animate-pulse flex items-center justify-center">
-              <div className="absolute -top-1 -left-1 w-4 h-4 border-t-2 border-l-2 border-blue-500" />
-              <div className="absolute -top-1 -right-1 w-4 h-4 border-t-2 border-r-2 border-blue-500" />
-              <div className="absolute -bottom-1 -left-1 w-4 h-4 border-b-2 border-l-2 border-blue-500" />
-              <div className="absolute -bottom-1 -right-1 w-4 h-4 border-b-2 border-r-2 border-blue-500" />
-              <span className="text-[10px] text-white/80 font-mono uppercase tracking-widest bg-black/50 px-2 py-0.5 rounded-full backdrop-blur-xs">
-                Continuous Scan
-              </span>
-            </div>
-          </div>
-        )}
-
-        {/* Instant Non-Blocking Floating Success / Error Popup */}
-        {activePopup && (
-          <div className="absolute inset-x-3 top-3 sm:inset-x-4 sm:top-4 z-20 transition-all duration-300 animate-in fade-in slide-in-from-top-3 pointer-events-none">
+      {/* ── SCANNING STATE: Camera Viewfinder ── */}
+      {scanState === 'scanning' && (
+        <>
+          <div className="relative bg-slate-950 min-h-[300px] sm:min-h-[340px] max-h-[380px] flex items-center justify-center overflow-hidden">
+            {/* Library video viewport */}
             <div
-              className={`p-3 sm:p-3.5 rounded-xl border backdrop-blur-md shadow-lg flex items-center gap-3 text-xs ${
-                activePopup.type === 'success'
-                  ? 'bg-emerald-950/95 border-emerald-500/50 text-emerald-100'
-                  : activePopup.type === 'warning'
-                  ? 'bg-amber-950/95 border-amber-500/50 text-amber-100'
-                  : 'bg-rose-950/95 border-rose-500/50 text-rose-100'
-              }`}
-            >
-              <div
-                className={`p-2 rounded-lg shrink-0 ${
-                  activePopup.type === 'success'
-                    ? 'bg-emerald-500/20 text-emerald-400'
-                    : activePopup.type === 'warning'
-                    ? 'bg-amber-500/20 text-amber-400'
-                    : 'bg-rose-500/20 text-rose-400'
-                }`}
-              >
-                {activePopup.type === 'success' ? (
-                  <CheckCircle2 className="w-5 h-5" />
+              id={readerElementId}
+              className="w-full h-full [&_video]:max-h-[380px] [&_video]:w-full [&_video]:object-cover [&_input[type=range]]:!hidden [&_.zoom-range-selector]:!hidden [&_select]:!hidden [&_span]:!hidden [&_button]:!hidden [&_img]:!hidden overflow-hidden"
+            />
+
+            {/* Corner guide overlay */}
+            {isCameraActive && (
+              <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
+                <div className="relative w-52 h-52 sm:w-60 sm:h-60">
+                  {/* Corner marks */}
+                  {[['top-0 left-0 border-t-2 border-l-2', ''], ['top-0 right-0 border-t-2 border-r-2', ''], ['bottom-0 left-0 border-b-2 border-l-2', ''], ['bottom-0 right-0 border-b-2 border-r-2', '']].map(([cls], i) => (
+                    <div key={i} className={`absolute w-5 h-5 ${cls} border-blue-400`} />
+                  ))}
+                  {/* Scanning line animation */}
+                  <div className="absolute inset-x-0 h-0.5 bg-blue-400/70 top-1/2 animate-bounce" style={{ animationDuration: '2s' }} />
+                </div>
+              </div>
+            )}
+
+            {/* Live indicator */}
+            {isCameraActive && (
+              <div className="absolute top-3 right-3 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-xs border border-white/10">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+                </span>
+                <span className="text-[10px] font-bold text-white uppercase tracking-widest">Live</span>
+              </div>
+            )}
+
+            {/* Camera paused/error overlay */}
+            {!isCameraActive && (
+              <div className="absolute inset-0 bg-slate-900/95 flex flex-col items-center justify-center gap-3 p-6 text-center">
+                {cameraError ? (
+                  <>
+                    <div className="p-3 rounded-full bg-rose-500/20 border border-rose-500/30">
+                      <AlertCircle className="w-7 h-7 text-rose-400" />
+                    </div>
+                    <p className="text-xs text-slate-300 max-w-xs leading-relaxed">{cameraError}</p>
+                    <button onClick={() => startCamera()} className="mt-1 px-4 py-2 rounded-xl bg-white text-slate-900 text-xs font-semibold hover:bg-slate-100 transition-colors">
+                      Retry Camera
+                    </button>
+                  </>
                 ) : (
-                  <AlertCircle className="w-5 h-5" />
+                  <>
+                    <div className="p-4 rounded-2xl bg-slate-800 border border-slate-700">
+                      <Camera className="w-8 h-8 text-slate-400" />
+                    </div>
+                    <p className="text-xs text-slate-400">Camera is off</p>
+                    <button onClick={() => startCamera()} className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold transition-colors">
+                      Start Camera
+                    </button>
+                  </>
                 )}
               </div>
-              <div className="flex-1 min-w-0">
-                <div className="font-bold text-xs sm:text-sm truncate">{activePopup.title}</div>
-                <div className="opacity-90 font-mono text-[10px] sm:text-[11px] truncate">{activePopup.message}</div>
-                {activePopup.subText && <div className="text-[10px] opacity-75 mt-0.5 truncate">{activePopup.subText}</div>}
-              </div>
-              {activePopup.status && (
-                <span
-                  className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase shrink-0 ${
-                    activePopup.status === 'late' ? 'bg-amber-500/30 text-amber-300' : 'bg-emerald-500/30 text-emerald-300'
-                  }`}
-                >
-                  {activePopup.status}
-                </span>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Paused / Error Overlay */}
-        {!isCameraActive && (
-          <div className="absolute inset-0 bg-slate-900/90 dark:bg-zinc-950/90 backdrop-blur-xs flex flex-col items-center justify-center p-6 text-center text-white space-y-3 z-10">
-            {cameraError ? (
-              <>
-                <div className="p-3 rounded-full bg-rose-500/20 text-rose-400 border border-rose-500/30">
-                  <AlertCircle className="w-6 h-6" />
-                </div>
-                <div className="text-xs font-medium text-slate-200 max-w-xs">{cameraError}</div>
-                <button
-                  onClick={() => startCamera()}
-                  className="px-4 py-2 rounded-lg bg-white dark:bg-zinc-100 text-slate-900 dark:text-zinc-900 font-semibold text-xs shadow-sm hover:bg-slate-100 transition-colors"
-                >
-                  Retry Camera
-                </button>
-              </>
-            ) : (
-              <>
-                <div className="p-3 rounded-full bg-slate-800 dark:bg-zinc-800 text-slate-300 dark:text-zinc-300 border border-slate-700 dark:border-zinc-700">
-                  <Camera className="w-6 h-6" />
-                </div>
-                <div className="text-xs text-slate-300 dark:text-zinc-400">Camera is paused</div>
-                <button
-                  onClick={() => startCamera()}
-                  className="px-4 py-2 rounded-lg bg-slate-900 dark:bg-zinc-100 hover:bg-slate-800 text-white dark:text-zinc-900 font-semibold text-xs shadow-sm"
-                >
-                  Start Camera
-                </button>
-              </>
             )}
           </div>
-        )}
-      </div>
 
-      {/* 🔍 Sleek Custom Camera Zoom Controller (1x, 1.5x, 2x, 3x + Slider) */}
-      {isCameraActive && (
-        <div className="p-3 rounded-xl bg-slate-50 dark:bg-zinc-800/60 border border-slate-200/80 dark:border-zinc-700 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
-          <div className="flex items-center gap-2 w-full sm:w-auto">
-            <ZoomOut className="w-3.5 h-3.5 text-slate-400" />
-            <input
-              type="range"
-              min="1"
-              max="3"
-              step="0.1"
-              value={zoomLevel}
-              onChange={(e) => applyZoom(parseFloat(e.target.value))}
-              className="flex-1 sm:w-36 h-1.5 bg-slate-200 dark:bg-zinc-700 rounded-lg appearance-none cursor-pointer accent-blue-600 dark:accent-blue-400"
-              aria-label="Camera Zoom"
-            />
-            <ZoomIn className="w-3.5 h-3.5 text-slate-400" />
-            <span className="font-mono font-bold text-slate-700 dark:text-zinc-300 text-[11px] min-w-[32px] text-right">
-              {zoomLevel.toFixed(1)}x
-            </span>
+          {/* Zoom controls */}
+          {isCameraActive && (
+            <div className="flex items-center gap-3 px-5 py-3 border-t border-slate-100 dark:border-zinc-800 bg-slate-50/50 dark:bg-zinc-900/50">
+              <ZoomOut className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+              <input
+                type="range" min="1" max="3" step="0.1" value={zoomLevel}
+                onChange={e => applyZoom(parseFloat(e.target.value))}
+                className="flex-1 h-1.5 bg-slate-200 dark:bg-zinc-700 rounded-full appearance-none cursor-pointer accent-blue-600"
+              />
+              <ZoomIn className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+              <span className="font-mono text-[11px] font-bold text-slate-600 dark:text-zinc-400 min-w-[30px] text-right">{zoomLevel.toFixed(1)}x</span>
+              <div className="flex gap-1 ml-1">
+                {[1, 1.5, 2, 2.5].map(p => (
+                  <button key={p} onClick={() => applyZoom(p)}
+                    className={`px-2 py-0.5 rounded-md text-[10px] font-bold font-mono transition-all ${Math.abs(zoomLevel - p) < 0.05 ? 'bg-slate-900 dark:bg-white text-white dark:text-zinc-900' : 'bg-white dark:bg-zinc-800 text-slate-500 dark:text-zinc-400 border border-slate-200 dark:border-zinc-700 hover:border-slate-400'}`}>
+                    {p}x
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div className="flex items-center justify-center gap-1.5 py-3 text-[11px] text-slate-400 dark:text-zinc-500">
+            <ScanLine className="w-3.5 h-3.5 text-blue-500 animate-pulse" />
+            <span>Point camera at any QR code to check in</span>
           </div>
+        </>
+      )}
 
-          {/* Quick Zoom Presets */}
-          <div className="flex items-center gap-1.5 self-end sm:self-auto">
-            {[1.0, 1.5, 2.0, 2.5].map((preset) => (
-              <button
-                key={preset}
-                onClick={() => applyZoom(preset)}
-                className={`px-2.5 py-1 rounded-lg text-[10px] font-bold font-mono transition-all ${
-                  Math.abs(zoomLevel - preset) < 0.05
-                    ? 'bg-slate-900 dark:bg-zinc-100 text-white dark:text-zinc-900 shadow-xs'
-                    : 'bg-white dark:bg-zinc-800 text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-zinc-700 border border-slate-200 dark:border-zinc-700'
-                }`}
-              >
-                {preset}x
-              </button>
-            ))}
+      {/* ── PROCESSING STATE: Loader ── */}
+      {scanState === 'processing' && (
+        <div className="flex flex-col items-center justify-center gap-5 py-16 px-8">
+          <div className="relative">
+            <div className="h-20 w-20 rounded-full border-4 border-slate-100 dark:border-zinc-800" />
+            <Loader2 className="h-20 w-20 text-blue-600 dark:text-blue-400 animate-spin absolute inset-0" />
+            <div className="absolute inset-0 flex items-center justify-center">
+              <QrCode className="w-7 h-7 text-slate-600 dark:text-zinc-300" />
+            </div>
+          </div>
+          <div className="text-center space-y-1">
+            <p className="text-sm font-bold text-slate-900 dark:text-zinc-100">Processing Check-in</p>
+            <p className="text-xs text-slate-500 dark:text-zinc-400">Verifying badge and recording attendance…</p>
           </div>
         </div>
       )}
 
-      <div className="flex items-center justify-center gap-1.5 text-[11px] text-slate-400 dark:text-zinc-500 font-medium text-center">
-        <ScanLine className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 animate-pulse shrink-0" />
-        <span>Continuous scanning active • Point at consecutive badges with 0 delay</span>
-      </div>
-
-      {/* Live Scan Queue (Shows up to 15 recent attendees checked in) */}
-      {recentScans.length > 0 && (
-        <div className="space-y-2.5 pt-2 border-t border-slate-100 dark:border-zinc-800">
-          <div className="flex items-center justify-between">
-            <h3 className="text-xs font-bold text-slate-900 dark:text-zinc-100 flex items-center gap-1.5">
-              <Users className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
-              <span>Scanned in This Session</span>
-            </h3>
-            <span className="px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 text-[10px] font-bold">
-              ⚡ {recentScans.length} Checked In
+      {/* ── SUCCESS STATE ── */}
+      {scanState === 'success' && scanResult && (
+        <div className="flex flex-col items-center gap-0 p-0">
+          {/* Green success banner */}
+          <div className="w-full px-6 py-8 bg-gradient-to-br from-emerald-500 to-emerald-600 flex flex-col items-center gap-3 text-center">
+            <div className="h-16 w-16 rounded-full bg-white/20 border-2 border-white/40 flex items-center justify-center">
+              <CheckCircle2 className="w-9 h-9 text-white" />
+            </div>
+            <div>
+              <p className="text-white text-xl font-bold leading-tight">{scanResult.name}</p>
+              <p className="text-emerald-100 text-sm font-mono mt-0.5">{scanResult.rollNumber}</p>
+            </div>
+            <span className={`px-4 py-1 rounded-full text-sm font-bold uppercase tracking-wider ${
+              scanResult.status === 'late'
+                ? 'bg-amber-400/30 text-amber-100 border border-amber-300/40'
+                : 'bg-white/20 text-white border border-white/30'
+            }`}>
+              {scanResult.status === 'late' ? '🕐 Late Arrival' : '✓ Present (On-Time)'}
             </span>
           </div>
 
-          <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
-            {recentScans.map((item, idx) => (
-              <div
-                key={`${item.id}-${idx}`}
-                className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-zinc-800/80 border border-slate-200/80 dark:border-zinc-700 text-xs animate-in fade-in slide-in-from-top-2"
-              >
-                <div className="flex items-center gap-2.5 min-w-0">
-                  <div className="h-6 w-6 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400 flex items-center justify-center font-bold text-[10px] shrink-0">
-                    ✓
-                  </div>
-                  <div className="min-w-0">
-                    <div className="font-semibold text-slate-900 dark:text-zinc-100 truncate">{item.name}</div>
-                    <div className="text-[10px] text-slate-400 dark:text-zinc-400 font-mono truncate">{item.rollNumber}</div>
-                  </div>
-                </div>
-
-                <div className="text-right shrink-0 ml-2">
-                  <span
-                    className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${
-                      item.status === 'Late Arrival'
-                        ? 'bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400'
-                        : 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400'
-                    }`}
-                  >
-                    {item.status}
-                  </span>
-                  <div className="text-[9px] text-slate-400 dark:text-zinc-500 font-mono mt-0.5">{item.time}</div>
-                </div>
+          {/* Details */}
+          <div className="w-full px-6 py-5 space-y-3">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="p-3 rounded-xl bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-zinc-500">Session</p>
+                <p className="text-xs font-semibold text-slate-900 dark:text-zinc-100 mt-0.5 truncate">{scanResult.sessionTitle || '—'}</p>
               </div>
-            ))}
+              <div className="p-3 rounded-xl bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-zinc-500">Checked In At</p>
+                <p className="text-xs font-mono font-semibold text-slate-900 dark:text-zinc-100 mt-0.5 flex items-center gap-1">
+                  <Clock className="w-3 h-3" />
+                  {scanResult.time}
+                </p>
+              </div>
+            </div>
+
+            <button
+              onClick={handleScanAgain}
+              className="w-full py-3 rounded-xl bg-slate-900 dark:bg-zinc-100 hover:bg-slate-700 dark:hover:bg-zinc-200 text-white dark:text-zinc-900 font-bold text-sm flex items-center justify-center gap-2 transition-all shadow-sm"
+            >
+              <RotateCcw className="w-4 h-4" />
+              Scan Next Attendee
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── ERROR STATE ── */}
+      {scanState === 'error' && scanResult && (
+        <div className="flex flex-col items-center gap-0 p-0">
+          {/* Red error banner */}
+          <div className={`w-full px-6 py-8 flex flex-col items-center gap-3 text-center ${
+            scanResult.isEnded
+              ? 'bg-gradient-to-br from-amber-500 to-orange-600'
+              : 'bg-gradient-to-br from-rose-500 to-rose-700'
+          }`}>
+            <div className="h-16 w-16 rounded-full bg-white/20 border-2 border-white/40 flex items-center justify-center">
+              <AlertCircle className="w-9 h-9 text-white" />
+            </div>
+            <div>
+              <p className="text-white text-lg font-bold leading-tight">
+                {scanResult.isEnded ? 'Session Ended' : 'Check-in Failed'}
+              </p>
+              <p className="text-white/80 text-xs mt-1.5 max-w-xs leading-relaxed">{scanResult.message}</p>
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div className="w-full px-6 py-5 space-y-2">
+            <button
+              onClick={handleScanAgain}
+              className="w-full py-3 rounded-xl bg-slate-900 dark:bg-zinc-100 hover:bg-slate-700 dark:hover:bg-zinc-200 text-white dark:text-zinc-900 font-bold text-sm flex items-center justify-center gap-2 transition-all shadow-sm"
+            >
+              <RotateCcw className="w-4 h-4" />
+              Try Again
+            </button>
           </div>
         </div>
       )}
