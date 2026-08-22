@@ -53,8 +53,10 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({ activeSessionId,
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const isStartingRef = useRef<boolean>(false);
   const isMountedRef = useRef<boolean>(true);
-  const lastScannedTimeRef = useRef<Map<string, number>>(new Map());
-  const isProcessingRef = useRef<boolean>(false);
+  
+  // Anti-Spam & Concurrency Locks
+  const isScanningLockedRef = useRef<boolean>(false);
+  const scannedInSessionRef = useRef<Set<string>>(new Set());
   const readerElementId = 'qr-camera-viewport';
 
   // Web Audio API Synthesizer
@@ -71,8 +73,8 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({ activeSessionId,
 
       if (type === 'success') {
         osc.type = 'sine';
-        osc.frequency.setValueAtTime(880, ctx.currentTime); // A5
-        osc.frequency.exponentialRampToValueAtTime(1320, ctx.currentTime + 0.12); // E6
+        osc.frequency.setValueAtTime(880, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(1320, ctx.currentTime + 0.12);
         gain.gain.setValueAtTime(0.2, ctx.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.18);
         osc.start();
@@ -95,8 +97,13 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({ activeSessionId,
       const devices = await Html5Qrcode.getCameras();
       if (devices && devices.length > 0) {
         setCameras(devices);
-        // Default to back camera or last camera in list
-        const backCam = devices.find(d => d.label.toLowerCase().includes('back') || d.label.toLowerCase().includes('environment'));
+        // Default to back / environment camera on mobile
+        const backCam = devices.find(d => 
+          d.label.toLowerCase().includes('back') || 
+          d.label.toLowerCase().includes('environment') || 
+          d.label.toLowerCase().includes('rear') ||
+          d.label.toLowerCase().includes('0')
+        );
         setSelectedCameraId(backCam ? backCam.id : devices[0].id);
       }
     } catch (e) {
@@ -150,7 +157,11 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({ activeSessionId,
 
       const config = {
         fps: 15,
-        qrbox: { width: 240, height: 240 },
+        qrbox: (viewfinderWidth: number, viewfinderHeight: number) => {
+          const minEdge = Math.min(viewfinderWidth, viewfinderHeight);
+          const size = Math.floor(minEdge * 0.75);
+          return { width: Math.max(180, size), height: Math.max(180, size) };
+        },
         aspectRatio: 1.0,
       };
 
@@ -158,7 +169,7 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({ activeSessionId,
         cameraConfig,
         config,
         (decodedText) => {
-          handleRapidScan(decodedText);
+          handleSingleScan(decodedText);
         },
         () => {
           // Ignore non-QR frame ticks
@@ -174,7 +185,7 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({ activeSessionId,
         const isInsecure = typeof window !== 'undefined' && !window.isSecureContext && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
         if (isInsecure) {
           setCameraError(
-            'Camera access requires HTTPS or localhost. To test over local IP HTTP, enable Chrome flag: chrome://flags/#unsafely-treat-insecure-origin-as-secure'
+            'Camera access requires HTTPS or localhost. To test over local IP on phone, enable Chrome flag: chrome://flags/#unsafely-treat-insecure-origin-as-secure'
           );
         } else {
           setCameraError(
@@ -211,19 +222,32 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({ activeSessionId,
     }
   };
 
-  // Ultra-Fast Continuous Scan Handler
-  const handleRapidScan = async (payloadToken: string) => {
+  // Single Guarded Scan Request (No spam / No multi-request from one device)
+  const handleSingleScan = async (payloadToken: string) => {
     const cleanToken = payloadToken.trim();
-    if (!cleanToken || isProcessingRef.current) return;
+    if (!cleanToken) return;
 
-    // Cooldown check (prevent repeated double-scans of the same badge within 2.5s)
-    const now = Date.now();
-    const lastTime = lastScannedTimeRef.current.get(cleanToken) || 0;
-    if (now - lastTime < 2500) {
+    // Concurrency Lock: Prevent multiple concurrent requests from overlapping camera frames
+    if (isScanningLockedRef.current) {
       return;
     }
-    lastScannedTimeRef.current.set(cleanToken, now);
-    isProcessingRef.current = true;
+
+    // Check if this badge/token was already successfully marked on this device during this session
+    if (scannedInSessionRef.current.has(cleanToken)) {
+      playAudioFeedback('warning');
+      setActivePopup({
+        type: 'warning',
+        title: 'Already Marked',
+        message: 'Attendance already recorded for this badge in this session.',
+      });
+      setTimeout(() => {
+        setActivePopup((cur) => (cur?.title === 'Already Marked' ? null : cur));
+      }, 1500);
+      return;
+    }
+
+    // Acquire lock immediately
+    isScanningLockedRef.current = true;
 
     try {
       if (typeof window !== 'undefined' && 'vibrate' in navigator) {
@@ -235,21 +259,25 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({ activeSessionId,
         sessionId: activeSessionId,
       });
 
+      // Mark token in local session set so duplicate requests are never sent again
+      scannedInSessionRef.current.add(cleanToken);
+      if (res.user?.rollNumber) {
+        scannedInSessionRef.current.add(res.user.rollNumber.toUpperCase());
+      }
+
       playAudioFeedback('success');
 
-      // Add to recent scans list
       const newRecord: ScannedRecord = {
-        id: res.user?.id || String(now),
+        id: res.user?.id || String(Date.now()),
         name: res.user?.name || 'Member',
         rollNumber: res.user?.rollNumber || '',
         status: res.status === 'late' ? 'Late Arrival' : 'Present',
-        time: new Date(res.record?.scannedAt || now).toLocaleTimeString(),
+        time: new Date(res.record?.scannedAt || Date.now()).toLocaleTimeString(),
         sessionTitle: res.session?.title || 'Live Session',
       };
 
       setRecentScans((prev) => [newRecord, ...prev.slice(0, 14)]);
 
-      // Display floating popover
       setActivePopup({
         type: 'success',
         title: res.user?.name || 'Attendance Verified!',
@@ -272,8 +300,12 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({ activeSessionId,
 
       toast.error(msg);
     } finally {
-      isProcessingRef.current = false;
-      // Auto-hide popup after 2 seconds
+      // Release lock after cooldown to allow scanning the next attendee
+      setTimeout(() => {
+        isScanningLockedRef.current = false;
+      }, 1500);
+
+      // Auto-dismiss popup
       setTimeout(() => {
         setActivePopup((cur) => (cur?.message === activePopup?.message ? null : cur));
       }, 2000);
@@ -281,26 +313,26 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({ activeSessionId,
   };
 
   return (
-    <div className="w-full max-w-xl mx-auto rounded-2xl dash-card bg-white dark:bg-zinc-900/90 border border-slate-200 dark:border-zinc-800 p-6 shadow-sm space-y-5">
-      {/* Header with Camera Switcher and Audio Toggle */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100 dark:border-zinc-800">
+    <div className="w-full max-w-xl mx-auto rounded-2xl dash-card bg-white dark:bg-zinc-900/90 border border-slate-200 dark:border-zinc-800 p-4 sm:p-6 shadow-sm space-y-4">
+      {/* Header with Camera Switcher and Sound Toggle */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100 dark:border-zinc-800">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-900 dark:bg-zinc-800 text-white border border-transparent dark:border-zinc-700">
-            <QrCode className="w-5 h-5 text-blue-400" />
+          <div className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-xl bg-slate-900 dark:bg-zinc-800 text-white shrink-0 shadow-sm border border-transparent dark:border-zinc-700">
+            <QrCode className="w-4 h-4 sm:w-5 sm:h-5 text-blue-400" />
           </div>
           <div>
-            <h2 className="text-base font-bold text-slate-900 dark:text-zinc-100 flex items-center gap-1.5">
+            <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-zinc-100 flex items-center gap-1.5 flex-wrap">
               <span>Rapid QR Scanner</span>
               <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 text-[10px] font-bold">
-                <Zap className="w-3 h-3" /> Continuous
+                <Zap className="w-3 h-3" /> Live
               </span>
             </h2>
-            <p className="text-xs text-slate-500 dark:text-zinc-400">Continuous instant scanning for rapid group attendance</p>
+            <p className="text-[11px] sm:text-xs text-slate-500 dark:text-zinc-400">Point at attendee QR codes for instant check-in</p>
           </div>
         </div>
 
-        {/* Controls */}
-        <div className="flex items-center gap-2">
+        {/* Mobile-Optimized Controls */}
+        <div className="flex items-center justify-between sm:justify-end gap-2 w-full sm:w-auto">
           {/* Sound Toggle */}
           <button
             onClick={() => setIsSoundEnabled(!isSoundEnabled)}
@@ -310,13 +342,13 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({ activeSessionId,
             {isSoundEnabled ? <Volume2 className="w-4 h-4 text-blue-600 dark:text-blue-400" /> : <VolumeX className="w-4 h-4" />}
           </button>
 
-          {/* Camera Selector */}
+          {/* Camera Selector Dropdown */}
           {cameras.length > 1 && (
-            <div className="relative">
+            <div className="relative flex-1 sm:flex-initial max-w-[170px] sm:max-w-[200px]">
               <select
                 value={selectedCameraId}
                 onChange={handleCameraChange}
-                className="pl-7 pr-3 py-1.5 rounded-lg bg-slate-100 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 text-slate-800 dark:text-zinc-200 text-xs font-medium focus:outline-none shadow-xs"
+                className="w-full pl-7 pr-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 text-slate-800 dark:text-zinc-200 text-xs font-medium focus:outline-none shadow-xs truncate"
               >
                 {cameras.map((cam, i) => (
                   <option key={cam.id} value={cam.id}>
@@ -328,10 +360,10 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({ activeSessionId,
             </div>
           )}
 
-          {/* Start/Stop Camera Toggle */}
+          {/* Start/Stop Camera Button */}
           <button
             onClick={isCameraActive ? stopCamera : () => startCamera()}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all shadow-sm ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all shadow-sm shrink-0 ${
               isCameraActive
                 ? 'bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-400 border border-rose-200 dark:border-rose-800 hover:bg-rose-100'
                 : 'bg-slate-900 dark:bg-zinc-100 text-white dark:text-zinc-900 hover:bg-slate-800'
@@ -352,51 +384,64 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({ activeSessionId,
         </div>
       </div>
 
-      {/* Viewfinder with Live Floating Popup */}
-      <div className="relative rounded-2xl overflow-hidden border border-slate-200 dark:border-zinc-800 bg-slate-950 min-h-[300px] max-h-[340px] flex items-center justify-center shadow-inner">
-        {/* Html5Qrcode video container */}
-        <div id={readerElementId} className="w-full h-full [&_video]:max-h-[340px] [&_video]:w-full [&_video]:object-cover overflow-hidden" />
+      {/* Viewfinder with Strict CSS Overrides to Completely Hide Injected Zoom Sliders */}
+      <div className="relative rounded-2xl overflow-hidden border border-slate-200 dark:border-zinc-800 bg-slate-950 min-h-[260px] sm:min-h-[320px] max-h-[340px] flex items-center justify-center shadow-inner">
+        {/* Html5Qrcode video container with CSS overrides for zoom sliders/selects */}
+        <div
+          id={readerElementId}
+          className="w-full h-full [&_video]:max-h-[340px] [&_video]:w-full [&_video]:object-cover overflow-hidden [&_input[type=range]]:!hidden [&_.zoom-range-selector]:!hidden [&_select]:!hidden [&_span]:!hidden [&_button]:!hidden [&_img]:!hidden"
+        />
 
         {/* Viewfinder Target Guide Overlay */}
         {isCameraActive && (
-          <div className="absolute inset-0 pointer-events-none flex flex-col items-center justify-center">
-            <div className="w-56 h-56 border-2 border-dashed border-white/60 dark:border-zinc-400/60 rounded-2xl relative animate-pulse flex items-center justify-center">
+          <div className="absolute inset-0 pointer-events-none flex flex-col items-center justify-center p-4">
+            <div className="w-48 h-48 sm:w-56 sm:h-56 border-2 border-dashed border-white/60 dark:border-zinc-400/60 rounded-2xl relative animate-pulse flex items-center justify-center">
               <div className="absolute -top-1 -left-1 w-4 h-4 border-t-2 border-l-2 border-blue-500" />
               <div className="absolute -top-1 -right-1 w-4 h-4 border-t-2 border-r-2 border-blue-500" />
               <div className="absolute -bottom-1 -left-1 w-4 h-4 border-b-2 border-l-2 border-blue-500" />
               <div className="absolute -bottom-1 -right-1 w-4 h-4 border-b-2 border-r-2 border-blue-500" />
-              <span className="text-[10px] text-white/75 font-mono uppercase tracking-widest bg-black/40 px-2 py-0.5 rounded-full">
-                Align QR Code
+              <span className="text-[10px] text-white/80 font-mono uppercase tracking-widest bg-black/50 px-2 py-0.5 rounded-full backdrop-blur-xs">
+                Scan QR Code
               </span>
             </div>
           </div>
         )}
 
-        {/* Instant Floating Success / Error Popup */}
+        {/* Instant Floating Success / Error / Warning Popup */}
         {activePopup && (
-          <div className="absolute inset-x-4 top-4 z-20 transition-all duration-300 animate-in fade-in slide-in-from-top-4">
+          <div className="absolute inset-x-3 top-3 sm:inset-x-4 sm:top-4 z-20 transition-all duration-300 animate-in fade-in slide-in-from-top-3">
             <div
-              className={`p-3.5 rounded-xl border backdrop-blur-md shadow-lg flex items-center gap-3 text-xs ${
+              className={`p-3 sm:p-3.5 rounded-xl border backdrop-blur-md shadow-lg flex items-center gap-3 text-xs ${
                 activePopup.type === 'success'
-                  ? 'bg-emerald-950/90 border-emerald-500/50 text-emerald-100'
-                  : 'bg-rose-950/90 border-rose-500/50 text-rose-100'
+                  ? 'bg-emerald-950/95 border-emerald-500/50 text-emerald-100'
+                  : activePopup.type === 'warning'
+                  ? 'bg-amber-950/95 border-amber-500/50 text-amber-100'
+                  : 'bg-rose-950/95 border-rose-500/50 text-rose-100'
               }`}
             >
               <div
-                className={`p-2 rounded-lg ${
-                  activePopup.type === 'success' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400'
+                className={`p-2 rounded-lg shrink-0 ${
+                  activePopup.type === 'success'
+                    ? 'bg-emerald-500/20 text-emerald-400'
+                    : activePopup.type === 'warning'
+                    ? 'bg-amber-500/20 text-amber-400'
+                    : 'bg-rose-500/20 text-rose-400'
                 }`}
               >
-                {activePopup.type === 'success' ? <CheckCircle2 className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
+                {activePopup.type === 'success' ? (
+                  <CheckCircle2 className="w-5 h-5" />
+                ) : (
+                  <AlertCircle className="w-5 h-5" />
+                )}
               </div>
               <div className="flex-1 min-w-0">
-                <div className="font-bold text-sm truncate">{activePopup.title}</div>
-                <div className="opacity-90 font-mono text-[11px] truncate">{activePopup.message}</div>
-                {activePopup.subText && <div className="text-[10px] opacity-75 mt-0.5">{activePopup.subText}</div>}
+                <div className="font-bold text-xs sm:text-sm truncate">{activePopup.title}</div>
+                <div className="opacity-90 font-mono text-[10px] sm:text-[11px] truncate">{activePopup.message}</div>
+                {activePopup.subText && <div className="text-[10px] opacity-75 mt-0.5 truncate">{activePopup.subText}</div>}
               </div>
               {activePopup.status && (
                 <span
-                  className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                  className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase shrink-0 ${
                     activePopup.status === 'late' ? 'bg-amber-500/30 text-amber-300' : 'bg-emerald-500/30 text-emerald-300'
                   }`}
                 >
@@ -441,9 +486,9 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({ activeSessionId,
         )}
       </div>
 
-      <div className="flex items-center justify-center gap-1.5 text-[11px] text-slate-400 dark:text-zinc-500 font-medium">
-        <ScanLine className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 animate-pulse" />
-        <span>Continuous high-speed scanning • Point at consecutive badges</span>
+      <div className="flex items-center justify-center gap-1.5 text-[11px] text-slate-400 dark:text-zinc-500 font-medium text-center">
+        <ScanLine className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 animate-pulse shrink-0" />
+        <span>Continuous scanning • Automatic single-request per badge lock</span>
       </div>
 
       {/* Live Scan Queue (Shows up to 15 recent attendees checked in) */}
@@ -465,17 +510,17 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({ activeSessionId,
                 key={`${item.id}-${idx}`}
                 className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-zinc-800/80 border border-slate-200/80 dark:border-zinc-700 text-xs animate-in fade-in slide-in-from-top-2"
               >
-                <div className="flex items-center gap-2.5">
-                  <div className="h-6 w-6 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400 flex items-center justify-center font-bold text-[10px]">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="h-6 w-6 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400 flex items-center justify-center font-bold text-[10px] shrink-0">
                     ✓
                   </div>
-                  <div>
-                    <div className="font-semibold text-slate-900 dark:text-zinc-100">{item.name}</div>
-                    <div className="text-[10px] text-slate-400 dark:text-zinc-400 font-mono">{item.rollNumber}</div>
+                  <div className="min-w-0">
+                    <div className="font-semibold text-slate-900 dark:text-zinc-100 truncate">{item.name}</div>
+                    <div className="text-[10px] text-slate-400 dark:text-zinc-400 font-mono truncate">{item.rollNumber}</div>
                   </div>
                 </div>
 
-                <div className="text-right">
+                <div className="text-right shrink-0 ml-2">
                   <span
                     className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${
                       item.status === 'Late Arrival'

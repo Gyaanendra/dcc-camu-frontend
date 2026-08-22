@@ -36,18 +36,18 @@ export default function ScanPage() {
         <Navbar />
         <div className="flex flex-1">
           <Sidebar />
-          <main className="flex-1 p-6 sm:p-8 max-w-4xl mx-auto w-full space-y-6">
+          <main className="flex-1 p-3.5 sm:p-6 lg:p-8 max-w-4xl mx-auto w-full space-y-4 sm:space-y-6">
             {/* Header with Auto-Detected Session Badge */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 rounded-2xl dash-card bg-white dark:bg-zinc-900/90 border border-slate-200 dark:border-zinc-800 shadow-sm">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 p-4 sm:p-6 rounded-2xl dash-card bg-white dark:bg-zinc-900/90 border border-slate-200 dark:border-zinc-800 shadow-sm">
               <div>
-                <div className="text-xs font-bold text-slate-400 dark:text-zinc-500 uppercase tracking-wider mb-1">
+                <div className="text-[10px] sm:text-xs font-bold text-slate-400 dark:text-zinc-500 uppercase tracking-wider mb-1">
                   Attendance Check-in
                 </div>
-                <h1 className="text-2xl font-bold text-slate-900 dark:text-zinc-100 flex items-center gap-2">
-                  <QrCode className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-zinc-100 flex items-center gap-2">
+                  <QrCode className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600 dark:text-blue-400" />
                   Live QR Attendance Scanner
                 </h1>
-                <p className="text-xs text-slate-500 dark:text-zinc-400 mt-1">
+                <p className="text-[11px] sm:text-xs text-slate-500 dark:text-zinc-400 mt-1">
                   Auto-detects active session directly from QR token or member roll number
                 </p>
               </div>
