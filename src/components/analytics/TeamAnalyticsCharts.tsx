@@ -35,6 +35,7 @@ interface TeamAnalyticsProps {
     memberCount: number;
     totalPresent: number;
     totalLate: number;
+    totalAttendanceCount?: number;
     attendanceRate: number;
   }>;
   summary: {
@@ -290,7 +291,7 @@ export const TeamAnalyticsCharts: React.FC<TeamAnalyticsProps> = ({ teamAnalytic
                   <div className="text-right">
                     <div className="text-xs font-bold text-slate-900 dark:text-zinc-100">{team.attendanceRate}%</div>
                     <div className="text-[10px] text-slate-400 dark:text-zinc-400">
-                      {team.totalAttendanceCount} logs
+                      {team.totalAttendanceCount ?? (team.totalPresent + team.totalLate)} logs
                     </div>
                   </div>
                 </div>

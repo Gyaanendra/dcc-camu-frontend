@@ -20,9 +20,8 @@ interface AuthContextType {
   user: User | null;
   token: string | null;
   isLoading: boolean;
-  login: (email?: string, password?: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<void>;
   logout: () => void;
-  quickSwitchRole: (role: 'admin' | 'user') => Promise<void>;
   refreshProfile: () => Promise<void>;
   updateUserPosition: (position: string) => Promise<void>;
 }
@@ -36,7 +35,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const refreshProfile = async () => {
     try {
-      const storedToken = localStorage.getItem('dcc_token');
+      const storedToken = localStorage.getItem('dcc_auth_token');
       if (!storedToken) {
         setIsLoading(false);
         return;
@@ -46,8 +45,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const res = await api.getMe();
       setUser(res.user);
     } catch (error) {
-      console.warn('Failed to restore session:', error);
-      localStorage.removeItem('dcc_token');
+      console.warn('[Auth] Failed to restore active session:', error);
+      localStorage.removeItem('dcc_auth_token');
+      api.setToken(null);
       setUser(null);
       setToken(null);
     } finally {
@@ -59,38 +59,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     refreshProfile();
   }, []);
 
-  const login = async (email?: string, password?: string) => {
+  const login = async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      const res = await api.login({
-        email: email || 's21cseu0001@bennett.edu.in',
-        password: password || 'admin123',
-      });
-      localStorage.setItem('dcc_token', res.token);
+      const normalizedEmail = email.trim().toLowerCase();
+      const res = await api.login(normalizedEmail, password);
+      localStorage.setItem('dcc_auth_token', res.token);
       setToken(res.token);
       setUser(res.user);
       toast.success(`Welcome back, ${res.user.name}!`);
     } catch (error: any) {
       toast.error(error.message || 'Login failed.');
       throw error;
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const quickSwitchRole = async (targetRole: 'admin' | 'user') => {
-    setIsLoading(true);
-    try {
-      const targetEmail = targetRole === 'admin' ? 's21cseu0001@bennett.edu.in' : 's24cseu0771@bennett.edu.in';
-      const targetPassword = targetRole === 'admin' ? 'admin123' : 'user123';
-      
-      const res = await api.login({ email: targetEmail, password: targetPassword });
-      localStorage.setItem('dcc_token', res.token);
-      setToken(res.token);
-      setUser(res.user);
-      toast.success(`Switched active view to ${targetRole.toUpperCase()} mode!`);
-    } catch (error: any) {
-      toast.error(`Quick switch failed: ${error.message}`);
     } finally {
       setIsLoading(false);
     }
@@ -109,7 +89,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = () => {
-    localStorage.removeItem('dcc_token');
+    localStorage.removeItem('dcc_auth_token');
+    api.setToken(null);
     setUser(null);
     setToken(null);
     toast.info('Logged out from Club DCC Camu.');
@@ -123,7 +104,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isLoading,
         login,
         logout,
-        quickSwitchRole,
         refreshProfile,
         updateUserPosition,
       }}

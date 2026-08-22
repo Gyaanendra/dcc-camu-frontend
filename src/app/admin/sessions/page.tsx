@@ -1,12 +1,14 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { Navbar } from '@/components/layout/Navbar';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { CreateSessionModal } from '@/components/sessions/CreateSessionModal';
 import { QRDisplayCard } from '@/components/qr/QRDisplayCard';
+import { PageLoader } from '@/components/layout/PageLoader';
 import { api } from '@/lib/api';
-import { Calendar, MapPin, Users, PowerOff, Play } from 'lucide-react';
+import { Calendar, MapPin, Users, PowerOff, Play, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function AdminSessionsPage() {
@@ -71,88 +73,111 @@ export default function AdminSessionsPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-zinc-950 text-slate-900 dark:text-zinc-100 transition-colors">
-      <Navbar />
-      <div className="flex flex-1">
-        <Sidebar />
-        <main className="flex-1 p-6 sm:p-8 max-w-7xl mx-auto w-full space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 rounded-2xl dash-card bg-white dark:bg-zinc-900/90 border border-slate-200 dark:border-zinc-800">
-            <div>
-              <div className="text-xs font-bold text-slate-400 dark:text-zinc-500 uppercase tracking-wider mb-1">
-                Event Management
+    <ProtectedRoute requireAdmin>
+      <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-zinc-950 text-slate-900 dark:text-zinc-100 transition-colors">
+        <Navbar />
+        <div className="flex flex-1">
+          <Sidebar />
+          <main className="flex-1 p-6 sm:p-8 max-w-7xl mx-auto w-full space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 rounded-2xl dash-card bg-white dark:bg-zinc-900/90 border border-slate-200 dark:border-zinc-800">
+              <div>
+                <div className="text-xs font-bold text-slate-400 dark:text-zinc-500 uppercase tracking-wider mb-1">
+                  Event Management
+                </div>
+                <h1 className="text-2xl font-bold text-slate-900 dark:text-zinc-100 flex items-center gap-2">
+                  <Calendar className="w-6 h-6 text-blue-600 dark:text-blue-400" /> Session & Live QR Manager
+                </h1>
+                <p className="text-xs text-slate-500 dark:text-zinc-400 mt-1">Schedule sessions, project dynamic QR codes, and monitor live check-ins</p>
               </div>
-              <h1 className="text-2xl font-bold text-slate-900 dark:text-zinc-100 flex items-center gap-2">
-                <Calendar className="w-6 h-6 text-blue-600 dark:text-blue-400" /> Session & Live QR Manager
-              </h1>
-              <p className="text-xs text-slate-500 dark:text-zinc-400 mt-1">Schedule sessions, project dynamic QR codes, and monitor live check-ins</p>
+
+              <div className="flex items-center gap-2">
+                <CreateSessionModal teams={teams} onCreated={loadData} />
+                <button
+                  onClick={loadData}
+                  className="p-2.5 rounded-xl bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-100 transition-colors shadow-sm"
+                  title="Refresh Sessions"
+                >
+                  <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+                </button>
+              </div>
             </div>
 
-            <CreateSessionModal teams={teams} onCreated={loadData} />
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Sessions List */}
-            <div className="space-y-3">
-              <h2 className="text-xs font-bold text-slate-400 dark:text-zinc-500 uppercase tracking-wider">
-                Sessions Directory
-              </h2>
-              <div className="space-y-2 max-h-[600px] overflow-y-auto pr-1">
-                {sessions.map((s) => (
-                  <button
-                    key={s.id}
-                    onClick={() => handleSelectSession(s)}
-                    className={`w-full text-left p-4 rounded-xl border transition-all ${
-                      selectedSession?.id === s.id
-                        ? 'bg-slate-900 dark:bg-zinc-800 text-white dark:text-zinc-100 shadow-sm border-slate-900 dark:border-zinc-700'
-                        : 'bg-white dark:bg-zinc-900 border-slate-200 dark:border-zinc-800 hover:bg-slate-50 dark:hover:bg-zinc-800 text-slate-900 dark:text-zinc-100 shadow-sm'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <span
-                        className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${
+            {isLoading ? (
+              <PageLoader message="Loading session records..." />
+            ) : (
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Sessions List */}
+              <div className="space-y-3">
+                <h2 className="text-xs font-bold text-slate-400 dark:text-zinc-500 uppercase tracking-wider">
+                  Sessions Directory
+                </h2>
+                <div className="space-y-2 max-h-[600px] overflow-y-auto pr-1">
+                  {isLoading ? (
+                    [1, 2, 3, 4].map((i) => (
+                      <div key={i} className="p-4 rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/90 h-28 animate-pulse" />
+                    ))
+                  ) : sessions.length > 0 ? (
+                    sessions.map((s) => (
+                      <button
+                        key={s.id}
+                        onClick={() => handleSelectSession(s)}
+                        className={`w-full text-left p-4 rounded-xl border transition-all ${
                           selectedSession?.id === s.id
-                            ? 'bg-slate-800 dark:bg-zinc-700 text-slate-300 dark:text-zinc-300'
-                            : 'bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-400'
+                            ? 'bg-slate-900 dark:bg-zinc-800 text-white dark:text-zinc-100 shadow-sm border-slate-900 dark:border-zinc-700'
+                            : 'bg-white dark:bg-zinc-900 border-slate-200 dark:border-zinc-800 hover:bg-slate-50 dark:hover:bg-zinc-800 text-slate-900 dark:text-zinc-100 shadow-sm'
                         }`}
                       >
-                        {s.type}
-                      </span>
-                      <span
-                        className={`text-[10px] font-bold ${
-                          s.isActive === 'true'
-                            ? selectedSession?.id === s.id ? 'text-emerald-400' : 'text-emerald-600 dark:text-emerald-400'
-                            : 'text-slate-400 dark:text-zinc-500'
+                        <div className="flex items-center justify-between">
+                          <span
+                            className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${
+                              selectedSession?.id === s.id
+                                ? 'bg-slate-800 dark:bg-zinc-700 text-slate-300 dark:text-zinc-300'
+                                : 'bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-400'
+                            }`}
+                          >
+                            {s.type}
+                          </span>
+                          <span
+                            className={`text-[10px] font-bold ${
+                              s.isActive === 'true'
+                                ? selectedSession?.id === s.id ? 'text-emerald-400' : 'text-emerald-600 dark:text-emerald-400'
+                                : 'text-slate-400 dark:text-zinc-500'
+                            }`}
+                          >
+                            {s.isActive === 'true' ? '● LIVE' : 'ENDED'}
+                          </span>
+                        </div>
+
+                        <div className="font-bold text-sm mt-2">{s.title}</div>
+                        <div
+                          className={`text-[11px] mt-1 flex items-center gap-1 ${
+                            selectedSession?.id === s.id ? 'text-slate-300 dark:text-zinc-400' : 'text-slate-500 dark:text-zinc-400'
+                          }`}
+                        >
+                          <MapPin className="w-3 h-3" /> {s.location}
+                        </div>
+
+                        <div
+                          className={`flex items-center justify-between text-[11px] font-mono mt-3 pt-2 border-t ${
+                            selectedSession?.id === s.id
+                              ? 'border-slate-800 dark:border-zinc-700 text-slate-400 dark:text-zinc-400'
+                              : 'border-slate-100 dark:border-zinc-800 text-slate-400 dark:text-zinc-500'
                         }`}
                       >
-                        {s.isActive === 'true' ? '● LIVE' : 'ENDED'}
-                      </span>
-                    </div>
-
-                    <div className="font-bold text-sm mt-2">{s.title}</div>
-                    <div
-                      className={`text-[11px] mt-1 flex items-center gap-1 ${
-                        selectedSession?.id === s.id ? 'text-slate-300 dark:text-zinc-400' : 'text-slate-500 dark:text-zinc-400'
-                      }`}
-                    >
-                      <MapPin className="w-3 h-3" /> {s.location}
-                    </div>
-
-                    <div
-                      className={`flex items-center justify-between text-[11px] font-mono mt-3 pt-2 border-t ${
-                        selectedSession?.id === s.id
-                          ? 'border-slate-800 dark:border-zinc-700 text-slate-400 dark:text-zinc-400'
-                          : 'border-slate-100 dark:border-zinc-800 text-slate-400 dark:text-zinc-500'
-                      }`}
-                    >
-                      <span>{new Date(s.startTime).toLocaleDateString()}</span>
-                      <span className={selectedSession?.id === s.id ? 'text-white dark:text-zinc-100 font-bold' : 'text-slate-900 dark:text-zinc-100 font-bold'}>
-                        {s.attendeeCount} attended
-                      </span>
-                    </div>
-                  </button>
-                ))}
+                        <span>{new Date(s.startTime).toLocaleDateString()}</span>
+                        <span className={selectedSession?.id === s.id ? 'text-white dark:text-zinc-100 font-bold' : 'text-slate-900 dark:text-zinc-100 font-bold'}>
+                          {s.attendeeCount} attended
+                        </span>
+                      </div>
+                    </button>
+                  ))
+                ) : (
+                  <div className="p-8 text-center text-xs text-slate-400 dark:text-zinc-500 bg-white dark:bg-zinc-900 rounded-xl border border-slate-200 dark:border-zinc-800">
+                    No sessions created yet. Click "Create New Session" above to get started.
+                  </div>
+                )}
+                </div>
               </div>
-            </div>
 
             {/* Selected Session QR Broadcast & Attendees Feed */}
             <div className="lg:col-span-2 space-y-6">
@@ -258,8 +283,10 @@ export default function AdminSessionsPage() {
               )}
             </div>
           </div>
-        </main>
+        )}
+          </main>
+        </div>
       </div>
-    </div>
+    </ProtectedRoute>
   );
 }

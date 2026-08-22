@@ -67,10 +67,11 @@ class ApiClient {
 
   // Auth Endpoints
   async login(email: string, password: string) {
-    console.log(`🔑 [Auth] Attempting login for Bennett email: ${email}`);
+    const normalizedEmail = email.trim().toLowerCase();
+    console.log(`🔑 [Auth] Attempting login for Bennett email: ${normalizedEmail}`);
     const data = await this.request('/auth/login', {
       method: 'POST',
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ email: normalizedEmail, password }),
     });
     if (data.token) this.setToken(data.token);
     return data;
@@ -84,10 +85,14 @@ class ApiClient {
     position?: string;
     teamId?: string;
   }) {
-    console.log(`📝 [Auth] Registering member: ${userData.name} (${userData.rollNumber})`);
+    const normalizedUserData = {
+      ...userData,
+      email: userData.email.trim().toLowerCase(),
+    };
+    console.log(`📝 [Auth] Registering member: ${normalizedUserData.name} (${normalizedUserData.rollNumber})`);
     const data = await this.request('/auth/register', {
       method: 'POST',
-      body: JSON.stringify(userData),
+      body: JSON.stringify(normalizedUserData),
     });
     if (data.token) this.setToken(data.token);
     return data;

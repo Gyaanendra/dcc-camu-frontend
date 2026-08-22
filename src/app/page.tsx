@@ -29,14 +29,21 @@ export default function SigninPage() {
   const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!isBennettEmail(email)) {
+    const normalizedEmail = email.trim().toLowerCase();
+
+    if (!normalizedEmail) {
+      toast.error('Please enter your Bennett University email.');
+      return;
+    }
+
+    if (!isBennettEmail(normalizedEmail)) {
       toast.error('Sign in requires a valid Bennett University email ending with @bennett.edu.in (e.g. s24cseu0771@bennett.edu.in)');
       return;
     }
 
     setIsSubmitting(true);
     try {
-      await login(email, password);
+      await login(normalizedEmail, password);
       router.push('/dashboard');
     } catch (err) {
       // Toast error handled in context
@@ -92,7 +99,10 @@ export default function SigninPage() {
                   type="email"
                   placeholder="s24cseu0771@bennett.edu.in"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => setEmail(e.target.value.toLowerCase())}
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck="false"
                   className="w-full pl-9 pr-3.5 py-2.5 rounded-lg bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 text-slate-900 dark:text-zinc-100 font-mono placeholder:text-slate-400 dark:placeholder:text-zinc-500 focus:border-slate-900 dark:focus:border-zinc-500 outline-none transition-all shadow-sm"
                   required
                 />
