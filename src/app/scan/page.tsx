@@ -32,22 +32,22 @@ export default function ScanPage() {
 
   return (
     <ProtectedRoute>
-      <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-zinc-950 text-slate-900 dark:text-zinc-100 transition-colors">
+      <div className="min-h-screen flex flex-col bg-background text-foreground transition-colors">
         <Navbar />
         <div className="flex flex-1">
           <Sidebar />
           <main className="flex-1 p-3.5 sm:p-6 lg:p-8 max-w-4xl mx-auto w-full space-y-4 sm:space-y-6">
             {/* Header with Auto-Detected Session Badge */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 p-4 sm:p-6 rounded-2xl dash-card bg-white dark:bg-zinc-900/90 border border-slate-200 dark:border-zinc-800 shadow-sm">
+            <div className="dash-card p-4 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
               <div>
-                <div className="text-[10px] sm:text-xs font-bold text-slate-400 dark:text-zinc-500 uppercase tracking-wider mb-1">
+                <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest mb-1">
                   Attendance Check-in
                 </div>
-                <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-zinc-100 flex items-center gap-2">
-                  <QrCode className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600 dark:text-blue-400" />
+                <h1 className="text-xl sm:text-2xl font-bold text-foreground flex items-center gap-2 tracking-tight">
+                  <QrCode className="w-5 h-5 sm:w-6 sm:h-6 text-accent" />
                   Live QR Attendance Scanner
                 </h1>
-                <p className="text-[11px] sm:text-xs text-slate-500 dark:text-zinc-400 mt-1">
+                <p className="text-xs text-muted-foreground mt-1">
                   Auto-detects active session directly from QR token or member roll number
                 </p>
               </div>
@@ -57,7 +57,7 @@ export default function ScanPage() {
                 {isLoading ? (
                   <div className="h-8 w-44 rounded-full bg-slate-100 dark:bg-zinc-800 animate-pulse" />
                 ) : activeSession ? (
-                  <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800/60 text-emerald-700 dark:text-emerald-400 text-xs font-semibold shadow-xs">
+                  <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-semibold">
                     <span className="relative flex h-2 w-2">
                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                       <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
@@ -66,15 +66,15 @@ export default function ScanPage() {
                     <span className="truncate max-w-[200px]">Live: {activeSession.title}</span>
                   </div>
                 ) : (
-                  <div className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-slate-100 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 text-slate-600 dark:text-zinc-400 text-xs font-medium">
-                    <Sparkles className="w-3.5 h-3.5 text-blue-500" />
+                  <div className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-secondary border border-border text-muted-foreground text-xs font-medium">
+                    <Sparkles className="w-3.5 h-3.5 text-accent" />
                     <span>Auto-Detects via QR</span>
                   </div>
                 )}
 
                 <button
                   onClick={fetchActiveSession}
-                  className="p-2 rounded-xl bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 text-slate-400 hover:text-slate-700 dark:hover:text-zinc-200 hover:bg-slate-50 dark:hover:bg-zinc-700 transition-colors"
+                  className="p-2 rounded-lg bg-secondary border border-border text-muted-foreground hover:text-foreground transition-colors"
                   title="Check for newly started sessions"
                 >
                   <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />

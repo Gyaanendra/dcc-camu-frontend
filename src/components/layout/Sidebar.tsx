@@ -12,8 +12,8 @@ import {
   Users,
   Award,
   ShieldCheck,
-  ChevronRight,
 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 export const Sidebar: React.FC = () => {
   const pathname = usePathname();
@@ -36,14 +36,15 @@ export const Sidebar: React.FC = () => {
   const isActive = (path: string) => pathname === path;
 
   return (
-    <aside className="w-64 shrink-0 hidden lg:block border-r border-slate-200 dark:border-zinc-800/80 bg-white dark:bg-zinc-950 p-4 min-h-[calc(100vh-4rem)] transition-colors">
-      <div className="space-y-6">
-        {/* User Navigation Section */}
+    <aside className="w-60 shrink-0 hidden lg:flex flex-col border-r border-border bg-card min-h-[calc(100vh-3.5rem)] transition-colors">
+      <div className="flex-1 p-3 space-y-5 overflow-y-auto">
+
+        {/* User Navigation */}
         <div>
-          <div className="px-3 mb-2 text-[10px] font-bold tracking-wider text-slate-400 dark:text-zinc-500 uppercase">
+          <p className="px-3 mb-1.5 text-[10px] font-semibold tracking-widest text-muted-foreground uppercase">
             Overview
-          </div>
-          <nav className="space-y-1">
+          </p>
+          <nav className="space-y-0.5">
             {userNav.map(item => {
               const Icon = item.icon;
               const active = isActive(item.href);
@@ -51,30 +52,30 @@ export const Sidebar: React.FC = () => {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium transition-all ${
+                  id={`sidebar-${item.name.toLowerCase().replace(/\s+/g, '-')}`}
+                  className={cn(
+                    'flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-all',
                     active
-                      ? 'bg-slate-900 dark:bg-zinc-800 text-white dark:text-zinc-100 shadow-sm font-semibold'
-                      : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-100 hover:bg-slate-50 dark:hover:bg-zinc-900'
-                  }`}
+                      ? 'bg-accent/10 text-accent'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-secondary'
+                  )}
                 >
-                  <div className="flex items-center gap-2.5">
-                    <Icon className={`w-4 h-4 ${active ? 'text-white dark:text-zinc-100' : 'text-slate-400 dark:text-zinc-500'}`} />
-                    <span>{item.name}</span>
-                  </div>
-                  {active && <ChevronRight className="w-3 h-3 text-slate-400 dark:text-zinc-500" />}
+                  <Icon className={cn('w-4 h-4 shrink-0', active ? 'text-accent' : 'text-muted-foreground')} />
+                  <span>{item.name}</span>
                 </Link>
               );
             })}
           </nav>
         </div>
 
-        {/* Admin Navigation Section */}
+        {/* Admin Navigation */}
         {isAdmin && (
           <div>
-            <div className="px-3 mb-2 flex items-center gap-1 text-[10px] font-bold tracking-wider text-blue-600 dark:text-blue-400 uppercase">
-              <ShieldCheck className="w-3.5 h-3.5" /> Admin Tools
-            </div>
-            <nav className="space-y-1">
+            <p className="px-3 mb-1.5 flex items-center gap-1.5 text-[10px] font-semibold tracking-widest text-accent uppercase">
+              <ShieldCheck className="w-3 h-3" />
+              Admin Tools
+            </p>
+            <nav className="space-y-0.5">
               {adminNav.map(item => {
                 const Icon = item.icon;
                 const active = isActive(item.href);
@@ -82,35 +83,40 @@ export const Sidebar: React.FC = () => {
                   <Link
                     key={item.href}
                     href={item.href}
-                    className={`flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium transition-all ${
+                    id={`sidebar-admin-${item.name.toLowerCase().replace(/\s+/g, '-')}`}
+                    className={cn(
+                      'flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-all',
                       active
-                        ? 'bg-slate-900 dark:bg-zinc-800 text-white dark:text-zinc-100 shadow-sm font-semibold'
-                        : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-100 hover:bg-slate-50 dark:hover:bg-zinc-900'
-                    }`}
+                        ? 'bg-accent/10 text-accent'
+                        : 'text-muted-foreground hover:text-foreground hover:bg-secondary'
+                    )}
                   >
-                    <div className="flex items-center gap-2.5">
-                      <Icon className={`w-4 h-4 ${active ? 'text-white dark:text-zinc-100' : 'text-slate-400 dark:text-zinc-500'}`} />
-                      <span>{item.name}</span>
-                    </div>
-                    {active && <ChevronRight className="w-3 h-3 text-slate-400 dark:text-zinc-500" />}
+                    <Icon className={cn('w-4 h-4 shrink-0', active ? 'text-accent' : 'text-muted-foreground')} />
+                    <span>{item.name}</span>
                   </Link>
                 );
               })}
             </nav>
           </div>
         )}
+      </div>
 
-        {/* Wing / Position Card */}
-        {user && (
-          <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-zinc-900/80 border border-slate-200/80 dark:border-zinc-800 text-xs">
-            <div className="text-[10px] font-bold tracking-wider text-slate-400 dark:text-zinc-500 uppercase">
+      {/* Club Assignment Card — pinned at bottom */}
+      {user && (
+        <div className="p-3 border-t border-border">
+          <div className="p-3 rounded-xl bg-secondary border border-border text-xs">
+            <div className="text-[10px] font-semibold tracking-widest text-muted-foreground uppercase mb-1">
               Club Assignment
             </div>
-            <div className="font-semibold text-slate-900 dark:text-zinc-100 mt-1">{user.teamName || 'All Club Members'}</div>
-            <div className="text-[11px] text-slate-500 dark:text-zinc-400 font-medium mt-0.5">{user.position || 'Member'}</div>
+            <div className="font-semibold text-foreground truncate">
+              {user.teamName || 'All Club Members'}
+            </div>
+            <div className="text-[11px] text-muted-foreground mt-0.5 font-medium">
+              {user.position || 'Member'}
+            </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </aside>
   );
 };

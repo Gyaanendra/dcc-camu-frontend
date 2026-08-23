@@ -28,24 +28,20 @@ export default function SigninPage() {
 
   const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     const normalizedEmail = email.trim().toLowerCase();
-
     if (!normalizedEmail) {
       toast.error('Please enter your Bennett University email.');
       return;
     }
-
     if (!isBennettEmail(normalizedEmail)) {
-      toast.error('Sign in requires a valid Bennett University email ending with @bennett.edu.in (e.g. s24cseu0771@bennett.edu.in)');
+      toast.error('Sign in requires a valid Bennett University email ending with @bennett.edu.in');
       return;
     }
-
     setIsSubmitting(true);
     try {
       await login(normalizedEmail, password);
       router.push('/dashboard');
-    } catch (err) {
+    } catch {
       // Toast error handled in context
     } finally {
       setIsSubmitting(false);
@@ -53,93 +49,105 @@ export default function SigninPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col justify-center items-center px-4 py-12 bg-slate-50 dark:bg-zinc-950 text-slate-900 dark:text-zinc-100 transition-colors relative">
-      {/* Top Corner Theme Toggle */}
-      <div className="absolute top-6 right-6">
-        <button
-          onClick={toggleTheme}
-          className="p-2 rounded-lg bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-600 dark:text-zinc-300 hover:text-slate-900 dark:hover:text-white transition-colors shadow-sm"
-          title="Toggle Theme"
-        >
-          {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-slate-600" />}
-        </button>
-      </div>
+    <div className="min-h-screen flex flex-col justify-center items-center px-4 py-12 bg-background text-foreground transition-colors relative">
 
-      <div className="w-full max-w-md space-y-6">
-        {/* Editorial Brand Header */}
-        <div className="text-center space-y-2">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-900 dark:bg-zinc-800 font-extrabold text-white text-lg shadow-sm border border-transparent dark:border-zinc-700">
+      {/* Theme toggle — top right */}
+      <button
+        onClick={toggleTheme}
+        id="login-theme-toggle"
+        className="absolute top-5 right-5 p-2 rounded-lg bg-secondary border border-border text-muted-foreground hover:text-foreground transition-colors"
+        title="Toggle Theme"
+      >
+        {theme === 'dark'
+          ? <Sun className="w-4 h-4 text-amber-400" />
+          : <Moon className="w-4 h-4" />
+        }
+      </button>
+
+      <div className="w-full max-w-sm space-y-6">
+
+        {/* Brand mark */}
+        <div className="text-center space-y-3 anim-fade-up">
+          <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-xl bg-foreground font-extrabold text-background text-sm shadow-sm">
             DCC
           </div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-zinc-100">
-            Club DCC Camu
-          </h1>
-          <p className="text-xs text-slate-500 dark:text-zinc-400 font-medium">
-            Bennett University • Developers & Creators Club
-          </p>
+          <div>
+            <h1 className="text-xl font-bold tracking-tight text-foreground">
+              Club DCC Camu
+            </h1>
+            <p className="text-xs text-muted-foreground font-medium mt-0.5">
+              Bennett University · Developers &amp; Creators Club
+            </p>
+          </div>
         </div>
 
-        {/* Clean Neutral Sign In Card */}
-        <div className="dash-card bg-white dark:bg-zinc-900/90 p-8 space-y-6 shadow-sm border border-slate-200 dark:border-zinc-800">
-          <div className="border-b border-slate-100 dark:border-zinc-800 pb-4">
-            <h2 className="text-base font-bold text-slate-900 dark:text-zinc-100">
-              Sign In to Portal
-            </h2>
-            <p className="text-xs text-slate-500 dark:text-zinc-400 mt-0.5">Enter your Bennett credentials to access your dashboard</p>
+        {/* Sign-in card */}
+        <div className="dash-card p-6 sm:p-8 space-y-5 anim-fade-up anim-delay-1">
+          <div className="pb-4 border-b border-border">
+            <h2 className="text-sm font-bold text-foreground">Sign In to Portal</h2>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Enter your Bennett credentials to continue
+            </p>
           </div>
 
-          <form onSubmit={handleLoginSubmit} className="space-y-4 text-xs">
-            <div>
-              <label className="block font-semibold text-slate-700 dark:text-zinc-300 mb-1.5">
+          <form onSubmit={handleLoginSubmit} className="space-y-4">
+            {/* Email */}
+            <div className="space-y-1.5">
+              <label htmlFor="login-email" className="block text-xs font-semibold text-foreground">
                 Bennett University Email
               </label>
               <div className="relative">
-                <Mail className="w-4 h-4 absolute left-3 top-3 text-slate-400 dark:text-zinc-500" />
+                <Mail className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
                 <input
+                  id="login-email"
                   type="email"
                   placeholder="s24cseu0771@bennett.edu.in"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value.toLowerCase())}
+                  onChange={e => setEmail(e.target.value.toLowerCase())}
                   autoCapitalize="none"
                   autoCorrect="off"
-                  spellCheck="false"
-                  className="w-full pl-9 pr-3.5 py-2.5 rounded-lg bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 text-slate-900 dark:text-zinc-100 font-mono placeholder:text-slate-400 dark:placeholder:text-zinc-500 focus:border-slate-900 dark:focus:border-zinc-500 outline-none transition-all shadow-sm"
+                  spellCheck={false}
+                  className="w-full h-9 pl-9 pr-3.5 rounded-lg bg-transparent border border-input text-foreground text-xs font-mono placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring transition-all"
                   required
                 />
               </div>
             </div>
 
-            <div>
-              <label className="block font-semibold text-slate-700 dark:text-zinc-300 mb-1.5">
+            {/* Password */}
+            <div className="space-y-1.5">
+              <label htmlFor="login-password" className="block text-xs font-semibold text-foreground">
                 Password
               </label>
               <div className="relative">
-                <Lock className="w-4 h-4 absolute left-3 top-3 text-slate-400 dark:text-zinc-500" />
+                <Lock className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
                 <input
+                  id="login-password"
                   type="password"
                   placeholder="••••••••"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-9 pr-3.5 py-2.5 rounded-lg bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 text-slate-900 dark:text-zinc-100 font-mono placeholder:text-slate-400 dark:placeholder:text-zinc-500 focus:border-slate-900 dark:focus:border-zinc-500 outline-none transition-all shadow-sm"
+                  onChange={e => setPassword(e.target.value)}
+                  className="w-full h-9 pl-9 pr-3.5 rounded-lg bg-transparent border border-input text-foreground text-xs font-mono placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring transition-all"
                   required
                 />
               </div>
             </div>
 
+            {/* Submit */}
             <button
               type="submit"
+              id="login-submit"
               disabled={isSubmitting}
-              className="w-full py-2.5 px-4 rounded-lg bg-slate-900 dark:bg-zinc-100 hover:bg-slate-800 dark:hover:bg-zinc-200 text-white dark:text-zinc-950 font-semibold text-xs shadow-sm transition-all flex items-center justify-center gap-2"
+              className="w-full h-9 rounded-lg bg-accent text-accent-foreground hover:bg-accent/90 font-semibold text-xs shadow-sm transition-all flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed active:scale-[0.97]"
             >
               <span>{isSubmitting ? 'Verifying...' : 'Sign In'}</span>
-              <ArrowRight className="w-4 h-4" />
+              <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </form>
         </div>
 
-        <div className="text-center text-[11px] text-slate-400 dark:text-zinc-500 font-medium">
-          Attendance & Team Analytics Engine for Club DCC
-        </div>
+        <p className="text-center text-[11px] text-muted-foreground">
+          Attendance &amp; Team Analytics Engine for Club DCC
+        </p>
       </div>
     </div>
   );

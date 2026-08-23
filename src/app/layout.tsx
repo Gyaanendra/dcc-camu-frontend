@@ -20,10 +20,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="h-full">
-      <body className={`${inter.variable} font-sans min-h-full bg-slate-50 dark:bg-zinc-950 text-slate-900 dark:text-zinc-100 flex flex-col antialiased transition-colors duration-150`}>
+      <body className={`${inter.variable} font-sans min-h-full bg-background text-foreground flex flex-col antialiased transition-colors duration-150`}>
         <ThemeProvider>
           <AuthProvider>
-            <div className="flex-1 pb-16 lg:pb-0">
+            <div className="flex-1">
               {children}
             </div>
             <MobileNav />

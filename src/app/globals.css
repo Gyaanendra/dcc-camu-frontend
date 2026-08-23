@@ -2,68 +2,239 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   MOTION SYSTEM — Corporate archetype
+   Easing: cubic-bezier(0.2, 0, 0, 1)  — Material Design 3 "Snappy"
+   Duration palette:
+     quick    80–150ms  — micro-feedback (hover, press, toggle)
+     standard 200–300ms — card enter, state change
+     slow     350–500ms — drawer, modal, page transitions
+   Entrance > Exit: entrances 30–40% longer than exits.
+   Three layers: primary (move) + secondary (shadow/icon) + ambient (shimmer)
+   Reduced-motion: all durations collapse to 0ms via media query.
+═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─── Keyframes ─────────────────────────────────────────────────────────── */
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes slide-in-left {
+  from { opacity: 0.6; transform: translateX(-100%); }
+  to   { opacity: 1;   transform: translateX(0); }
+}
+
+@keyframes slide-out-left {
+  from { opacity: 1;   transform: translateX(0); }
+  to   { opacity: 0;   transform: translateX(-100%); }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes dot-bounce {
+  0%, 80%, 100% { transform: translateY(0);     opacity: 0.4; }
+  40%           { transform: translateY(-6px);  opacity: 1; }
+}
+
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.95); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes btn-press {
+  0%   { transform: scale(1); }
+  50%  { transform: scale(0.97); }
+  100% { transform: scale(1); }
+}
+
+@keyframes progress-fill {
+  from { width: 0%; }
+}
+
+@keyframes spin-smooth {
+  to { transform: rotate(360deg); }
+}
+
+/* ─── Utility classes ───────────────────────────────────────────────────── */
+
+/* Card / panel entrance — fade up 10px, standard 280ms */
+.anim-fade-up {
+  animation: fade-up 280ms cubic-bezier(0.2, 0, 0, 1) both;
+}
+
+/* Stagger helpers — apply anim-fade-up on parent items */
+.anim-delay-1  { animation-delay:  40ms; }
+.anim-delay-2  { animation-delay:  80ms; }
+.anim-delay-3  { animation-delay: 120ms; }
+.anim-delay-4  { animation-delay: 160ms; }
+.anim-delay-5  { animation-delay: 200ms; }
+
+/* Overlay backdrop */
+.anim-fade-in {
+  animation: fade-in 180ms cubic-bezier(0.2, 0, 0, 1) both;
+}
+
+/* Sidebar / drawer enter from left */
+.anim-slide-left {
+  animation: slide-in-left 280ms cubic-bezier(0.05, 0.7, 0.1, 1) both;
+}
+
+/* Modal / card scale-in */
+.anim-scale-in {
+  animation: scale-in 240ms cubic-bezier(0.2, 0, 0, 1) both;
+}
+
+/* Button press micro-feedback */
+.anim-btn-press:active {
+  animation: btn-press 120ms cubic-bezier(0.2, 0, 0, 1) both;
+}
+
+/* Smooth spinner — linear so it's consistent */
+.anim-spin-smooth {
+  animation: spin-smooth 800ms linear infinite;
+}
+
+/* Progress bar fill from 0 on mount */
+.anim-progress {
+  animation: progress-fill 700ms cubic-bezier(0.2, 0, 0, 1) both;
+  animation-delay: 100ms;
+}
+
+/* ─── Skeleton shimmer ──────────────────────────────────────────────────── */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    hsl(var(--secondary)) 25%,
+    hsl(var(--muted))      50%,
+    hsl(var(--secondary)) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: calc(var(--radius) - 2px);
+}
+
+/* ─── Dot bounce loader ─────────────────────────────────────────────────── */
+.dot-loader span {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 9999px;
+  background: hsl(var(--accent));
+  animation: dot-bounce 1.2s ease-in-out infinite;
+}
+.dot-loader span:nth-child(1) { animation-delay: 0ms; }
+.dot-loader span:nth-child(2) { animation-delay: 150ms; }
+.dot-loader span:nth-child(3) { animation-delay: 300ms; }
+
+/* ─── Reduced motion override — collapses all durations ─────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .anim-fade-up,
+  .anim-fade-in,
+  .anim-slide-left,
+  .anim-scale-in,
+  .anim-btn-press:active,
+  .skeleton {
+    animation: none !important;
+    transition: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  .anim-spin-smooth {
+    animation-duration: 2s !important;
+  }
+}
+
+
 @layer base {
   :root {
-    --background: 210 40% 98%;
-    --foreground: 222 47% 11%;
+    /* Surfaces */
+    --background:         210 20% 98%;    /* #f8fafc — page canvas */
+    --foreground:         222 47% 11%;    /* #181d26 — primary text */
 
-    --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
+    /* Cards / Panels */
+    --card:               0 0% 100%;      /* #ffffff */
+    --card-foreground:    222 47% 11%;
 
-    --popover: 0 0% 100%;
+    /* Popovers / Dropdowns */
+    --popover:            0 0% 100%;
     --popover-foreground: 222 47% 11%;
 
-    --primary: 222 47% 11%;
-    --primary-foreground: 210 40% 98%;
+    /* Primary (near-black pill buttons) */
+    --primary:            222 47% 11%;
+    --primary-foreground: 210 20% 98%;
 
-    --secondary: 210 40% 96.1%;
+    /* Secondary fills */
+    --secondary:          210 20% 96%;    /* #f0f4f8 */
     --secondary-foreground: 222 47% 11%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    /* Muted */
+    --muted:              210 20% 96%;
+    --muted-foreground:   215 16% 47%;    /* #6b7280 */
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222 47% 11%;
+    /* THE accent — single interactive blue, same in both modes */
+    --accent:             217 91% 60%;    /* #3b7ff0 */
+    --accent-foreground:  0 0% 100%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    /* Semantic */
+    --destructive:        0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222 47% 11%;
+    /* Chrome */
+    --border:             214 32% 91%;    /* #e2e8f0 */
+    --input:              214 32% 91%;
+    --ring:               217 91% 60%;    /* matches accent */
 
-    --radius: 0.75rem;
+    /* Shape */
+    --radius:             0.75rem;
   }
 
   .dark {
-    /* Neutral Grey & Black Palette (No heavy blue backgrounds) */
-    --background: 240 10% 3.9%;
-    --foreground: 0 0% 98%;
+    /* Surfaces */
+    --background:         240 10% 3.9%;   /* #09090b — deepest layer */
+    --foreground:         0 0% 98%;       /* #fafafa */
 
-    --card: 240 10% 7%;
-    --card-foreground: 0 0% 98%;
+    /* Cards — one step lighter than canvas */
+    --card:               240 8% 7%;      /* #111114 */
+    --card-foreground:    0 0% 98%;
 
-    --popover: 240 10% 7%;
+    /* Popovers */
+    --popover:            240 8% 7%;
     --popover-foreground: 0 0% 98%;
 
-    --primary: 0 0% 98%;
-    --primary-foreground: 240 5.9% 10%;
+    /* Primary (white pill buttons in dark) */
+    --primary:            0 0% 98%;
+    --primary-foreground: 240 6% 10%;
 
-    --secondary: 240 3.7% 15.9%;
+    /* Secondary fills */
+    --secondary:          240 4% 16%;     /* #27272a */
     --secondary-foreground: 0 0% 98%;
 
-    --muted: 240 3.7% 15.9%;
-    --muted-foreground: 240 5% 64.9%;
+    /* Muted */
+    --muted:              240 4% 16%;
+    --muted-foreground:   240 5% 65%;     /* #9ca3af */
 
-    --accent: 217 91% 60%;
-    --accent-foreground: 0 0% 100%;
+    /* THE accent — unchanged across modes */
+    --accent:             217 91% 60%;    /* #3b7ff0 */
+    --accent-foreground:  0 0% 100%;
 
-    --destructive: 0 62.8% 30.6%;
+    /* Semantic */
+    --destructive:        0 63% 31%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
-    --ring: 240 4.9% 83.9%;
+    /* Chrome */
+    --border:             240 4% 16%;     /* #27272a */
+    --input:              240 4% 16%;
+    --ring:               217 91% 60%;    /* keep accent ring in dark too */
   }
 }
 
@@ -72,63 +243,47 @@
     @apply border-border;
   }
   body {
-    background-color: #f8fafc;
-    color: #181d26;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    @apply bg-background text-foreground antialiased;
+    font-family: var(--font-sans), system-ui, -apple-system, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
-
-  .dark body {
-    background-color: #09090b;
-    color: #f4f4f5;
-  }
 }
 
-/* Editorial Dashboard Card Style (Light & Dark Neutral Grey/Black) */
+/* ─── Dashboard Card ────────────────────────────────────── */
 .dash-card {
-  background-color: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 0.875rem;
+  background-color: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius);
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 1px 2px -1px rgba(0, 0, 0, 0.04);
+  transition: border-color 150ms ease, box-shadow 150ms ease;
 }
-
 .dark .dash-card {
-  background-color: #121215;
-  border-color: #27272a;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.4);
-}
-
-.dash-card-hover {
-  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.40);
 }
 .dash-card-hover:hover {
-  border-color: #cbd5e1;
+  border-color: hsl(var(--ring) / 0.35);
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.06);
 }
 .dark .dash-card-hover:hover {
-  border-color: #3f3f46;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.6);
+  border-color: hsl(var(--border) / 0.8);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
 }
 
-/* Scrollbar */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+/* ─── Bottom Tab Bar (Mobile) ────────────────────────────── */
+.tab-bar {
+  background-color: hsl(var(--card));
+  border-top: 1px solid hsl(var(--border));
+  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
-::-webkit-scrollbar-track {
-  background: transparent;
-}
+
+/* ─── Scrollbar ──────────────────────────────────────────── */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: hsl(var(--border));
   border-radius: 9999px;
 }
-.dark ::-webkit-scrollbar-thumb {
-  background: #27272a;
-}
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
-}
-.dark ::-webkit-scrollbar-thumb:hover {
-  background: #3f3f46;
+  background: hsl(var(--muted-foreground) / 0.5);
 }
