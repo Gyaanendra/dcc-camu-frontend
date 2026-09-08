@@ -24,13 +24,13 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requir
   // Loading state with smooth animation
   if (isLoading) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 dark:bg-zinc-950 text-slate-900 dark:text-zinc-100">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-background text-foreground">
         <div className="flex flex-col items-center space-y-4">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-900 dark:bg-zinc-800 text-white font-extrabold text-base shadow-sm animate-pulse border border-transparent dark:border-zinc-700">
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-foreground text-background font-extrabold text-base shadow-sm animate-pulse">
             DCC
           </div>
-          <div className="flex items-center gap-2 text-xs font-mono text-slate-500 dark:text-zinc-400">
-            <RefreshCw className="w-3.5 h-3.5 animate-spin text-blue-600" />
+          <div className="flex items-center gap-2 text-xs font-mono text-muted-foreground">
+            <RefreshCw className="w-3.5 h-3.5 animate-spin text-accent" />
             <span>Verifying Bennett credentials...</span>
           </div>
         </div>
@@ -46,22 +46,22 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requir
   // Admin access guard
   if (requireAdmin && user.role !== 'admin') {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 dark:bg-zinc-950 p-6 text-slate-900 dark:text-zinc-100">
-        <div className="w-full max-w-md p-8 rounded-2xl dash-card bg-white dark:bg-zinc-900/90 border border-slate-200 dark:border-zinc-800 text-center space-y-4 shadow-sm">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-background p-6 text-foreground">
+        <div className="w-full max-w-md p-8 rounded-2xl dash-card text-center space-y-4 shadow-sm">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10 text-destructive border border-destructive/30">
             <ShieldAlert className="w-6 h-6" />
           </div>
-          <h2 className="text-lg font-bold text-slate-900 dark:text-zinc-100">
+          <h2 className="text-lg font-bold text-foreground">
             Admin Access Required
           </h2>
-          <p className="text-xs text-slate-500 dark:text-zinc-400">
+          <p className="text-xs text-muted-foreground">
             This module is restricted to Club DCC Admins and Executives. Your current role is{' '}
-            <strong className="text-slate-900 dark:text-zinc-200 uppercase font-mono">{user.role}</strong>.
+            <strong className="text-foreground uppercase font-mono">{user.role}</strong>.
           </p>
           <div className="pt-2">
             <Link
               href="/dashboard"
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-900 dark:bg-zinc-100 hover:bg-slate-800 dark:hover:bg-zinc-200 text-white dark:text-zinc-950 text-xs font-semibold shadow-sm transition-all"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 text-xs font-semibold shadow-sm transition-colors"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
               <span>Back to Dashboard</span>

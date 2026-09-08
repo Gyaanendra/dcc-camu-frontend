@@ -8,7 +8,7 @@ import { TeamAnalyticsCharts } from '@/components/analytics/TeamAnalyticsCharts'
 import { MemberDirectoryTable } from '@/components/members/MemberDirectoryTable';
 import { PageLoader } from '@/components/layout/PageLoader';
 import { api } from '@/lib/api';
-import { BarChart3, Download, RefreshCw } from 'lucide-react';
+import { Download, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function AdminAnalyticsPage() {
@@ -67,32 +67,32 @@ export default function AdminAnalyticsPage() {
 
   return (
     <ProtectedRoute requireAdmin>
-      <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-zinc-950 text-slate-900 dark:text-zinc-100 transition-colors">
+      <div className="min-h-screen flex flex-col bg-background text-foreground transition-colors">
         <Navbar />
         <div className="flex flex-1">
           <Sidebar />
           <main className="flex-1 p-6 sm:p-8 max-w-7xl mx-auto w-full space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 rounded-2xl dash-card bg-white dark:bg-zinc-900/90 border border-slate-200 dark:border-zinc-800">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 dash-card">
               <div>
-                <div className="text-xs font-bold text-slate-400 dark:text-zinc-500 uppercase tracking-wider mb-1">
+                <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest mb-1">
                   Executive Insights
                 </div>
-                <h1 className="text-2xl font-bold text-slate-900 dark:text-zinc-100 flex items-center gap-2">
-                  <BarChart3 className="w-6 h-6 text-blue-600 dark:text-blue-400" /> Team & Member Analytics
+                <h1 className="text-xl sm:text-2xl font-bold text-foreground tracking-tight">
+                  Team & Member Analytics
                 </h1>
-                <p className="text-xs text-slate-500 dark:text-zinc-400 mt-1">Live data queried from Neon PostgreSQL database</p>
+                <p className="text-xs text-muted-foreground mt-1">Live data queried from Neon PostgreSQL database</p>
               </div>
 
               <div className="flex items-center gap-2.5">
                 <button
                   onClick={handleExportCSV}
-                  className="px-4 py-2.5 rounded-xl bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 hover:bg-slate-50 dark:hover:bg-zinc-700 text-slate-800 dark:text-zinc-200 font-semibold text-xs shadow-sm flex items-center gap-2 transition-all"
+                  className="px-4 py-2.5 rounded-xl bg-secondary border border-border text-secondary-foreground hover:bg-muted font-semibold text-xs shadow-sm flex items-center gap-2 transition-colors"
                 >
-                  <Download className="w-4 h-4 text-slate-600 dark:text-zinc-400" /> Export CSV Report
+                  <Download className="w-4 h-4 text-muted-foreground" /> Export CSV Report
                 </button>
                 <button
                   onClick={loadData}
-                  className="p-2.5 rounded-xl bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-100 hover:bg-slate-50 dark:hover:bg-zinc-700 transition-colors shadow-sm"
+                  className="p-2.5 rounded-xl bg-secondary border border-border text-muted-foreground hover:text-foreground hover:bg-muted transition-colors shadow-sm"
                   title="Refresh"
                 >
                   <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
@@ -112,7 +112,7 @@ export default function AdminAnalyticsPage() {
                 )}
 
                 <div className="space-y-3 pt-2">
-                  <h2 className="text-base font-bold text-slate-900 dark:text-zinc-100">Member Directory & Performance</h2>
+                  <h2 className="text-sm font-bold text-foreground">Member Directory & Performance</h2>
                   <MemberDirectoryTable members={users} teams={teams} onRefresh={loadData} />
                 </div>
               </>

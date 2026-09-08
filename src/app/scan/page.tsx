@@ -55,7 +55,7 @@ export default function ScanPage() {
               {/* Automatic Session Detection Status */}
               <div className="flex items-center gap-2">
                 {isLoading ? (
-                  <div className="h-8 w-44 rounded-full bg-slate-100 dark:bg-zinc-800 animate-pulse" />
+                  <div className="h-8 w-44 rounded-full bg-secondary animate-pulse" />
                 ) : activeSession ? (
                   <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-semibold">
                     <span className="relative flex h-2 w-2">

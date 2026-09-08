@@ -193,6 +193,23 @@ class ApiClient {
     return this.request('/users');
   }
 
+  // Admin: Create a new member directly
+  async createMember(memberData: {
+    name: string;
+    email: string;
+    password: string;
+    rollNumber: string;
+    position?: string;
+    teamId?: string | null;
+    role?: string;
+  }) {
+    console.log(`🛡️ [Admin] Creating new member: ${memberData.name} (${memberData.rollNumber})`);
+    return this.request('/users', {
+      method: 'POST',
+      body: JSON.stringify(memberData),
+    });
+  }
+
   async updateUser(userId: string, userData: { role?: string; position?: string; teamId?: string | null; name?: string; email?: string; rollNumber?: string; password?: string }) {
     return this.request(`/users/${userId}`, {
       method: 'PATCH',
