@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
-import { Search, Shield, User, Filter, Edit2, X } from 'lucide-react';
+import { Search, Shield, User, Filter, Edit2, X, Trash2 } from 'lucide-react';
 
 interface MemberDirectoryProps {
   members: Array<{
@@ -27,6 +27,7 @@ export const MemberDirectoryTable: React.FC<MemberDirectoryProps> = ({ members, 
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedTeamFilter, setSelectedTeamFilter] = useState('ALL');
   const [editingUser, setEditingUser] = useState<any>(null);
+  const [newName, setNewName] = useState<string>('');
   const [newRole, setNewRole] = useState<'admin' | 'user'>('user');
   const [newPosition, setNewPosition] = useState<string>('Member');
   const [newTeamId, setNewTeamId] = useState<string>('');
@@ -46,6 +47,7 @@ export const MemberDirectoryTable: React.FC<MemberDirectoryProps> = ({ members, 
 
   const handleOpenEdit = (user: any) => {
     setEditingUser(user);
+    setNewName(user.name);
     setNewRole(user.role);
     setNewPosition(user.position || 'Member');
     setNewTeamId(user.teamId || '');
@@ -56,11 +58,12 @@ export const MemberDirectoryTable: React.FC<MemberDirectoryProps> = ({ members, 
     setIsUpdating(true);
     try {
       await api.updateUserRole(editingUser.id, {
+        name: newName.trim(),
         role: newRole,
         position: newPosition,
         teamId: newTeamId || null,
       });
-      toast.success(`Updated details for ${editingUser.name}`);
+      toast.success(`Updated details for ${newName.trim() || editingUser.name}`);
       setEditingUser(null);
       if (onRefresh) onRefresh();
     } catch (error: any) {
@@ -69,6 +72,23 @@ export const MemberDirectoryTable: React.FC<MemberDirectoryProps> = ({ members, 
       setIsUpdating(false);
     }
   };
+
+  const handleDeleteUser = async () => {
+    if (!editingUser) return;
+    if (!window.confirm(`Are you sure you want to remove ${editingUser.name} (${editingUser.rollNumber})? This cannot be undone.`)) return;
+    setIsUpdating(true);
+    try {
+      await api.deleteUser(editingUser.id);
+      toast.success(`Removed ${editingUser.name}`);
+      setEditingUser(null);
+      if (onRefresh) onRefresh();
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to remove member');
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
 
   return (
     <div className="space-y-4">
@@ -190,6 +210,16 @@ export const MemberDirectoryTable: React.FC<MemberDirectoryProps> = ({ members, 
 
             <div className="space-y-3 text-xs">
               <div>
+                <label className="block font-medium text-slate-700 dark:text-zinc-300 mb-1">Full Name</label>
+                <input
+                  type="text"
+                  value={newName}
+                  onChange={(e) => setNewName(e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 text-slate-900 dark:text-zinc-100 font-medium outline-none focus:border-slate-900 dark:focus:border-zinc-600 shadow-sm"
+                />
+              </div>
+
+              <div>
                 <label className="block font-medium text-slate-700 dark:text-zinc-300 mb-1">Position / Designation</label>
                 <input
                   type="text"
@@ -228,20 +258,34 @@ export const MemberDirectoryTable: React.FC<MemberDirectoryProps> = ({ members, 
               </div>
             </div>
 
-            <div className="flex gap-2.5 pt-3 border-t border-slate-100 dark:border-zinc-800">
+            <div className="flex items-center justify-between gap-2.5 pt-3 border-t border-slate-100 dark:border-zinc-800">
               <button
-                onClick={() => setEditingUser(null)}
-                className="flex-1 py-2 rounded-lg bg-slate-100 dark:bg-zinc-800 hover:bg-slate-200 dark:hover:bg-zinc-700 text-slate-700 dark:text-zinc-300 font-medium text-xs transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleSaveRole}
+                type="button"
+                onClick={handleDeleteUser}
                 disabled={isUpdating}
-                className="flex-1 py-2 rounded-lg bg-slate-900 dark:bg-zinc-100 hover:bg-slate-800 dark:hover:bg-zinc-200 text-white dark:text-zinc-950 font-semibold text-xs shadow-sm transition-colors"
+                className="p-2 rounded-lg border border-red-200 dark:border-red-900/60 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 transition-colors"
+                title="Remove Member"
               >
-                Save Changes
+                <Trash2 className="w-4 h-4" />
               </button>
+
+              <div className="flex gap-2 flex-1 justify-end">
+                <button
+                  type="button"
+                  onClick={() => setEditingUser(null)}
+                  className="px-4 py-2 rounded-lg bg-slate-100 dark:bg-zinc-800 hover:bg-slate-200 dark:hover:bg-zinc-700 text-slate-700 dark:text-zinc-300 font-medium text-xs transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSaveRole}
+                  disabled={isUpdating}
+                  className="px-5 py-2 rounded-lg bg-slate-900 dark:bg-zinc-100 hover:bg-slate-800 dark:hover:bg-zinc-200 text-white dark:text-zinc-950 font-semibold text-xs shadow-sm transition-colors"
+                >
+                  Save Changes
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -249,3 +293,4 @@ export const MemberDirectoryTable: React.FC<MemberDirectoryProps> = ({ members, 
     </div>
   );
 };
+

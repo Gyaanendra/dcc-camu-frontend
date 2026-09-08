@@ -169,15 +169,48 @@ class ApiClient {
     return this.request('/teams');
   }
 
+  async createTeam(teamData: { name: string; code: string; description?: string; color?: string }) {
+    return this.request('/teams', {
+      method: 'POST',
+      body: JSON.stringify(teamData),
+    });
+  }
+
+  async updateTeam(teamId: string, teamData: { name?: string; code?: string; description?: string; color?: string }) {
+    return this.request(`/teams/${teamId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(teamData),
+    });
+  }
+
+  async deleteTeam(teamId: string) {
+    return this.request(`/teams/${teamId}`, {
+      method: 'DELETE',
+    });
+  }
+
   async getUsers() {
     return this.request('/users');
   }
 
-  async updateUserRole(userId: string, roleData: { role: string; position?: string; teamId?: string | null }) {
+  async updateUser(userId: string, userData: { role?: string; position?: string; teamId?: string | null; name?: string; email?: string; rollNumber?: string; password?: string }) {
+    return this.request(`/users/${userId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(userData),
+    });
+  }
+
+  async updateUserRole(userId: string, roleData: { role: string; position?: string; teamId?: string | null; name?: string }) {
     console.log(`🛡️ [Admin] Updating role/team for user ${userId}:`, roleData);
     return this.request(`/users/${userId}/role`, {
       method: 'PATCH',
       body: JSON.stringify(roleData),
+    });
+  }
+
+  async deleteUser(userId: string) {
+    return this.request(`/users/${userId}`, {
+      method: 'DELETE',
     });
   }
 }

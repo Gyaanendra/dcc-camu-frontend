@@ -217,10 +217,10 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({ activeSessionId,
       await qr.start(
         camConfig,
         {
-          fps: 15,
+          fps: 20,
           qrbox: (w: number, h: number) => {
-            const s = Math.floor(Math.min(w, h) * 0.72);
-            return { width: Math.max(200, s), height: Math.max(200, s) };
+            const s = Math.floor(Math.min(w, h) * 0.78);
+            return { width: Math.max(220, s), height: Math.max(220, s) };
           },
           aspectRatio: 1.0,
         },
