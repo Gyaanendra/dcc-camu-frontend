@@ -38,7 +38,7 @@ export const QRDisplayCard: React.FC<QRDisplayCardProps> = ({
           {type === 'session' ? 'Live Session QR' : 'Digital Member ID'}
         </span>
         <h3 className="text-sm font-bold text-foreground mt-2">{title}</h3>
-        {subtitle && <p className="text-xs text-muted-foreground mt-0.5">{subtitle}</p>}
+        {subtitle && <p className="text-sm text-muted-foreground mt-0.5">{subtitle}</p>}
       </div>
 
       {/* Clean QR Render Box (High contrast white canvas for QR code readability) */}
@@ -47,7 +47,7 @@ export const QRDisplayCard: React.FC<QRDisplayCardProps> = ({
       </div>
 
       {/* Footer Info */}
-      <div className="w-full space-y-2 mt-2 text-xs font-mono text-muted-foreground">
+      <div className="w-full space-y-2 mt-2 text-sm font-mono text-muted-foreground">
         {location && (
           <div className="flex items-center justify-center gap-1.5 text-foreground font-sans">
             <MapPin className="w-3.5 h-3.5 text-accent" />

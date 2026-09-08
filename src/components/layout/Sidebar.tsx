@@ -54,7 +54,7 @@ export const Sidebar: React.FC = () => {
                   href={item.href}
                   id={`sidebar-${item.name.toLowerCase().replace(/\s+/g, '-')}`}
                   className={cn(
-                    'flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-all',
+                    'flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-all',
                     active
                       ? 'bg-accent/10 text-accent'
                       : 'text-muted-foreground hover:text-foreground hover:bg-secondary'
@@ -85,7 +85,7 @@ export const Sidebar: React.FC = () => {
                     href={item.href}
                     id={`sidebar-admin-${item.name.toLowerCase().replace(/\s+/g, '-')}`}
                     className={cn(
-                      'flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-all',
+                      'flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-all',
                       active
                         ? 'bg-accent/10 text-accent'
                         : 'text-muted-foreground hover:text-foreground hover:bg-secondary'
@@ -104,7 +104,7 @@ export const Sidebar: React.FC = () => {
       {/* Club Assignment Card — pinned at bottom */}
       {user && (
         <div className="p-3 border-t border-border">
-          <div className="p-3 rounded-xl bg-secondary border border-border text-xs">
+          <div className="p-3 rounded-xl bg-secondary border border-border text-sm">
             <div className="text-[10px] font-semibold tracking-widest text-muted-foreground uppercase mb-1">
               Club Assignment
             </div>

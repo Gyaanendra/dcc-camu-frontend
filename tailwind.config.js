@@ -8,6 +8,10 @@ module.exports = {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ['var(--font-sans)', 'system-ui', '-apple-system', 'sans-serif'],
+        mono: ['var(--font-mono)', 'JetBrains Mono', 'Fira Code', 'monospace'],
+      },
       colors: {
         background: 'hsl(var(--background))',
         foreground: 'hsl(var(--foreground))',

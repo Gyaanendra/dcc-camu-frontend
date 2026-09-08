@@ -57,7 +57,7 @@ export const CreateSessionModal: React.FC<CreateSessionModalProps> = ({ teams, o
     <>
       <button
         onClick={() => setIsOpen(true)}
-        className="px-4 py-2.5 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 font-medium text-xs shadow-sm flex items-center gap-2 transition-colors"
+        className="px-4 py-2.5 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 font-medium text-sm shadow-sm flex items-center gap-2 transition-colors"
       >
         <Plus className="w-4 h-4" /> Create Session & QR
       </button>
@@ -72,7 +72,7 @@ export const CreateSessionModal: React.FC<CreateSessionModalProps> = ({ teams, o
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-3.5 text-xs">
+            <form onSubmit={handleSubmit} className="space-y-3.5 text-sm">
               <div>
                 <label className="block text-foreground font-medium mb-1">Session Title</label>
                 <input

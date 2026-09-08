@@ -56,7 +56,7 @@ export const CreateTeamModal: React.FC<CreateTeamModalProps> = ({ onCreated }) =
     <>
       <button
         onClick={() => setIsOpen(true)}
-        className="px-4 py-2.5 rounded-xl bg-secondary border border-border text-secondary-foreground hover:bg-muted font-medium text-xs shadow-sm flex items-center gap-2 transition-colors"
+        className="px-4 py-2.5 rounded-xl bg-secondary border border-border text-secondary-foreground hover:bg-muted font-medium text-sm shadow-sm flex items-center gap-2 transition-colors"
       >
         <Plus className="w-4 h-4" /> Create Team / Wing
       </button>
@@ -71,7 +71,7 @@ export const CreateTeamModal: React.FC<CreateTeamModalProps> = ({ onCreated }) =
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-3.5 text-xs">
+            <form onSubmit={handleSubmit} className="space-y-3.5 text-sm">
               <div>
                 <label className="block font-medium text-foreground mb-1">Team Name</label>
                 <input

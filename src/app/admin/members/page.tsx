@@ -49,7 +49,7 @@ export default function AdminMembersPage() {
                 <h1 className="text-xl sm:text-2xl font-bold text-foreground tracking-tight">
                   Member Directory
                 </h1>
-                <p className="text-xs text-muted-foreground mt-1">Manage member assignments, positions, roles, and view attendance totals</p>
+                <p className="text-sm text-muted-foreground mt-1">Manage member assignments, positions, roles, and view attendance totals</p>
               </div>
 
               <div className="flex items-center gap-2.5">

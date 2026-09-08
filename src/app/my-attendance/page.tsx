@@ -38,7 +38,7 @@ export default function MyAttendancePage() {
               <h1 className="text-xl sm:text-2xl font-bold text-foreground tracking-tight">
                 My Attendance & Streak History
               </h1>
-              <p className="text-xs text-muted-foreground mt-1">Individual check-in record for {user?.name}</p>
+              <p className="text-sm text-muted-foreground mt-1">Individual check-in record for {user?.name}</p>
             </div>
 
             {isLoading ? (
@@ -84,7 +84,7 @@ export default function MyAttendancePage() {
                         myStats.history.map((h: any) => (
                           <div
                             key={h.id}
-                            className="flex items-center justify-between p-3.5 rounded-xl bg-secondary border border-border text-xs"
+                            className="flex items-center justify-between p-3.5 rounded-xl bg-secondary border border-border text-sm"
                           >
                             <div className="flex items-center gap-3">
                               <div className="p-2 rounded-lg bg-card border border-border text-emerald-600 dark:text-emerald-400">
@@ -113,7 +113,7 @@ export default function MyAttendancePage() {
                           </div>
                         ))
                       ) : (
-                        <div className="text-center py-10 text-muted-foreground text-xs">
+                        <div className="text-center py-10 text-muted-foreground text-sm">
                           No attendance records found for your account.
                         </div>
                       )}

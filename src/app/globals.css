@@ -157,84 +157,84 @@
 
 @layer base {
   :root {
-    /* Surfaces */
-    --background:         210 20% 98%;    /* #f8fafc — page canvas */
-    --foreground:         222 47% 11%;    /* #181d26 — primary text */
+    /* Surfaces — warm cream canvas (DESIGN.md: canvas #f7f7f4) */
+    --background:         60 20% 96%;     /* #f7f7f4 — page floor */
+    --foreground:         52 12% 13%;     /* #26251e — warm ink */
 
-    /* Cards / Panels */
-    --card:               0 0% 100%;      /* #ffffff */
-    --card-foreground:    222 47% 11%;
+    /* Cards / Panels — pure white floats on cream by contrast, not shadow */
+    --card:               0 0% 100%;
+    --card-foreground:    52 12% 13%;
 
     /* Popovers / Dropdowns */
     --popover:            0 0% 100%;
-    --popover-foreground: 222 47% 11%;
+    --popover-foreground: 52 12% 13%;
 
-    /* Primary (near-black pill buttons) */
-    --primary:            222 47% 11%;
-    --primary-foreground: 210 20% 98%;
+    /* Primary — DCC Orange, the single brand voltage (#f54e00) */
+    --primary:            19 100% 48%;
+    --primary-foreground: 0 0% 100%;
 
-    /* Secondary fills */
-    --secondary:          210 20% 96%;    /* #f0f4f8 */
-    --secondary-foreground: 222 47% 11%;
+    /* Secondary fills — surface-strong / hairline (#e6e5e0) */
+    --secondary:          50 11% 89%;
+    --secondary-foreground: 52 12% 13%;
 
     /* Muted */
-    --muted:              210 20% 96%;
-    --muted-foreground:   215 16% 47%;    /* #6b7280 */
+    --muted:              50 18% 92%;     /* #efeee8 — hairline-soft */
+    --muted-foreground:   47 6% 47%;      /* #807d72 — warm gray */
 
-    /* THE accent — single interactive blue, same in both modes */
-    --accent:             217 91% 60%;    /* #3b7ff0 */
+    /* Accent — same orange; interactive/current states only */
+    --accent:             19 100% 48%;
     --accent-foreground:  0 0% 100%;
 
     /* Semantic */
-    --destructive:        0 84% 60%;
+    --destructive:        345 64% 49%;    /* #cf2d56 */
     --destructive-foreground: 0 0% 100%;
 
-    /* Chrome */
-    --border:             214 32% 91%;    /* #e2e8f0 */
-    --input:              214 32% 91%;
-    --ring:               217 91% 60%;    /* matches accent */
+    /* Chrome — hairline borders; inputs use hairline-strong (#cfcdc4) */
+    --border:             50 11% 89%;     /* #e6e5e0 */
+    --input:              49 10% 79%;     /* #cfcdc4 */
+    --ring:               19 100% 48%;    /* orange focus ring */
 
-    /* Shape */
-    --radius:             0.75rem;
+    /* Shape — 8px control radius (12px cards come from rounded-lg) */
+    --radius:             0.5rem;
   }
 
   .dark {
-    /* Surfaces */
-    --background:         240 10% 3.9%;   /* #09090b — deepest layer */
-    --foreground:         0 0% 98%;       /* #fafafa */
+    /* Warm-dark counterpart of the cream canvas (#191813) */
+    --background:         50 14% 9%;
+    --foreground:         51 26% 95%;     /* #f5f4ee — cream ink */
 
-    /* Cards — one step lighter than canvas */
-    --card:               240 8% 7%;      /* #111114 */
-    --card-foreground:    0 0% 98%;
+    /* Cards — one step lighter than canvas (#201f19) */
+    --card:               50 12% 11%;
+    --card-foreground:    51 26% 95%;
 
     /* Popovers */
-    --popover:            240 8% 7%;
-    --popover-foreground: 0 0% 98%;
+    --popover:            50 12% 11%;
+    --popover-foreground: 51 26% 95%;
 
-    /* Primary (white pill buttons in dark) */
-    --primary:            0 0% 98%;
-    --primary-foreground: 240 6% 10%;
+    /* Primary — same orange in both modes */
+    --primary:            19 100% 48%;
+    --primary-foreground: 0 0% 100%;
 
-    /* Secondary fills */
-    --secondary:          240 4% 16%;     /* #27272a */
-    --secondary-foreground: 0 0% 98%;
+    /* Secondary fills (#28271f) */
+    --secondary:          50 13% 14%;
+    --secondary-foreground: 51 26% 95%;
 
     /* Muted */
-    --muted:              240 4% 16%;
-    --muted-foreground:   240 5% 65%;     /* #9ca3af */
+    --muted:              50 10% 16%;
+    --muted-foreground:   45 8% 63%;      /* #a8a49a */
 
-    /* THE accent — unchanged across modes */
-    --accent:             217 91% 60%;    /* #3b7ff0 */
+    /* Accent — unchanged across modes */
+    --accent:             19 100% 48%;
     --accent-foreground:  0 0% 100%;
 
     /* Semantic */
-    --destructive:        0 63% 31%;
-    --destructive-foreground: 0 0% 98%;
+    --destructive:        345 70% 58%;
+    --destructive-foreground: 0 0% 100%;
 
-    /* Chrome */
-    --border:             240 4% 16%;     /* #27272a */
-    --input:              240 4% 16%;
-    --ring:               217 91% 60%;    /* keep accent ring in dark too */
+    /* Chrome (#34332a hairlines) */
+    --border:             49 11% 18%;
+    --input:              49 11% 18%;
+    --ring:               19 100% 48%;    /* keep orange ring in dark too */
   }
 }
 
@@ -250,24 +250,15 @@
   }
 }
 
-/* ─── Dashboard Card ────────────────────────────────────── */
+/* ─── Dashboard Card — hairline-only depth, never a shadow ── */
 .dash-card {
   background-color: hsl(var(--card));
   border: 1px solid hsl(var(--border));
-  border-radius: var(--radius);
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 1px 2px -1px rgba(0, 0, 0, 0.04);
-  transition: border-color 150ms ease, box-shadow 150ms ease;
-}
-.dark .dash-card {
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.40);
+  border-radius: calc(var(--radius) + 4px);
+  transition: border-color 150ms ease;
 }
 .dash-card-hover:hover {
-  border-color: hsl(var(--ring) / 0.35);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.06);
-}
-.dark .dash-card-hover:hover {
-  border-color: hsl(var(--border) / 0.8);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+  border-color: hsl(var(--input));
 }
 
 /* ─── Bottom Tab Bar (Mobile) ────────────────────────────── */

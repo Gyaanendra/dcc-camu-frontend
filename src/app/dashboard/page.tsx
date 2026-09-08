@@ -105,7 +105,7 @@ export default function DashboardPage() {
                 </h1>
 
                 {/* Position + Wing + Role pills */}
-                <div className="flex flex-wrap items-center gap-1.5 mt-2 text-xs">
+                <div className="flex flex-wrap items-center gap-1.5 mt-2 text-sm">
                   <span className="text-muted-foreground">Position:</span>
 
                   {isEditingPosition ? (
@@ -115,7 +115,7 @@ export default function DashboardPage() {
                         value={positionInput}
                         onChange={e => setPositionInput(e.target.value)}
                         onKeyDown={e => e.key === 'Enter' && handleSavePosition()}
-                        className="px-2 py-0.5 rounded-md bg-transparent border border-ring text-foreground text-xs outline-none font-medium w-32"
+                        className="px-2 py-0.5 rounded-md bg-transparent border border-ring text-foreground text-sm outline-none font-medium w-32"
                         autoFocus
                       />
                       <button
@@ -131,7 +131,7 @@ export default function DashboardPage() {
                     <button
                       onClick={() => setIsEditingPosition(true)}
                       id="edit-position-btn"
-                      className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-secondary border border-border text-foreground font-medium hover:bg-muted transition-colors text-xs"
+                      className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-secondary border border-border text-foreground font-medium hover:bg-muted transition-colors text-sm"
                       title="Click to edit position"
                     >
                       <span>{user?.position || 'Member'}</span>
@@ -153,7 +153,7 @@ export default function DashboardPage() {
                 <Link
                   href="/scan"
                   id="dashboard-scan-cta"
-                  className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-accent text-accent-foreground hover:bg-accent/90 font-semibold text-xs shadow-sm transition-all"
+                  className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-accent text-accent-foreground hover:bg-accent/90 font-semibold text-sm shadow-sm transition-all"
                 >
                   <QrCode className="w-3.5 h-3.5" />
                   <span>Instant QR Scan</span>
@@ -189,7 +189,7 @@ export default function DashboardPage() {
                     <button
                       onClick={() => handleCloseActiveSession(activeLiveSession.id)}
                       disabled={isClosingSession}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-destructive/10 border border-destructive/30 text-destructive hover:bg-destructive/20 text-xs font-semibold transition-colors"
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-destructive/10 border border-destructive/30 text-destructive hover:bg-destructive/20 text-sm font-semibold transition-colors"
                     >
                       <PowerOff className="w-3.5 h-3.5" />
                       <span>Close Live QR</span>
@@ -197,7 +197,7 @@ export default function DashboardPage() {
                   )}
                   <Link
                     href="/scan"
-                    className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold transition-colors shadow-sm"
+                    className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold transition-colors shadow-sm"
                   >
                     <span>Mark Attendance</span>
                     <ArrowRight className="w-3.5 h-3.5" />
@@ -243,7 +243,7 @@ export default function DashboardPage() {
                         <button
                           onClick={() => handleCloseActiveSession(activeLiveSession.id)}
                           disabled={isClosingSession}
-                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-destructive/10 border border-destructive/30 text-destructive hover:bg-destructive/20 text-xs font-semibold transition-colors"
+                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-destructive/10 border border-destructive/30 text-destructive hover:bg-destructive/20 text-sm font-semibold transition-colors"
                         >
                           <PowerOff className="w-3.5 h-3.5" />
                           <span>End Session</span>
@@ -256,7 +256,7 @@ export default function DashboardPage() {
                           { label: 'Location', value: activeLiveSession.location },
                           { label: 'Live Check-ins', value: `${activeLiveSession.attendeeCount} members`, highlight: true },
                         ].map(item => (
-                          <div key={item.label} className="p-3 rounded-xl bg-secondary border border-border text-xs">
+                          <div key={item.label} className="p-3 rounded-xl bg-secondary border border-border text-sm">
                             <span className="text-[10px] font-semibold tracking-widest text-muted-foreground uppercase block mb-1">
                               {item.label}
                             </span>
@@ -341,7 +341,7 @@ export default function DashboardPage() {
                       <h3 className="text-sm font-bold text-foreground">Recent Attendance History</h3>
                       <Link
                         href="/my-attendance"
-                        className="text-xs text-accent font-semibold hover:underline underline-offset-4"
+                        className="text-sm text-accent font-semibold hover:underline underline-offset-4"
                       >
                         View All
                       </Link>
@@ -356,7 +356,7 @@ export default function DashboardPage() {
                         userStats.history.map((log: any) => (
                           <div
                             key={log.id}
-                            className="flex items-center justify-between p-3.5 rounded-xl bg-secondary border border-border text-xs"
+                            className="flex items-center justify-between p-3.5 rounded-xl bg-secondary border border-border text-sm"
                           >
                             <div className="min-w-0 flex-1">
                               <div className="font-semibold text-foreground truncate">{log.sessionTitle}</div>
@@ -381,10 +381,10 @@ export default function DashboardPage() {
                         <div className="flex flex-col items-center justify-center py-10 text-center">
                           <QrCode className="w-8 h-8 text-muted-foreground mb-2" />
                           <p className="text-sm font-medium text-foreground">No records yet</p>
-                          <p className="text-xs text-muted-foreground mt-0.5">Scan a session QR code to record attendance</p>
+                          <p className="text-sm text-muted-foreground mt-0.5">Scan a session QR code to record attendance</p>
                           <Link
                             href="/scan"
-                            className="mt-3 flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-accent text-accent-foreground hover:bg-accent/90 text-xs font-semibold transition-all shadow-sm"
+                            className="mt-3 flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-accent text-accent-foreground hover:bg-accent/90 text-sm font-semibold transition-all shadow-sm"
                           >
                             <QrCode className="w-3.5 h-3.5" />
                             Scan Now

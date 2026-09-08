@@ -102,7 +102,7 @@ export const MemberDirectoryTable: React.FC<MemberDirectoryProps> = ({ members, 
             placeholder="Search member, roll, position..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-9 pr-3 py-2 rounded-lg bg-transparent border border-input text-foreground text-xs placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring transition-all shadow-sm"
+            className="w-full pl-9 pr-3 py-2 rounded-lg bg-transparent border border-input text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring transition-all shadow-sm"
           />
         </div>
 
@@ -112,7 +112,7 @@ export const MemberDirectoryTable: React.FC<MemberDirectoryProps> = ({ members, 
           <select
             value={selectedTeamFilter}
             onChange={(e) => setSelectedTeamFilter(e.target.value)}
-            className="px-3 py-2 rounded-lg bg-transparent border border-input text-foreground focus:outline-none focus:ring-1 focus:ring-ring text-xs shadow-sm"
+            className="px-3 py-2 rounded-lg bg-transparent border border-input text-foreground focus:outline-none focus:ring-1 focus:ring-ring text-sm shadow-sm"
           >
             <option value="ALL">All Club Wings</option>
             {teams.map((t) => (
@@ -127,7 +127,7 @@ export const MemberDirectoryTable: React.FC<MemberDirectoryProps> = ({ members, 
       {/* Directory Table */}
       <div className="dash-card overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
+          <table className="w-full text-left text-sm">
             <thead className="bg-secondary/60 text-muted-foreground border-b border-border font-medium">
               <tr>
                 <th className="p-4 font-semibold">Member</th>
@@ -144,7 +144,7 @@ export const MemberDirectoryTable: React.FC<MemberDirectoryProps> = ({ members, 
                 <tr key={member.id} className="hover:bg-secondary/50 transition-colors">
                   <td className="p-4">
                     <div className="flex items-center gap-3">
-                      <div className="h-8 w-8 rounded-full bg-secondary border border-border flex items-center justify-center font-bold text-foreground text-xs">
+                      <div className="h-8 w-8 rounded-full bg-secondary border border-border flex items-center justify-center font-bold text-foreground text-sm">
                         {member.avatarUrl ? (
                           <img src={member.avatarUrl} alt={member.name} className="h-full w-full rounded-full object-cover" />
                         ) : (
@@ -204,11 +204,11 @@ export const MemberDirectoryTable: React.FC<MemberDirectoryProps> = ({ members, 
               </button>
             </div>
 
-            <p className="text-xs text-muted-foreground">
+            <p className="text-sm text-muted-foreground">
               Updating details for <strong className="text-foreground">{editingUser.name}</strong> ({editingUser.rollNumber})
             </p>
 
-            <div className="space-y-3 text-xs">
+            <div className="space-y-3 text-sm">
               <div>
                 <label className="block font-medium text-foreground mb-1">Full Name</label>
                 <input
@@ -273,7 +273,7 @@ export const MemberDirectoryTable: React.FC<MemberDirectoryProps> = ({ members, 
                 <button
                   type="button"
                   onClick={() => setEditingUser(null)}
-                  className="px-4 py-2 rounded-lg bg-secondary text-secondary-foreground hover:bg-secondary/70 font-medium text-xs transition-colors"
+                  className="px-4 py-2 rounded-lg bg-secondary text-secondary-foreground hover:bg-secondary/70 font-medium text-sm transition-colors"
                 >
                   Cancel
                 </button>
@@ -281,7 +281,7 @@ export const MemberDirectoryTable: React.FC<MemberDirectoryProps> = ({ members, 
                   type="button"
                   onClick={handleSaveRole}
                   disabled={isUpdating}
-                  className="px-5 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 font-semibold text-xs shadow-sm transition-colors disabled:opacity-50"
+                  className="px-5 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 font-semibold text-sm shadow-sm transition-colors disabled:opacity-50"
                 >
                   Save Changes
                 </button>

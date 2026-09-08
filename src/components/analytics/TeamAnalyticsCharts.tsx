@@ -136,14 +136,14 @@ export const TeamAnalyticsCharts: React.FC<TeamAnalyticsProps> = ({ teamAnalytic
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-border">
             <div>
               <h3 className="text-sm font-bold text-foreground">Wing Attendance Performance</h3>
-              <p className="text-xs text-muted-foreground">Attendance percentage grouped by assigned wing</p>
+              <p className="text-sm text-muted-foreground">Attendance percentage grouped by assigned wing</p>
             </div>
 
             {/* View Switcher Tabs */}
             <div className="flex items-center p-1 bg-secondary rounded-xl gap-1">
               <button
                 onClick={() => setChartView('bar')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
+                className={`px-3 py-1.5 rounded-lg text-sm font-semibold flex items-center gap-1.5 transition-all ${
                   chartView === 'bar'
                     ? 'bg-card text-foreground shadow-sm'
                     : 'text-muted-foreground hover:text-foreground'
@@ -153,7 +153,7 @@ export const TeamAnalyticsCharts: React.FC<TeamAnalyticsProps> = ({ teamAnalytic
               </button>
               <button
                 onClick={() => setChartView('pie')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
+                className={`px-3 py-1.5 rounded-lg text-sm font-semibold flex items-center gap-1.5 transition-all ${
                   chartView === 'pie'
                     ? 'bg-card text-foreground shadow-sm'
                     : 'text-muted-foreground hover:text-foreground'
@@ -187,7 +187,7 @@ export const TeamAnalyticsCharts: React.FC<TeamAnalyticsProps> = ({ teamAnalytic
               ) : (
                 <div className="h-full flex flex-col items-center justify-center text-center p-6">
                   <BarChart3 className="w-8 h-8 text-muted-foreground mb-2" />
-                  <p className="text-xs font-semibold text-foreground">No Wing Data Recorded Yet</p>
+                  <p className="text-sm font-semibold text-foreground">No Wing Data Recorded Yet</p>
                   <p className="text-[11px] text-muted-foreground mt-0.5">
                     Create club wings and record member attendance to visualize live performance.
                   </p>
@@ -216,7 +216,7 @@ export const TeamAnalyticsCharts: React.FC<TeamAnalyticsProps> = ({ teamAnalytic
             ) : (
               <div className="h-full flex flex-col items-center justify-center text-center p-6">
                 <PieIcon className="w-8 h-8 text-muted-foreground mb-2" />
-                <p className="text-xs font-semibold text-foreground">No Attendance Check-ins Yet</p>
+                <p className="text-sm font-semibold text-foreground">No Attendance Check-ins Yet</p>
                 <p className="text-[11px] text-muted-foreground mt-0.5">
                   Check-in distributions (On-time vs Late) will display once members scan session QR codes.
                 </p>
@@ -231,7 +231,7 @@ export const TeamAnalyticsCharts: React.FC<TeamAnalyticsProps> = ({ teamAnalytic
             <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
               <Trophy className="w-4 h-4 text-amber-500" /> Wing Standings
             </h3>
-            <span className="text-xs text-muted-foreground font-medium">Rankings</span>
+            <span className="text-sm text-muted-foreground font-medium">Rankings</span>
           </div>
 
           <div className="space-y-2.5">
@@ -243,7 +243,7 @@ export const TeamAnalyticsCharts: React.FC<TeamAnalyticsProps> = ({ teamAnalytic
                 >
                   <div className="flex items-center gap-3">
                     <div
-                      className={`flex h-6 w-6 items-center justify-center rounded-md text-xs font-bold tabular-nums ${
+                      className={`flex h-6 w-6 items-center justify-center rounded-md text-sm font-bold tabular-nums ${
                         idx === 0
                           ? 'bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300'
                           : idx === 1
@@ -254,13 +254,13 @@ export const TeamAnalyticsCharts: React.FC<TeamAnalyticsProps> = ({ teamAnalytic
                       {idx + 1}
                     </div>
                     <div>
-                      <div className="text-xs font-semibold text-foreground">{team.teamName}</div>
+                      <div className="text-sm font-semibold text-foreground">{team.teamName}</div>
                       <div className="text-[11px] text-muted-foreground">{team.memberCount} members</div>
                     </div>
                   </div>
 
                   <div className="text-right">
-                    <div className="text-xs font-bold text-foreground tabular-nums">{team.attendanceRate}%</div>
+                    <div className="text-sm font-bold text-foreground tabular-nums">{team.attendanceRate}%</div>
                     <div className="text-[10px] text-muted-foreground tabular-nums">
                       {team.totalAttendanceCount ?? (team.totalPresent + team.totalLate)} logs
                     </div>
@@ -268,7 +268,7 @@ export const TeamAnalyticsCharts: React.FC<TeamAnalyticsProps> = ({ teamAnalytic
                 </div>
               ))
             ) : (
-              <div className="text-center py-12 text-muted-foreground text-xs">
+              <div className="text-center py-12 text-muted-foreground text-sm">
                 No club wings registered yet.
               </div>
             )}

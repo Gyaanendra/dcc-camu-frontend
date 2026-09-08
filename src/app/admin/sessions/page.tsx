@@ -87,7 +87,7 @@ export default function AdminSessionsPage() {
                 <h1 className="text-xl sm:text-2xl font-bold text-foreground tracking-tight">
                   Sessions & Live QR
                 </h1>
-                <p className="text-xs text-muted-foreground mt-1">Schedule sessions, project dynamic QR codes, and monitor live check-ins</p>
+                <p className="text-sm text-muted-foreground mt-1">Schedule sessions, project dynamic QR codes, and monitor live check-ins</p>
               </div>
 
               <div className="flex items-center gap-2">
@@ -154,7 +154,7 @@ export default function AdminSessionsPage() {
                         </button>
                       ))
                     ) : (
-                      <div className="p-8 text-center text-xs text-muted-foreground bg-card rounded-xl border border-border">
+                      <div className="p-8 text-center text-sm text-muted-foreground bg-card rounded-xl border border-border">
                         No sessions created yet. Click "Create New Session" above to get started.
                       </div>
                     )}
@@ -171,7 +171,7 @@ export default function AdminSessionsPage() {
                         <Calendar className="w-5 h-5" />
                       </div>
                       <div>
-                        <div className="text-xs font-bold text-foreground">{selectedSession.title}</div>
+                        <div className="text-sm font-bold text-foreground">{selectedSession.title}</div>
                         <div className="text-[11px] text-muted-foreground">Status: <strong className={selectedSession.isActive === 'true' ? 'text-emerald-600 dark:text-emerald-400' : 'text-muted-foreground'}>{selectedSession.isActive === 'true' ? 'Active Live QR' : 'Session Ended / QR Closed'}</strong></div>
                       </div>
                     </div>
@@ -179,7 +179,7 @@ export default function AdminSessionsPage() {
                     <button
                       onClick={handleToggleSessionStatus}
                       disabled={isUpdatingStatus}
-                      className={`px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 transition-colors shadow-sm ${
+                      className={`px-3.5 py-2 rounded-xl text-sm font-semibold flex items-center gap-2 transition-colors shadow-sm ${
                         selectedSession.isActive === 'true'
                           ? 'bg-destructive/10 border border-destructive/30 text-destructive hover:bg-destructive/20'
                           : 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20'
@@ -210,7 +210,7 @@ export default function AdminSessionsPage() {
                   <div className="p-6 dash-card space-y-4">
                     <div className="flex items-center justify-between pb-3 border-b border-border">
                       <h3 className="text-sm font-bold text-foreground">Real-time Attendance Feed</h3>
-                      <span className="px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-bold tabular-nums">
+                      <span className="px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-sm font-bold tabular-nums">
                         {sessionDetail?.attendeeCount || 0} Checked In
                       </span>
                     </div>
@@ -220,10 +220,10 @@ export default function AdminSessionsPage() {
                         sessionDetail.attendees.map((a: any) => (
                           <div
                             key={a.id}
-                            className="flex items-center justify-between p-3 rounded-xl bg-secondary border border-border text-xs"
+                            className="flex items-center justify-between p-3 rounded-xl bg-secondary border border-border text-sm"
                           >
                             <div className="flex items-center gap-3">
-                              <div className="h-8 w-8 rounded-full bg-card border border-border flex items-center justify-center font-bold text-foreground text-xs">
+                              <div className="h-8 w-8 rounded-full bg-card border border-border flex items-center justify-center font-bold text-foreground text-sm">
                                 {a.name.charAt(0)}
                               </div>
                               <div>
@@ -249,7 +249,7 @@ export default function AdminSessionsPage() {
                           </div>
                         ))
                       ) : (
-                        <div className="text-center py-10 text-muted-foreground text-xs">
+                        <div className="text-center py-10 text-muted-foreground text-sm">
                           No members have checked in for this session yet.
                         </div>
                       )}
@@ -257,7 +257,7 @@ export default function AdminSessionsPage() {
                   </div>
                 </>
               ) : (
-                <div className="p-12 text-center text-muted-foreground text-xs dash-card">
+                <div className="p-12 text-center text-muted-foreground text-sm dash-card">
                   Select a session to view QR code.
                 </div>
               )}

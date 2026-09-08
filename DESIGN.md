@@ -1,561 +1,240 @@
-# DESIGN.md — dcc-camu-frontend
+---
+name: Club DCC Camu — Attendance & Analytics Portal
+description: A warmly-editorial product UI — cream canvas, warm ink, one scarce orange accent, hairline-only depth, Inter + JetBrains Mono — adapted from the Cursor brand register to a product register with a warm-dark counterpart.
 
-> **Source of Truth** for visual design decisions.  
-> Derived from the Shadcn UI **Maia / Inter** preset (reference screenshots) and the Impeccable `distill` + `typeset` disciplines.  
-> Every token, pattern, and rule here must be respected when writing or reviewing UI code.
+colors:
+  primary: "#f54e00"
+  primary-active: "#d04200"
+  on-primary: "#ffffff"
+  ink: "#26251e"
+  body: "#5a5852"
+  muted: "#807d72"
+  muted-soft: "#a09c92"
+  canvas: "#f7f7f4"
+  canvas-soft: "#fafaf7"
+  surface-card: "#ffffff"
+  surface-strong: "#e6e5e0"
+  hairline: "#e6e5e0"
+  hairline-soft: "#efeee8"
+  hairline-strong: "#cfcdc4"
+  semantic-success: "#1f8a65"
+  semantic-error: "#cf2d56"
+  semantic-warning: "#b45309"
+  semantic-live: "#1f8a65"
+  dark-canvas: "#191813"
+  dark-card: "#201f19"
+  dark-ink: "#f5f4ee"
+  dark-body: "#c9c6bc"
+  dark-muted: "#a8a49a"
+  dark-secondary: "#28271f"
+  dark-hairline: "#34332a"
 
+typography:
+  page-title:
+    fontFamily: "var(--font-sans), system-ui, sans-serif"
+    fontSize: 24px
+    fontWeight: 600
+    lineHeight: 1.25
+    letterSpacing: "-0.01em"
+  section-title:
+    fontFamily: "var(--font-sans), system-ui, sans-serif"
+    fontSize: 16px
+    fontWeight: 600
+    lineHeight: 1.4
+    letterSpacing: 0
+  body-md:
+    fontFamily: "var(--font-sans), system-ui, sans-serif"
+    fontSize: 14px
+    fontWeight: 400
+    lineHeight: 1.5
+    letterSpacing: 0
+  body-lg:
+    fontFamily: "var(--font-sans), system-ui, sans-serif"
+    fontSize: 16px
+    fontWeight: 400
+    lineHeight: 1.5
+    letterSpacing: 0
+  caption:
+    fontFamily: "var(--font-sans), system-ui, sans-serif"
+    fontSize: 12px
+    fontWeight: 400
+    lineHeight: 1.4
+    letterSpacing: 0
+  kicker:
+    fontFamily: "var(--font-sans), system-ui, sans-serif"
+    fontSize: 11px
+    fontWeight: 600
+    lineHeight: 1.4
+    letterSpacing: 0.08em
+    textTransform: uppercase
+  button:
+    fontFamily: "var(--font-sans), system-ui, sans-serif"
+    fontSize: 14px
+    fontWeight: 500
+    lineHeight: 1
+    letterSpacing: 0
+  nav-link:
+    fontFamily: "var(--font-sans), system-ui, sans-serif"
+    fontSize: 14px
+    fontWeight: 500
+    lineHeight: 1.4
+    letterSpacing: 0
+  mono:
+    fontFamily: "var(--font-mono), 'JetBrains Mono', monospace"
+    fontSize: 13px
+    fontWeight: 400
+    lineHeight: 1.5
+    letterSpacing: 0
+  metric:
+    fontFamily: "var(--font-sans), system-ui, sans-serif"
+    fontSize: 24px
+    fontWeight: 600
+    lineHeight: 1.2
+    letterSpacing: "-0.01em"
+
+rounded:
+  xs: 4px
+  sm: 6px
+  md: 8px
+  lg: 12px
+  pill: 9999px
+
+spacing:
+  xs: 8px
+  sm: 12px
+  base: 16px
+  md: 20px
+  lg: 24px
+  xl: 32px
+  section: 48px
+
+components:
+  button-primary:
+    backgroundColor: "{colors.primary}"
+    textColor: "{colors.on-primary}"
+    typography: "{typography.button}"
+    rounded: "{rounded.md}"
+    height: 40px
+    padding: 10px 18px
+  button-primary-active:
+    backgroundColor: "{colors.primary-active}"
+    textColor: "{colors.on-primary}"
+    rounded: "{rounded.md}"
+  button-secondary:
+    backgroundColor: "{colors.surface-card}"
+    textColor: "{colors.ink}"
+    typography: "{typography.button}"
+    rounded: "{rounded.md}"
+    height: 40px
+    padding: 9px 17px
+  button-download:
+    backgroundColor: "{colors.ink}"
+    textColor: "{colors.canvas}"
+    typography: "{typography.button}"
+    rounded: "{rounded.md}"
+    height: 44px
+    padding: 12px 20px
+  text-input:
+    backgroundColor: "{colors.surface-card}"
+    textColor: "{colors.ink}"
+    typography: "{typography.body-md}"
+    rounded: "{rounded.md}"
+    height: 40px
+    padding: 10px 14px
+  card:
+    backgroundColor: "{colors.surface-card}"
+    textColor: "{colors.ink}"
+    rounded: "{rounded.lg}"
+    padding: 24px
+  badge-pill:
+    backgroundColor: "{colors.surface-strong}"
+    textColor: "{colors.ink}"
+    typography: "{typography.kicker}"
+    rounded: "{rounded.pill}"
+    padding: 4px 10px
+  top-nav:
+    backgroundColor: "{colors.canvas}"
+    textColor: "{colors.ink}"
+    typography: "{typography.nav-link}"
+    height: 56px
 ---
 
-## 0. Philosophy
-
-| Principle | Rule |
-|-----------|------|
-| **Minimalist** | Only what informs. Remove decoration that does not carry data. |
-| **Data-dense** | Cards carry real numbers, labels, and status — not illustrations. |
-| **One accent** | A single blue (`--accent`) is the only interactive color. Everything else is neutral. |
-| **No gradients on surfaces** | Surfaces are flat. Gradients belong only to chart fills or hero illustrations. |
-| **System-level consistency** | Light and dark are equal citizens — every component must look correct in both. |
-
----
-
-## 1. Color Tokens (CSS Variables — HSL)
-
-All values are defined as CSS custom properties in `src/app/globals.css` and consumed via Tailwind `hsl(var(--*))` mapping.
-
-### 1.1 Light Mode (`:root`)
-
-```css
-:root {
-  /* Surfaces */
-  --background:        210 20% 98%;   /* #f8fafc  — page canvas */
-  --foreground:        222 47% 11%;   /* #181d26  — primary text */
-
-  /* Cards / Panels */
-  --card:              0 0% 100%;     /* #ffffff  — card surface */
-  --card-foreground:   222 47% 11%;
-
-  /* Popovers / Dropdowns */
-  --popover:           0 0% 100%;
-  --popover-foreground: 222 47% 11%;
-
-  /* Primary (non-accent actions, e.g. dark pill buttons) */
-  --primary:           222 47% 11%;   /* near-black */
-  --primary-foreground: 210 20% 98%;
-
-  /* Secondary (ghost-like fills) */
-  --secondary:         210 20% 96%;   /* #f0f4f8 */
-  --secondary-foreground: 222 47% 11%;
-
-  /* Muted (disabled, placeholder, helper text) */
-  --muted:             210 20% 96%;
-  --muted-foreground:  215 16% 47%;   /* #6b7280-ish */
-
-  /* THE accent — interactive blue */
-  --accent:            217 91% 60%;   /* #3b7ff0 */
-  --accent-foreground: 0 0% 100%;
-
-  /* Semantic */
-  --destructive:       0 84% 60%;
-  --destructive-foreground: 0 0% 100%;
-
-  /* Chrome */
-  --border:            214 32% 91%;   /* #e2e8f0 */
-  --input:             214 32% 91%;
-  --ring:              217 91% 60%;   /* matches accent */
-
-  /* Shape */
-  --radius:            0.75rem;       /* 12px — used for all cards/inputs/buttons */
-}
-```
-
-### 1.2 Dark Mode (`.dark`)
-
-```css
-.dark {
-  /* Surfaces */
-  --background:        240 10% 3.9%;  /* #09090b  — deepest layer */
-  --foreground:        0 0% 98%;      /* #fafafa  */
-
-  /* Cards — one step lighter than canvas */
-  --card:              240 8% 7%;     /* #111114  */
-  --card-foreground:   0 0% 98%;
-
-  /* Popovers — match card */
-  --popover:           240 8% 7%;
-  --popover-foreground: 0 0% 98%;
-
-  /* Primary (white pill buttons in dark mode) */
-  --primary:           0 0% 98%;
-  --primary-foreground: 240 6% 10%;
-
-  /* Secondary fills */
-  --secondary:         240 4% 16%;    /* #27272a */
-  --secondary-foreground: 0 0% 98%;
-
-  /* Muted */
-  --muted:             240 4% 16%;
-  --muted-foreground:  240 5% 65%;    /* #9ca3af-ish */
-
-  /* Accent — same blue, unchanged across modes */
-  --accent:            217 91% 60%;   /* #3b7ff0 */
-  --accent-foreground: 0 0% 100%;
-
-  /* Semantic */
-  --destructive:       0 63% 31%;
-  --destructive-foreground: 0 0% 98%;
-
-  /* Chrome */
-  --border:            240 4% 16%;    /* #27272a */
-  --input:             240 4% 16%;
-  --ring:              240 5% 84%;
-
-  /* Shape unchanged */
-  --radius:            0.75rem;
-}
-```
-
-### 1.3 Named Semantic Palette (Quick Reference)
-
-| Token | Light | Dark | Usage |
-|-------|-------|------|-------|
-| `--background` | `#f8fafc` | `#09090b` | Page body bg |
-| `--card` | `#ffffff` | `#111114` | All card/panel surfaces |
-| `--border` | `#e2e8f0` | `#27272a` | Dividers, outlines, input rings |
-| `--muted-foreground` | `#6b7280` | `#9ca3af` | Labels, helper text, secondary metadata |
-| `--accent` | `#3b7ff0` | `#3b7ff0` | CTA buttons, links, toggles, progress fills |
-| `--foreground` | `#181d26` | `#fafafa` | Body copy, headings |
-| `--destructive` | `#ef4444` | `#7f1d1d` | Error states, danger alerts |
-
----
-
-## 2. Typography
-
-### 2.1 Font Stack
-
-| Role | Family | Weight | Size |
-|------|--------|--------|------|
-| **UI / Body** | `Inter`, system-ui, sans-serif | 400 | `14px` / `text-sm` |
-| **Headings** | `Inter` | 600–700 | Scale below |
-| **Monospace** | `JetBrains Mono`, `Fira Code`, monospace | 400 | `text-xs` |
-| **Data / Figures** | `Inter` | 600–700 | Oversize (`text-2xl`–`text-4xl`) |
-
-> Load via `next/font/google`: `Inter({ subsets: ['latin'], variable: '--font-inter' })`
-
-### 2.2 Type Scale
-
-```
-text-xs    → 12px / leading-4   — badge labels, table meta, timestamps
-text-sm    → 14px / leading-5   — body copy, form labels, card body
-text-base  → 16px / leading-6   — section intros, modal body
-text-lg    → 18px / leading-7   — card titles, sidebar section headers
-text-xl    → 20px / leading-7   — page sub-headings
-text-2xl   → 24px / leading-8   — metric values (KPI numbers)
-text-3xl   → 30px / leading-9   — hero metric (e.g. $420,000)
-text-4xl+  → 36px+              — reserved for landing / onboarding
-```
-
-### 2.3 Rules
-
-- **Never** use `font-bold` on muted/secondary text.
-- **Number emphasis**: large metric figures use `font-semibold` or `font-bold`, `tabular-nums`, `tracking-tight`.
-- **Label pattern**: `text-xs text-muted-foreground uppercase tracking-wide font-medium` — for card section labels.
-- **Line-height**: Always use Tailwind's paired leading class (`leading-5` for `text-sm`, etc.).
-
----
-
-## 3. Spacing & Layout
-
-### 3.1 Base Grid
-
-| Context | Value |
-|---------|-------|
-| Page padding (mobile) | `px-4 py-4` |
-| Page padding (desktop) | `px-6 py-6` |
-| Card inner padding | `p-5` or `p-6` |
-| Between card grid rows/cols | `gap-4` |
-| Sidebar width | `240px` (collapsible to `56px`) |
-| Top navbar height | `56px` |
-
-### 3.2 Dashboard Grid
-
-```tsx
-<div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-  {/* Cards */}
-</div>
-```
-
-Full-width widgets span: `className="col-span-full"` or `className="md:col-span-2"`
-
-### 3.3 Vertical Rhythm
-
-- Card header → card body gap: `mt-3` or `space-y-3`
-- Between label and value: `mt-0.5`
-- Between sections inside a card: `mt-4 border-t border-border pt-4`
-
----
-
-## 4. Shape & Elevation
-
-### 4.1 Border Radius
-
-| Element | Class | Value |
-|---------|-------|-------|
-| Card / Panel | `rounded-xl` | `0.75rem` |
-| Input / Select | `rounded-lg` | ~`0.625rem` |
-| Button (default) | `rounded-lg` | `0.625rem` |
-| Button (pill) | `rounded-full` | |
-| Badge | `rounded-full` | |
-| Avatar | `rounded-full` | |
-| Chart bars | `rounded-sm` | `2px` |
-
-### 4.2 Shadows (Elevation Layers)
-
-```
-Layer 0 — Page canvas      : no shadow
-Layer 1 — Card (resting)   : shadow-sm   → 0 1px 3px rgba(0,0,0,0.05)
-Layer 2 — Card (hover)     : shadow-md   → 0 4px 6px rgba(0,0,0,0.07)
-Layer 3 — Dropdown/Popover : shadow-lg   → 0 10px 24px rgba(0,0,0,0.10)
-Layer 4 — Modal/Dialog     : shadow-xl
-```
-
-Dark mode: multiply alpha × 3–4× for same perceived depth.
-
----
-
-## 5. Component Patterns
-
-### 5.1 Card (`.dash-card`)
-
-The primary building block. Every dashboard widget lives inside one.
-
-```tsx
-<div className="dash-card p-5">
-  <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">
-    Section Label
-  </p>
-  <h2 className="mt-1 text-2xl font-bold tracking-tight tabular-nums">
-    $420,000
-  </h2>
-  <p className="text-xs text-muted-foreground mt-0.5">85% achieved</p>
-</div>
-```
-
-```css
-/* globals.css */
-.dash-card {
-  background-color: hsl(var(--card));
-  border: 1px solid hsl(var(--border));
-  border-radius: var(--radius);
-  box-shadow: 0 1px 3px 0 rgba(0,0,0,0.04);
-}
-.dark .dash-card { box-shadow: 0 1px 3px 0 rgba(0,0,0,0.40); }
-```
-
-### 5.2 Stat / KPI Card
-
-```
-┌──────────────────────────────┐
-│ CARD BALANCE          label  │
-│ US$12.94             value   │
-│ US$11,337.06 Available  sub  │
-└──────────────────────────────┘
-```
-- Label: `text-xs text-muted-foreground`
-- Value: `text-2xl font-bold tabular-nums`
-- Sub: `text-xs text-muted-foreground`
-
-### 5.3 Button Hierarchy
-
-| Variant | Usage | Appearance |
-|---------|-------|------------|
-| **Primary** | Single main CTA per card | `bg-accent text-white rounded-lg` |
-| **Secondary** | Secondary action | `bg-secondary text-foreground` |
-| **Outline** | Tertiary / toggleable | `border border-border bg-transparent` |
-| **Ghost** | Nav items, icon buttons | `hover:bg-secondary` |
-| **Destructive** | Delete / archive | `bg-destructive text-white` |
-
-> Primary buttons: solid `--accent` blue, `text-white`, `rounded-lg`, `h-9 px-4`, `text-sm font-medium`.
-
-### 5.4 Input / Form Fields
-
-```tsx
-<div className="space-y-1.5">
-  <label className="text-sm font-medium text-foreground">Email Address</label>
-  <input
-    className="w-full h-9 rounded-lg border border-input bg-transparent
-               px-3 text-sm text-foreground placeholder:text-muted-foreground
-               focus:outline-none focus:ring-1 focus:ring-ring transition"
-  />
-</div>
-```
-
-- Background: **transparent** (not double-layered white-on-white).
-- Focus ring: `ring-1 ring-ring` using `--ring`.
-
-### 5.5 Badge
-
-```tsx
-{/* Accent / info */}
-<span className="inline-flex items-center rounded-full px-2.5 py-0.5
-                 text-xs font-medium bg-accent/10 text-accent">+10%</span>
-
-{/* Positive delta */}
-<span className="text-xs font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 
-                 rounded-full px-2.5 py-0.5">+$4,200</span>
-
-{/* Negative delta */}
-<span className="text-xs font-medium text-red-500 bg-red-500/10 
-                 rounded-full px-2.5 py-0.5">-$6.50</span>
-```
-
-### 5.6 Progress Bar
-
-```tsx
-<div className="w-full h-1.5 rounded-full bg-secondary">
-  <div className="h-1.5 rounded-full bg-accent transition-all" style={{ width: '85%' }} />
-</div>
-```
-- Track: `bg-secondary` · Fill: `bg-accent` · Height: `h-1.5` standard / `h-2` prominent
-
-### 5.7 Bar Chart (Muted Histogram)
-
-Visual rules (from images — contribution history, power usage, sleep report):
-- Bar fill: `hsl(var(--muted))` in both modes — neutral grey, NOT accent blue.
-- Hover/active bar: `hsl(var(--accent))` or slightly brighter muted.
-- Bar width: ~70% of column; gap ~30%.
-- Labels below: `text-xs text-muted-foreground`
-- No axis lines, no gridlines — bars only.
-- X-axis: 3-letter month or hour (`Dec`, `Jan`, `6a`, `8a`).
-
-### 5.8 Donut / Ring Chart
-
-- Stroke: accent blue for active segment. Track: `hsl(var(--border))`.
-- Center text: `text-2xl font-bold`
-- Legend: `text-xs text-muted-foreground` with colored dot
-
-### 5.9 Transaction / List Row
-
-```tsx
-<div className="flex items-center justify-between py-3 border-b border-border last:border-0">
-  <div className="flex items-center gap-3">
-    <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center">
-      <Icon className="w-4 h-4 text-muted-foreground" />
-    </div>
-    <div>
-      <p className="text-sm font-medium">Blue Bottle Coffee</p>
-      <p className="text-xs text-muted-foreground">Food & Drink · Today, 10:24 AM</p>
-    </div>
-  </div>
-  <span className="text-sm font-medium tabular-nums text-red-500">-$6.50</span>
-</div>
-```
-
-### 5.10 Toggle / Switch
-
-- Use Shadcn `<Switch />`. Thumb: white. Track off: `bg-muted`. Track on: `bg-accent`.
-
-### 5.11 Select / Dropdown
-
-```tsx
-<Select>
-  <SelectTrigger className="w-full h-9 rounded-lg border-input text-sm" />
-  <SelectContent className="rounded-xl border-border bg-card shadow-lg" />
-</Select>
-```
-
-### 5.12 Radio Group (Pill Selector)
-
-Observed in "Receiving Method" — bank transfer / PayPal:
-
-```tsx
-<label className={cn(
-  "flex-1 flex flex-col gap-0.5 rounded-lg border p-3 cursor-pointer transition",
-  selected === opt.value
-    ? "border-accent bg-accent/5"
-    : "border-border bg-transparent hover:bg-secondary"
-)}>
-  <span className="text-sm font-medium">{opt.label}</span>
-  <span className="text-xs text-muted-foreground">{opt.sublabel}</span>
-</label>
-```
-
-### 5.13 Slider
-
-- Track: `bg-secondary h-1 rounded-full` · Range fill: `bg-accent` · Thumb: `white ring-2 ring-accent`
-
-### 5.14 Danger Zone
-
-```tsx
-<div className="flex items-center justify-between rounded-lg border border-destructive/30
-                bg-destructive/5 px-4 py-3">
-  <div className="flex items-center gap-2">
-    <AlertCircle className="w-4 h-4 text-destructive" />
-    <div>
-      <p className="text-sm font-medium text-destructive">Danger Zone</p>
-      <p className="text-xs text-muted-foreground">Archive account and remove...</p>
-    </div>
-  </div>
-  <ChevronRight className="w-4 h-4 text-muted-foreground" />
-</div>
-```
-
-### 5.15 Empty State
-
-```tsx
-<div className="flex flex-col items-center justify-center py-12 text-center">
-  <Icon className="w-10 h-10 text-muted-foreground mb-3" />
-  <p className="text-sm font-medium">No items found</p>
-  <p className="text-xs text-muted-foreground mt-1">Description of the empty state</p>
-  <Button size="sm" className="mt-4">Create</Button>
-</div>
-```
-
----
-
-## 6. Navigation & Layout Shell
-
-### 6.1 Sidebar
-
-| Property | Value |
-|----------|-------|
-| Width | `240px` (collapsed: `56px` icon-only) |
-| Background | `hsl(var(--card))` |
-| Border-right | `1px solid hsl(var(--border))` |
-| Active item bg | `hsl(var(--accent)/0.10)` |
-| Active item text | `text-accent` |
-| Inactive item | `text-muted-foreground hover:text-foreground hover:bg-secondary` |
-| Section label | `text-xs uppercase tracking-wide text-muted-foreground px-3 mb-1` |
-
-### 6.2 Top Navbar
-
-| Property | Value |
-|----------|-------|
-| Height | `56px` |
-| Background | `hsl(var(--background))` + `border-b border-border` |
-| Search | Full-width, `rounded-full`, `bg-secondary` |
-| Theme toggle | Icon-only ghost button |
-| Actions | Avatar + notification bell |
-
----
-
-## 7. Icons
-
-- **Library**: `lucide-react` (declared in `components.json`)
-- **Size**: `w-4 h-4` inline · `w-5 h-5` nav · `w-8 h-8` empty state
-- **Color**: Inherit from text context; `text-muted-foreground` for decorative
-- **Never** use filled/colored icon sets — keep to lucide's stroke style
-
----
-
-## 8. Motion & Interaction
-
-| Interaction | Duration | Easing |
-|-------------|----------|--------|
-| Card hover shadow/border | `150ms` | `ease-out` |
-| Button press | `100ms` | `ease-in` |
-| Sidebar expand/collapse | `200ms` | `ease-in-out` |
-| Progress bar fill (mount) | `600ms` | `ease-out` |
-| Chart bar mount | `400ms` staggered `20ms` | `ease-out` |
-| Skeleton shimmer | `1500ms` | `ease-in-out` loop |
-| Toast / alert enter | `200ms` slide-up + fade | |
-| Modal open | `150ms` scale `0.96→1` + fade | |
-
-> **Reduced motion**: Wrap animations in `@media (prefers-reduced-motion: reduce)` and remove them.
-
----
-
-## 9. Dark / Light Mode Implementation
-
-### 9.1 Switching Strategy
-
-- Mode stored in `localStorage` + `<html class="dark">`.
-- Use `next-themes` (`ThemeProvider` wrapping root layout).
-- **Never hard-code `#hex` in JSX** — always use Tailwind token classes.
-
-### 9.2 Token Substitution Rules
-
-| ❌ Wrong | ✅ Correct |
-|---------|----------|
-| `bg-white dark:bg-zinc-900` | `bg-card` |
-| `text-gray-500` | `text-muted-foreground` |
-| `border-gray-200 dark:border-gray-700` | `border-border` |
-| `style={{ color: '#6b7280' }}` | `className="text-muted-foreground"` |
-| `bg-blue-500` for interactive | `bg-accent` |
-
-### 9.3 Assets in Dark Mode
-
-- Black logos that need to be white: `invert dark:invert-0`
-- Chart SVGs: stroke/fill must reference CSS variables, not hard-coded hex.
-
----
-
-## 10. Accessibility Checklist
-
-- [ ] All interactive elements have `aria-label` or visible label
-- [ ] Focus rings visible in both modes (`focus-visible:ring-2 ring-ring`)
-- [ ] Color is never the only differentiator (icon + color for status)
-- [ ] WCAG AA contrast for all text/background pairs
-- [ ] Form inputs have associated `<label>` (`htmlFor` + `id`)
-- [ ] Charts have `aria-label` on SVG; data available as table for screen readers
-- [ ] Keyboard navigation works for dropdowns, modals, and sidebar
-
----
-
-## 11. Shadcn Component Checklist
-
-Install via `npx shadcn-ui@latest add <component>`:
-
-| Component | Notes |
-|-----------|-------|
-| `Button` | 5 variants per §5.3 |
-| `Card`, `CardHeader`, `CardContent`, `CardFooter` | Use `.dash-card` CSS for dashboard panels |
-| `Input`, `Textarea` | Transparent bg, `border-input` |
-| `Select`, `SelectTrigger`, `SelectContent` | `rounded-xl` content |
-| `Switch` | `bg-accent` when on |
-| `Slider` | Accent range + thumb ring |
-| `Badge` | Semantic color system |
-| `Progress` | Accent fill |
-| `Avatar`, `AvatarFallback` | `bg-secondary` fallback |
-| `Separator` | `bg-border` |
-| `Dialog`, `Sheet` | `rounded-xl`, `shadow-xl` |
-| `DropdownMenu` | `rounded-xl`, `shadow-lg` |
-| `Tooltip` | `bg-foreground text-background text-xs` |
-| `Skeleton` | `bg-muted animate-pulse` |
-| `Tabs`, `TabsList`, `TabsTrigger` | Active: `bg-background shadow-sm` |
-| `Table` | Row dividers via `border-b border-border` |
-
----
-
-## 12. File Map
-
-```
-src/
-├── app/
-│   └── globals.css          ← CSS variables (design tokens)
-├── components/
-│   ├── ui/                  ← Shadcn primitives (do not edit directly)
-│   └── layout/
-│       ├── Sidebar.tsx      ← Navigation shell
-│       └── Navbar.tsx       ← Top bar with search + theme toggle
-└── lib/
-    └── utils.ts             ← cn() helper
-```
-
----
-
-## 13. Do / Don't Summary
-
-| ✅ Do | ❌ Don't |
-|------|---------|
-| Use `hsl(var(--accent))` for all interactive blue | Use `blue-500`, `blue-600`, `indigo-*` ad-hoc |
-| Keep card padding at `p-5` or `p-6` | Mix `p-3`, `p-4`, `p-8` inconsistently |
-| Use `text-muted-foreground` for all secondary copy | Use `opacity-50` to dim text |
-| Use `rounded-xl` on all cards | Mix `rounded-md`, `rounded-2xl` on cards |
-| Keep chart bars in `hsl(var(--muted))` (grey) | Colorize chart bars in random hues |
-| One primary CTA per card | Two solid primary buttons in the same card |
-| Use Inter for all text | Mix multiple font families |
-| Always test both light and dark mode | Assume dark mode works because light works |
-
----
-
-*Last updated: 2026-08-23 · Derived from Shadcn UI Maia preset reference images*
+## Overview
+
+Club DCC Camu adopts the Cursor editorial identity — **warm cream canvas, warm near-black ink, one scarce orange accent, hairline-only depth** — translated from a marketing register to a **product register**. What that means concretely:
+
+- The page floor is cream `{colors.canvas}`, never pure white; cards are pure white `{colors.surface-card}` so content floats on the canvas by contrast, not shadow.
+- Ink `{colors.ink}` is warm (#26251e), not pure black, and carries headings at weight 600 (product tables and dense UI need the hierarchy; the "display stays at 400" rule is a marketing luxury we consciously drop).
+- **DCC Orange `{colors.primary}` is the single brand voltage**: primary CTAs, active/selected states, focus rings, and the interactive accent. Never decoration, never a second action color.
+- **Hairline-only depth.** No drop shadows anywhere. Cards are 1px `{colors.hairline}` outlines.
+- Every code-like surface — roll numbers, QR tokens, emails, timestamps — renders in JetBrains Mono (`--font-mono`).
+- The app ships a **warm-dark counterpart** (`{colors.dark-canvas}` … `{colors.dark-hairline}`) instead of Cursor's light-only site, because members use it in dim lecture halls. Same ink/orange logic, warm-dark surfaces.
+
+## Colors
+
+### Brand
+- **DCC Orange** `{colors.primary}` (#f54e00): primary CTAs, active nav, selected items, focus ring, links. Scarce — one orange element per view cluster.
+- **Orange Active** `{colors.primary-active}` (#d04200): press/hover state.
+
+### Surfaces
+- **Canvas** `{colors.canvas}` (#f7f7f4): page floor (light). **Canvas Soft** `{colors.canvas-soft}`: subtle inset fills.
+- **Card** `{colors.surface-card}` (#ffffff): all cards, inputs, modals.
+- **Surface Strong** `{colors.surface-strong}` (#e6e5e0): badges, secondary buttons tint, table headers.
+- Dark equivalents: canvas `{colors.dark-canvas}`, card `{colors.dark-card}`, secondary `{colors.dark-secondary}`.
+
+### Hairlines
+1px only: `{colors.hairline}` (default), `{colors.hairline-soft}` (subtle dividers), `{colors.hairline-strong}` (inputs, hovered card outlines). Dark: `{colors.dark-hairline}`.
+
+### Text
+- **Ink** `{colors.ink}`: headings, emphasized values.
+- **Body** `{colors.body}`: running text.
+- **Muted** `{colors.muted}`: metadata, captions. **Muted Soft** `{colors.muted-soft}`: disabled only.
+
+### Semantic (state, never decoration)
+Success/Live `{colors.semantic-success}`, Error/Destructive `{colors.semantic-error}`, Late/Warning `{colors.semantic-warning}`. Used at ~10% tint backgrounds with 20% borders and full-strength text.
+
+## Typography
+
+**Inter** (`--font-sans`) is the working family (CursorGothic's open substitute per the source spec). **JetBrains Mono** (`--font-mono`) on every code surface.
+
+| Token | Size / Weight | Use |
+|---|---|---|
+| `{typography.page-title}` | 24px / 600 / -0.01em | Page h1 |
+| `{typography.metric}` | 24px / 600 / tabular | KPI numbers |
+| `{typography.section-title}` | 16px / 600 | Card & section titles, h2/h3 |
+| `{typography.body-lg}` | 16px / 400 | Long reading text |
+| `{typography.body-md}` | 14px / 400 | Working text: table cells, form labels, list rows, buttons |
+| `{typography.caption}` | 12px / 400 | Metadata, helper text |
+| `{typography.kicker}` | 11px / 600 / +0.08em / uppercase | One page-header label per page, no more |
+| `{typography.mono}` | 13px JetBrains Mono | Roll numbers, tokens, emails, timestamps |
+
+**Scaling rules:** fixed rem scale (no clamp — product UI). 14px is the working minimum for content; 12px only for metadata; nothing below 11px. Body base is 16px. `tabular-nums` on all metrics and counts. Line height 1.4–1.5 everywhere.
+
+## Elevation
+
+**None.** Hairlines + white-card-on-cream-canvas carry all depth. Modals use a scrim (`ink` at ~30%) with backdrop blur — the only "elevation" in the system. Hover raises a card's border to `{colors.hairline-strong}`, never a shadow.
+
+## Components
+
+- **Card** (`card`): white, 1px hairline, 12px radius (`{rounded.lg}`), 24px padding. Class: `dash-card`.
+- **Buttons**: primary = orange (`{components.button-primary}`, 40px, 8px radius, 14px/500); secondary = white with `{colors.hairline-strong}` border; destructive = error token at 10% tint. All have hover, active, disabled (50% opacity), and a 2px orange focus ring.
+- **Text inputs** (`{components.text-input}`): white, hairline-strong border, 8px radius, 40px height, 14px text, mono variant for roll numbers/tokens/emails.
+- **Nav**: top bar 56px on cream; sidebar/drawer links 14px/500, active = orange text on 10% orange tint.
+- **Tables**: header row `{colors.surface-strong}` at 60% with `{typography.kicker}` labels; rows 14px, hover = canvas-soft; 1px hairline row dividers.
+- **Status pills**: `{components.badge-pill}` shape; semantic colors at 10% tint; LIVE uses a pulsing success dot.
+- **Charts**: ink axis labels, hairline gridlines, team colors on bars only; tooltips = white card, hairline, 8px radius.
+
+## Do's and Don'ts
+
+**Do**
+- Use DCC Orange for exactly one thing per cluster: the primary action or the current selection.
+- Keep depth hairline-only; radius 8px on controls, 12px on cards.
+- Render roll numbers, tokens, emails, and timestamps in JetBrains Mono.
+- Bump density down (not type down) on mobile — same 14px minimum, wider gaps.
+
+**Don't**
+- Don't add a second brand action color or use orange decoratively.
+- Don't use drop shadows, gradients, or glass effects.
+- Don't ship content text below 14px (metadata 12px, kickers 11px are the floor).
+- Don't uppercase anything except the single kicker and status pills.
+- Don't tint neutrals cool — warmth lives in the neutrals (hue ~50) as much as in the orange.

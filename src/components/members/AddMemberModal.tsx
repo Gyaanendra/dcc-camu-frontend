@@ -70,7 +70,7 @@ export const AddMemberModal: React.FC<AddMemberModalProps> = ({ teams, onCreated
     <>
       <button
         onClick={() => setIsOpen(true)}
-        className="px-4 py-2.5 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 font-medium text-xs shadow-sm flex items-center gap-2 transition-colors"
+        className="px-4 py-2.5 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 font-medium text-sm shadow-sm flex items-center gap-2 transition-colors"
       >
         <UserPlus className="w-4 h-4" /> Add Member
       </button>
@@ -85,7 +85,7 @@ export const AddMemberModal: React.FC<AddMemberModalProps> = ({ teams, onCreated
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-3.5 text-xs">
+            <form onSubmit={handleSubmit} className="space-y-3.5 text-sm">
               <div>
                 <label className="block font-medium text-foreground mb-1">Full Name</label>
                 <input

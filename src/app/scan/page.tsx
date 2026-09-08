@@ -47,7 +47,7 @@ export default function ScanPage() {
                   <QrCode className="w-5 h-5 sm:w-6 sm:h-6 text-accent" />
                   Live QR Attendance Scanner
                 </h1>
-                <p className="text-xs text-muted-foreground mt-1">
+                <p className="text-sm text-muted-foreground mt-1">
                   Auto-detects active session directly from QR token or member roll number
                 </p>
               </div>
@@ -57,7 +57,7 @@ export default function ScanPage() {
                 {isLoading ? (
                   <div className="h-8 w-44 rounded-full bg-secondary animate-pulse" />
                 ) : activeSession ? (
-                  <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-semibold">
+                  <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-sm font-semibold">
                     <span className="relative flex h-2 w-2">
                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                       <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
@@ -66,7 +66,7 @@ export default function ScanPage() {
                     <span className="truncate max-w-[200px]">Live: {activeSession.title}</span>
                   </div>
                 ) : (
-                  <div className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-secondary border border-border text-muted-foreground text-xs font-medium">
+                  <div className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-secondary border border-border text-muted-foreground text-sm font-medium">
                     <Sparkles className="w-3.5 h-3.5 text-accent" />
                     <span>Auto-Detects via QR</span>
                   </div>

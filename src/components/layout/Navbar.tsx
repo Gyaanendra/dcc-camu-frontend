@@ -60,7 +60,7 @@ export const Navbar: React.FC = () => {
         {/* Right side */}
         <div className="flex items-center gap-2">
           {/* Date Badge — desktop only */}
-          <div className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-secondary border border-border text-xs font-medium text-muted-foreground">
+          <div className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-secondary border border-border text-sm font-medium text-muted-foreground">
             <Calendar className="w-3.5 h-3.5" />
             <span>{today}</span>
           </div>
@@ -84,7 +84,7 @@ export const Navbar: React.FC = () => {
               <Link
                 href="/scan"
                 id="navbar-scan-qr"
-                className="hidden sm:flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-accent text-accent-foreground hover:bg-accent/90 font-semibold text-xs shadow-sm transition-all"
+                className="hidden sm:flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-accent text-accent-foreground hover:bg-accent/90 font-semibold text-sm shadow-sm transition-all"
               >
                 <QrCode className="w-3.5 h-3.5" />
                 <span>Scan QR</span>
@@ -93,7 +93,7 @@ export const Navbar: React.FC = () => {
               {/* Profile + Logout */}
               <div className="flex items-center gap-2 pl-2 border-l border-border">
                 <div className="flex items-center gap-2">
-                  <div className="flex h-7 w-7 items-center justify-center rounded-full bg-secondary border border-border font-semibold text-xs text-foreground overflow-hidden">
+                  <div className="flex h-7 w-7 items-center justify-center rounded-full bg-secondary border border-border font-semibold text-sm text-foreground overflow-hidden">
                     {user.avatarUrl ? (
                       <img src={user.avatarUrl} alt={user.name} className="h-full w-full object-cover" />
                     ) : (
@@ -101,7 +101,7 @@ export const Navbar: React.FC = () => {
                     )}
                   </div>
                   <div className="hidden lg:block text-left">
-                    <div className="text-xs font-semibold text-foreground leading-tight">{user.name}</div>
+                    <div className="text-sm font-semibold text-foreground leading-tight">{user.name}</div>
                     <div className="text-[11px] text-muted-foreground font-mono flex items-center gap-1">
                       <span>{user.rollNumber}</span>
                       <span>·</span>
@@ -123,7 +123,7 @@ export const Navbar: React.FC = () => {
           ) : (
             <Link
               href="/"
-              className="px-4 py-1.5 rounded-lg bg-accent text-accent-foreground hover:bg-accent/90 font-semibold text-xs shadow-sm transition-all"
+              className="px-4 py-1.5 rounded-lg bg-accent text-accent-foreground hover:bg-accent/90 font-semibold text-sm shadow-sm transition-all"
             >
               Sign In
             </Link>

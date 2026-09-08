@@ -29,7 +29,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requir
           <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-foreground text-background font-extrabold text-base shadow-sm animate-pulse">
             DCC
           </div>
-          <div className="flex items-center gap-2 text-xs font-mono text-muted-foreground">
+          <div className="flex items-center gap-2 text-sm font-mono text-muted-foreground">
             <RefreshCw className="w-3.5 h-3.5 animate-spin text-accent" />
             <span>Verifying Bennett credentials...</span>
           </div>
@@ -54,14 +54,14 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requir
           <h2 className="text-lg font-bold text-foreground">
             Admin Access Required
           </h2>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-sm text-muted-foreground">
             This module is restricted to Club DCC Admins and Executives. Your current role is{' '}
             <strong className="text-foreground uppercase font-mono">{user.role}</strong>.
           </p>
           <div className="pt-2">
             <Link
               href="/dashboard"
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 text-xs font-semibold shadow-sm transition-colors"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 text-sm font-semibold shadow-sm transition-colors"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
               <span>Back to Dashboard</span>

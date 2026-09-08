@@ -78,7 +78,7 @@ export const MobileNav: React.FC = () => {
                   DCC
                 </div>
                 <div>
-                  <div className="text-xs font-bold text-foreground">Club DCC Camu</div>
+                  <div className="text-sm font-bold text-foreground">Club DCC Camu</div>
                   <div className="text-[10px] text-muted-foreground">Bennett University</div>
                 </div>
               </Link>
@@ -93,7 +93,7 @@ export const MobileNav: React.FC = () => {
 
             {/* User card */}
             <div className="px-3 py-3 border-b border-border anim-fade-up anim-delay-1">
-              <div className="p-3 rounded-xl bg-secondary border border-border text-xs">
+              <div className="p-3 rounded-xl bg-secondary border border-border text-sm">
                 <div className="font-semibold text-foreground truncate">{user.name}</div>
                 <div className="text-[11px] text-muted-foreground font-mono mt-0.5 flex items-center gap-1 flex-wrap">
                   <span>{user.rollNumber}</span>
@@ -126,7 +126,7 @@ export const MobileNav: React.FC = () => {
                         onClick={close}
                         id={`mobile-nav-${item.name.toLowerCase().replace(/\s+/g, '-')}`}
                         className={cn(
-                          'flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-xs font-medium transition-all anim-btn-press active:scale-[0.97]',
+                          'flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium transition-all anim-btn-press active:scale-[0.97]',
                           active
                             ? 'bg-accent/10 text-accent'
                             : 'text-muted-foreground hover:text-foreground hover:bg-secondary'
@@ -158,7 +158,7 @@ export const MobileNav: React.FC = () => {
                           onClick={close}
                           id={`mobile-nav-admin-${item.name.toLowerCase().replace(/\s+/g, '-')}`}
                           className={cn(
-                            'flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-xs font-medium transition-all',
+                            'flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium transition-all',
                             active
                               ? 'bg-accent/10 text-accent'
                               : 'text-muted-foreground hover:text-foreground hover:bg-secondary'
@@ -180,7 +180,7 @@ export const MobileNav: React.FC = () => {
               <button
                 onClick={toggleTheme}
                 id="mobile-nav-theme-toggle"
-                className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg bg-secondary border border-border text-foreground text-xs font-medium hover:bg-muted transition-colors"
+                className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg bg-secondary border border-border text-foreground text-sm font-medium hover:bg-muted transition-colors"
               >
                 <div className="flex items-center gap-2">
                   {theme === 'dark'
@@ -196,7 +196,7 @@ export const MobileNav: React.FC = () => {
               <button
                 onClick={() => { close(); logout(); }}
                 id="mobile-nav-logout"
-                className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-xs font-semibold hover:bg-destructive/20 transition-colors"
+                className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-sm font-semibold hover:bg-destructive/20 transition-colors"
               >
                 <LogOut className="w-4 h-4" />
                 <span>Sign Out</span>

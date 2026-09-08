@@ -75,7 +75,7 @@ export default function SigninPage() {
             <h1 className="text-xl font-bold tracking-tight text-foreground">
               Club DCC Camu
             </h1>
-            <p className="text-xs text-muted-foreground font-medium mt-0.5">
+            <p className="text-sm text-muted-foreground font-medium mt-0.5">
               Bennett University · Developers &amp; Creators Club
             </p>
           </div>
@@ -85,7 +85,7 @@ export default function SigninPage() {
         <div className="dash-card p-6 sm:p-8 space-y-5 anim-fade-up anim-delay-1">
           <div className="pb-4 border-b border-border">
             <h2 className="text-sm font-bold text-foreground">Sign In to Portal</h2>
-            <p className="text-xs text-muted-foreground mt-0.5">
+            <p className="text-sm text-muted-foreground mt-0.5">
               Enter your Bennett credentials to continue
             </p>
           </div>
@@ -93,7 +93,7 @@ export default function SigninPage() {
           <form onSubmit={handleLoginSubmit} className="space-y-4">
             {/* Email */}
             <div className="space-y-1.5">
-              <label htmlFor="login-email" className="block text-xs font-semibold text-foreground">
+              <label htmlFor="login-email" className="block text-sm font-semibold text-foreground">
                 Bennett University Email
               </label>
               <div className="relative">
@@ -107,7 +107,7 @@ export default function SigninPage() {
                   autoCapitalize="none"
                   autoCorrect="off"
                   spellCheck={false}
-                  className="w-full h-9 pl-9 pr-3.5 rounded-lg bg-transparent border border-input text-foreground text-xs font-mono placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring transition-all"
+                  className="w-full h-9 pl-9 pr-3.5 rounded-lg bg-transparent border border-input text-foreground text-sm font-mono placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring transition-all"
                   required
                 />
               </div>
@@ -115,7 +115,7 @@ export default function SigninPage() {
 
             {/* Password */}
             <div className="space-y-1.5">
-              <label htmlFor="login-password" className="block text-xs font-semibold text-foreground">
+              <label htmlFor="login-password" className="block text-sm font-semibold text-foreground">
                 Password
               </label>
               <div className="relative">
@@ -126,7 +126,7 @@ export default function SigninPage() {
                   placeholder="••••••••"
                   value={password}
                   onChange={e => setPassword(e.target.value)}
-                  className="w-full h-9 pl-9 pr-3.5 rounded-lg bg-transparent border border-input text-foreground text-xs font-mono placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring transition-all"
+                  className="w-full h-9 pl-9 pr-3.5 rounded-lg bg-transparent border border-input text-foreground text-sm font-mono placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring transition-all"
                   required
                 />
               </div>
@@ -137,7 +137,7 @@ export default function SigninPage() {
               type="submit"
               id="login-submit"
               disabled={isSubmitting}
-              className="w-full h-9 rounded-lg bg-accent text-accent-foreground hover:bg-accent/90 font-semibold text-xs shadow-sm transition-all flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed active:scale-[0.97]"
+              className="w-full h-9 rounded-lg bg-accent text-accent-foreground hover:bg-accent/90 font-semibold text-sm shadow-sm transition-all flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed active:scale-[0.97]"
             >
               <span>{isSubmitting ? 'Verifying...' : 'Sign In'}</span>
               <ArrowRight className="w-3.5 h-3.5" />

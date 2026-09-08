@@ -80,13 +80,13 @@ export default function AdminAnalyticsPage() {
                 <h1 className="text-xl sm:text-2xl font-bold text-foreground tracking-tight">
                   Team & Member Analytics
                 </h1>
-                <p className="text-xs text-muted-foreground mt-1">Live data queried from Neon PostgreSQL database</p>
+                <p className="text-sm text-muted-foreground mt-1">Live data queried from Neon PostgreSQL database</p>
               </div>
 
               <div className="flex items-center gap-2.5">
                 <button
                   onClick={handleExportCSV}
-                  className="px-4 py-2.5 rounded-xl bg-secondary border border-border text-secondary-foreground hover:bg-muted font-semibold text-xs shadow-sm flex items-center gap-2 transition-colors"
+                  className="px-4 py-2.5 rounded-xl bg-secondary border border-border text-secondary-foreground hover:bg-muted font-semibold text-sm shadow-sm flex items-center gap-2 transition-colors"
                 >
                   <Download className="w-4 h-4 text-muted-foreground" /> Export CSV Report
                 </button>
