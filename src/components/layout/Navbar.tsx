@@ -80,15 +80,17 @@ export const Navbar: React.FC = () => {
 
           {user ? (
             <>
-              {/* Scan QR CTA — hidden on mobile (accessible via sidebar) */}
-              <Link
-                href="/scan"
-                id="navbar-scan-qr"
-                className="hidden sm:flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-accent text-accent-foreground hover:bg-accent/90 font-semibold text-sm shadow-sm transition-all"
-              >
-                <QrCode className="w-3.5 h-3.5" />
-                <span>Scan QR</span>
-              </Link>
+              {/* Scan QR CTA — hidden on mobile + hidden for view-only advisors */}
+              {user.role !== 'advisor' && (
+                <Link
+                  href="/scan"
+                  id="navbar-scan-qr"
+                  className="hidden sm:flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-accent text-accent-foreground hover:bg-accent/90 font-semibold text-sm shadow-sm transition-all"
+                >
+                  <QrCode className="w-3.5 h-3.5" />
+                  <span>Scan QR</span>
+                </Link>
+              )}
 
               {/* Profile + Logout */}
               <div className="flex items-center gap-2 pl-2 border-l border-border">

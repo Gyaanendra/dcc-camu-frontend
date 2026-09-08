@@ -103,7 +103,8 @@ class ApiClient {
   }
 
   async updateProfile(profileData: { position?: string; name?: string }) {
-    console.log(`✏️ [Profile] Updating profile info:`, profileData);
+    // Disabled: backend returns 403 — self-editing is turned off. Kept for backwards compat.
+    console.log(`✏️ [Profile] Update attempted (disabled):`, profileData);
     return this.request('/auth/profile', {
       method: 'PUT',
       body: JSON.stringify(profileData),

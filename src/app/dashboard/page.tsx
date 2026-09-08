@@ -18,8 +18,6 @@ import {
   Calendar,
   RefreshCw,
   ArrowRight,
-  Edit2,
-  Check,
   Users,
   Radio,
   PowerOff,
@@ -27,20 +25,17 @@ import {
 import Link from 'next/link';
 
 export default function DashboardPage() {
-  const { user, updateUserPosition } = useAuth();
+  const { user } = useAuth();
   const [adminAnalytics, setAdminAnalytics] = useState<any>(null);
   const [userStats, setUserStats] = useState<any>(null);
   const [activeSessions, setActiveSessions] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isClosingSession, setIsClosingSession] = useState(false);
 
-  const [isEditingPosition, setIsEditingPosition] = useState(false);
-  const [positionInput, setPositionInput] = useState('');
-
   const loadDashboardData = async () => {
     setIsLoading(true);
     try {
-      if (user?.role === 'admin') {
+      if (user?.role === 'admin' || user?.role === 'advisor') {
         const data = await api.getAdminAnalytics();
         setAdminAnalytics(data);
       } else {
@@ -59,15 +54,8 @@ export default function DashboardPage() {
   useEffect(() => {
     if (user) {
       loadDashboardData();
-      setPositionInput(user.position || 'Member');
     }
   }, [user]);
-
-  const handleSavePosition = async () => {
-    if (!positionInput.trim()) return;
-    await updateUserPosition(positionInput.trim());
-    setIsEditingPosition(false);
-  };
 
   const handleCloseActiveSession = async (sessionId: string) => {
     setIsClosingSession(true);
@@ -104,40 +92,13 @@ export default function DashboardPage() {
                   Welcome back, {user?.name?.split(' ')[0] || 'Member'}
                 </h1>
 
-                {/* Position + Wing + Role pills */}
+                {/* Position + Wing + Role pills (read-only — self-edit disabled) */}
                 <div className="flex flex-wrap items-center gap-1.5 mt-2 text-sm">
                   <span className="text-muted-foreground">Position:</span>
 
-                  {isEditingPosition ? (
-                    <div className="flex items-center gap-1">
-                      <input
-                        type="text"
-                        value={positionInput}
-                        onChange={e => setPositionInput(e.target.value)}
-                        onKeyDown={e => e.key === 'Enter' && handleSavePosition()}
-                        className="px-2 py-0.5 rounded-md bg-transparent border border-ring text-foreground text-sm outline-none font-medium w-32"
-                        autoFocus
-                      />
-                      <button
-                        onClick={handleSavePosition}
-                        id="save-position-btn"
-                        className="p-1 rounded-md bg-accent text-accent-foreground hover:bg-accent/90 transition-colors"
-                        title="Save Position"
-                      >
-                        <Check className="w-3 h-3" />
-                      </button>
-                    </div>
-                  ) : (
-                    <button
-                      onClick={() => setIsEditingPosition(true)}
-                      id="edit-position-btn"
-                      className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-secondary border border-border text-foreground font-medium hover:bg-muted transition-colors text-sm"
-                      title="Click to edit position"
-                    >
-                      <span>{user?.position || 'Member'}</span>
-                      <Edit2 className="w-2.5 h-2.5 text-muted-foreground" />
-                    </button>
-                  )}
+                  <span className="px-2 py-0.5 rounded-full bg-secondary border border-border text-foreground font-medium text-sm">
+                    {user?.position || 'Member'}
+                  </span>
 
                   <span className="text-border">·</span>
                   <span className="text-muted-foreground">Wing:</span>
@@ -150,14 +111,16 @@ export default function DashboardPage() {
               </div>
 
               <div className="flex items-center gap-2 shrink-0">
-                <Link
-                  href="/scan"
-                  id="dashboard-scan-cta"
-                  className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-accent text-accent-foreground hover:bg-accent/90 font-semibold text-sm shadow-sm transition-all"
-                >
-                  <QrCode className="w-3.5 h-3.5" />
-                  <span>Instant QR Scan</span>
-                </Link>
+                {user?.role !== 'advisor' && (
+                  <Link
+                    href="/scan"
+                    id="dashboard-scan-cta"
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-accent text-accent-foreground hover:bg-accent/90 font-semibold text-sm shadow-sm transition-all"
+                  >
+                    <QrCode className="w-3.5 h-3.5" />
+                    <span>Instant QR Scan</span>
+                  </Link>
+                )}
                 <button
                   onClick={loadDashboardData}
                   id="dashboard-refresh"
@@ -195,13 +158,15 @@ export default function DashboardPage() {
                       <span>Close Live QR</span>
                     </button>
                   )}
-                  <Link
-                    href="/scan"
-                    className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold transition-colors shadow-sm"
-                  >
-                    <span>Mark Attendance</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </Link>
+                  {user?.role !== 'advisor' && (
+                    <Link
+                      href="/scan"
+                      className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold transition-colors shadow-sm"
+                    >
+                      <span>Mark Attendance</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </Link>
+                  )}
                 </div>
               </div>
             )}
@@ -209,8 +174,8 @@ export default function DashboardPage() {
             {/* ── Main Content ───────────────────────────────────── */}
             {isLoading ? (
               <PageLoader message="Loading dashboard analytics..." />
-            ) : user?.role === 'admin' ? (
-              /* ADMIN VIEW */
+            ) : user?.role === 'admin' || user?.role === 'advisor' ? (
+              /* ADMIN + ADVISOR READ-ONLY VIEW */
               <div className="space-y-4">
                 <TeamAnalyticsCharts
                   teamAnalytics={adminAnalytics?.teamAnalytics || []}
@@ -240,14 +205,16 @@ export default function DashboardPage() {
                           <Calendar className="w-4 h-4 text-accent" />
                           Active Session Details
                         </h3>
-                        <button
-                          onClick={() => handleCloseActiveSession(activeLiveSession.id)}
-                          disabled={isClosingSession}
-                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-destructive/10 border border-destructive/30 text-destructive hover:bg-destructive/20 text-sm font-semibold transition-colors"
-                        >
-                          <PowerOff className="w-3.5 h-3.5" />
-                          <span>End Session</span>
-                        </button>
+                        {user?.role === 'admin' && (
+                          <button
+                            onClick={() => handleCloseActiveSession(activeLiveSession.id)}
+                            disabled={isClosingSession}
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-destructive/10 border border-destructive/30 text-destructive hover:bg-destructive/20 text-sm font-semibold transition-colors"
+                          >
+                            <PowerOff className="w-3.5 h-3.5" />
+                            <span>End Session</span>
+                          </button>
+                        )}
                       </div>
 
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">

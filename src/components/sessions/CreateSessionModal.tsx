@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { api } from '@/lib/api';
+import { useAuth } from '@/context/AuthContext';
 import { toast } from 'sonner';
 import { Plus, X } from 'lucide-react';
 
@@ -14,6 +15,7 @@ const inputClass =
   'w-full px-3.5 py-2 rounded-lg bg-transparent border border-input text-foreground outline-none focus:ring-1 focus:ring-ring shadow-sm transition-all';
 
 export const CreateSessionModal: React.FC<CreateSessionModalProps> = ({ teams, onCreated }) => {
+  const { user } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [title, setTitle] = useState('');
   const [type, setType] = useState<'regular' | 'workshop' | 'hackathon' | 'standup'>('workshop');
@@ -52,6 +54,9 @@ export const CreateSessionModal: React.FC<CreateSessionModalProps> = ({ teams, o
       setIsSubmitting(false);
     }
   };
+
+  // Advisors are view-only.
+  if (user?.role === 'advisor') return null;
 
   return (
     <>

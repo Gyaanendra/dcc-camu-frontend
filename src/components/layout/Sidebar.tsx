@@ -21,11 +21,16 @@ export const Sidebar: React.FC = () => {
   const { user } = useAuth();
 
   const isAdmin = user?.role === 'admin';
+  const isViewer = user?.role === 'admin' || user?.role === 'advisor';
 
   const userNav = [
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-    { name: 'QR Scanner', href: '/scan', icon: QrCode },
-    { name: 'My Attendance', href: '/my-attendance', icon: Award },
+    ...(user?.role === 'advisor'
+      ? []
+      : [
+          { name: 'QR Scanner', href: '/scan', icon: QrCode },
+          { name: 'My Attendance', href: '/my-attendance', icon: Award },
+        ]),
   ];
 
   const adminNav = [
@@ -70,12 +75,12 @@ export const Sidebar: React.FC = () => {
           </nav>
         </div>
 
-        {/* Admin Navigation */}
-        {isAdmin && (
+        {/* Admin Navigation (advisors: view-only) */}
+        {isViewer && (
           <div>
             <p className="px-3 mb-1.5 flex items-center gap-1.5 text-[10px] font-semibold tracking-widest text-accent uppercase">
               <ShieldCheck className="w-3 h-3" />
-              Admin Tools
+              {isAdmin ? 'Admin Tools' : 'View Only'}
             </p>
             <nav className="space-y-0.5">
               {adminNav.map(item => {

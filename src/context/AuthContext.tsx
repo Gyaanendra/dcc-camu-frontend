@@ -10,7 +10,7 @@ export interface User {
   email: string;
   rollNumber: string;
   position: string;
-  role: 'admin' | 'user';
+  role: 'admin' | 'advisor' | 'user';
   teamId?: string | null;
   teamName?: string;
   avatarUrl?: string;
@@ -77,15 +77,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const updateUserPosition = async (newPosition: string) => {
-    try {
-      const res = await api.updateProfile({ position: newPosition });
-      if (user) {
-        setUser({ ...user, position: res.user.position });
-      }
-      toast.success('Your position title has been updated!');
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to update position.');
-    }
+    // Self-editing disabled by admin: positions can only be changed via Member Directory by an admin.
+    toast.error('Profile editing is disabled. Please contact an admin to update your details.');
+    return;
   };
 
   const logout = () => {

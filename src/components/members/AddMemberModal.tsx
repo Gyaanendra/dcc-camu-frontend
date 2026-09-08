@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { api } from '@/lib/api';
+import { useAuth } from '@/context/AuthContext';
 import { toast } from 'sonner';
 import { UserPlus, X } from 'lucide-react';
 
@@ -14,6 +15,7 @@ const inputClass =
   'w-full px-3.5 py-2 rounded-lg bg-transparent border border-input text-foreground outline-none focus:ring-1 focus:ring-ring shadow-sm transition-all';
 
 export const AddMemberModal: React.FC<AddMemberModalProps> = ({ teams, onCreated }) => {
+  const { user } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -21,7 +23,9 @@ export const AddMemberModal: React.FC<AddMemberModalProps> = ({ teams, onCreated
   const [rollNumber, setRollNumber] = useState('');
   const [position, setPosition] = useState('Member');
   const [teamId, setTeamId] = useState('');
-  const [role, setRole] = useState<'admin' | 'user'>('user');
+  const [role, setRole] = useState<'admin' | 'advisor' | 'user'>('user');
+  // Advisors are view-only — never show the create control to them.
+  if (user?.role === 'advisor') return null;
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const resetForm = () => {
@@ -171,6 +175,7 @@ export const AddMemberModal: React.FC<AddMemberModalProps> = ({ teams, onCreated
                     className={inputClass}
                   >
                     <option value="user">User (Club Member)</option>
+                    <option value="advisor">Advisor (View-only)</option>
                     <option value="admin">Admin (Executive / Lead)</option>
                   </select>
                 </div>

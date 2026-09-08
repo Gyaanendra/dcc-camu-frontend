@@ -43,8 +43,8 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requir
     return null;
   }
 
-  // Admin access guard
-  if (requireAdmin && user.role !== 'admin') {
+  // Admin access guard — advisors get read-only view access to admin modules
+  if (requireAdmin && user.role !== 'admin' && user.role !== 'advisor') {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-background p-6 text-foreground">
         <div className="w-full max-w-md p-8 rounded-2xl dash-card text-center space-y-4 shadow-sm">

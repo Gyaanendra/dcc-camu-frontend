@@ -37,13 +37,18 @@ export const MobileNav: React.FC = () => {
   if (!user || pathname === '/') return null;
 
   const isAdmin = user?.role === 'admin';
+  const isViewer = user?.role === 'admin' || user?.role === 'advisor';
   const isActive = (path: string) => pathname === path;
   const close = () => setIsOpen(false);
 
   const userNav = [
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-    { name: 'QR Scanner', href: '/scan', icon: QrCode },
-    { name: 'My Attendance', href: '/my-attendance', icon: Award },
+    ...(user?.role === 'advisor'
+      ? []
+      : [
+          { name: 'QR Scanner', href: '/scan', icon: QrCode },
+          { name: 'My Attendance', href: '/my-attendance', icon: Award },
+        ]),
   ];
 
   const adminNav = [
@@ -142,8 +147,8 @@ export const MobileNav: React.FC = () => {
                 </div>
               </div>
 
-              {/* Admin section */}
-              {isAdmin && (
+              {/* Admin section (advisors: view-only) */}
+              {isViewer && (
                 <div>
                   <p className="px-3 mb-1.5 flex items-center gap-1.5 text-[10px] font-semibold tracking-widest text-accent uppercase">
                     <ShieldCheck className="w-3 h-3" />

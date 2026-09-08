@@ -2,8 +2,9 @@
 
 import React, { useState } from 'react';
 import { api } from '@/lib/api';
+import { useAuth } from '@/context/AuthContext';
 import { toast } from 'sonner';
-import { Search, Shield, User, Filter, Edit2, X, Trash2 } from 'lucide-react';
+import { Search, Shield, User, Filter, Edit2, X, Trash2, Eye } from 'lucide-react';
 
 interface MemberDirectoryProps {
   members: Array<{
@@ -12,7 +13,7 @@ interface MemberDirectoryProps {
     email: string;
     rollNumber: string;
     position: string;
-    role: 'admin' | 'user';
+    role: 'admin' | 'advisor' | 'user';
     teamId?: string | null;
     teamName: string;
     teamCode: string;
@@ -24,11 +25,13 @@ interface MemberDirectoryProps {
 }
 
 export const MemberDirectoryTable: React.FC<MemberDirectoryProps> = ({ members, teams, onRefresh }) => {
+  const { user: currentUser } = useAuth();
+  const isReadOnly = currentUser?.role === 'advisor';
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedTeamFilter, setSelectedTeamFilter] = useState('ALL');
   const [editingUser, setEditingUser] = useState<any>(null);
   const [newName, setNewName] = useState<string>('');
-  const [newRole, setNewRole] = useState<'admin' | 'user'>('user');
+  const [newRole, setNewRole] = useState<'admin' | 'advisor' | 'user'>('user');
   const [newPosition, setNewPosition] = useState<string>('Member');
   const [newTeamId, setNewTeamId] = useState<string>('');
   const [isUpdating, setIsUpdating] = useState(false);
@@ -46,7 +49,10 @@ export const MemberDirectoryTable: React.FC<MemberDirectoryProps> = ({ members, 
   });
 
   const handleOpenEdit = (user: any) => {
-    setEditingUser(user);
+    if (isReadOnly) {
+      toast.error('Advisors have view-only access.');
+      return;
+    }    setEditingUser(user);
     setNewName(user.name);
     setNewRole(user.role);
     setNewPosition(user.position || 'Member');
@@ -136,7 +142,7 @@ export const MemberDirectoryTable: React.FC<MemberDirectoryProps> = ({ members, 
                 <th className="p-4 font-semibold">Wing</th>
                 <th className="p-4 font-semibold">Role</th>
                 <th className="p-4 font-semibold">Attended</th>
-                <th className="p-4 font-semibold text-right">Actions</th>
+                {!isReadOnly && <th className="p-4 font-semibold text-right">Actions</th>}
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
@@ -169,23 +175,27 @@ export const MemberDirectoryTable: React.FC<MemberDirectoryProps> = ({ members, 
                       className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full font-mono text-[10px] font-bold uppercase tracking-wider ${
                         member.role === 'admin'
                           ? 'bg-accent/10 text-accent border border-accent/20'
-                          : 'bg-secondary text-muted-foreground border border-border'
+                          : member.role === 'advisor'
+                            ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20'
+                            : 'bg-secondary text-muted-foreground border border-border'
                       }`}
                     >
-                      {member.role === 'admin' ? <Shield className="w-3 h-3" /> : <User className="w-3 h-3" />}
+                      {member.role === 'admin' ? <Shield className="w-3 h-3" /> : member.role === 'advisor' ? <Eye className="w-3 h-3" /> : <User className="w-3 h-3" />}
                       {member.role}
                     </span>
                   </td>
                   <td className="p-4 font-bold text-foreground tabular-nums">{member.totalAttended} check-ins</td>
-                  <td className="p-4 text-right">
-                    <button
-                      onClick={() => handleOpenEdit(member)}
-                      className="p-1.5 rounded-lg bg-secondary border border-border text-muted-foreground hover:text-foreground hover:bg-muted transition-colors shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                      title="Edit Member"
-                    >
-                      <Edit2 className="w-3.5 h-3.5" />
-                    </button>
-                  </td>
+                  {!isReadOnly && (
+                    <td className="p-4 text-right">
+                      <button
+                        onClick={() => handleOpenEdit(member)}
+                        className="p-1.5 rounded-lg bg-secondary border border-border text-muted-foreground hover:text-foreground hover:bg-muted transition-colors shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                        title="Edit Member"
+                      >
+                        <Edit2 className="w-3.5 h-3.5" />
+                      </button>
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>
@@ -193,8 +203,8 @@ export const MemberDirectoryTable: React.FC<MemberDirectoryProps> = ({ members, 
         </div>
       </div>
 
-      {/* Edit Role, Position & Wing Modal */}
-      {editingUser && (
+      {/* Edit Role, Position & Wing Modal (admins only) */}
+      {editingUser && !isReadOnly && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/30 backdrop-blur-sm p-4 anim-fade-in">
           <div className="w-full max-w-md rounded-2xl bg-card border border-border p-6 space-y-4 shadow-2xl anim-scale-in">
             <div className="flex items-center justify-between pb-3 border-b border-border">
@@ -237,6 +247,7 @@ export const MemberDirectoryTable: React.FC<MemberDirectoryProps> = ({ members, 
                   className="w-full px-3 py-2 rounded-lg bg-transparent border border-input text-foreground focus:outline-none focus:ring-1 focus:ring-ring shadow-sm"
                 >
                   <option value="user">User (Club Member)</option>
+                  <option value="advisor">Advisor (View-only)</option>
                   <option value="admin">Admin (Executive / Lead)</option>
                 </select>
               </div>

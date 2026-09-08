@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { api } from '@/lib/api';
+import { useAuth } from '@/context/AuthContext';
 import { toast } from 'sonner';
 import { Plus, X } from 'lucide-react';
 
@@ -15,6 +16,7 @@ const inputClass =
 const TEAM_COLORS = ['#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#ef4444', '#06b6d4'];
 
 export const CreateTeamModal: React.FC<CreateTeamModalProps> = ({ onCreated }) => {
+  const { user } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [name, setName] = useState('');
   const [code, setCode] = useState('');
@@ -51,6 +53,9 @@ export const CreateTeamModal: React.FC<CreateTeamModalProps> = ({ onCreated }) =
       setIsSubmitting(false);
     }
   };
+
+  // Advisors are view-only.
+  if (user?.role === 'advisor') return null;
 
   return (
     <>

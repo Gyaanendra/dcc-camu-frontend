@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
+import { useAuth } from '@/context/AuthContext';
 import { Navbar } from '@/components/layout/Navbar';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { MemberDirectoryTable } from '@/components/members/MemberDirectoryTable';
@@ -13,6 +14,8 @@ import { RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function AdminMembersPage() {
+  const { user } = useAuth();
+  const isReadOnly = user?.role === 'advisor';
   const [users, setUsers] = useState<any[]>([]);
   const [teams, setTeams] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -49,7 +52,7 @@ export default function AdminMembersPage() {
                 <h1 className="text-xl sm:text-2xl font-bold text-foreground tracking-tight">
                   Member Directory
                 </h1>
-                <p className="text-sm text-muted-foreground mt-1">Manage member assignments, positions, roles, and view attendance totals</p>
+                <p className="text-sm text-muted-foreground mt-1">{isReadOnly ? 'View-only access — editing is disabled for advisors' : 'Manage member assignments, positions, roles, and view attendance totals'}</p>
               </div>
 
               <div className="flex items-center gap-2.5">

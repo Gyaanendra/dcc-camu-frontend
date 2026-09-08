@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
+import { useAuth } from '@/context/AuthContext';
 import { Navbar } from '@/components/layout/Navbar';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { CreateSessionModal } from '@/components/sessions/CreateSessionModal';
@@ -12,6 +13,8 @@ import { Calendar, MapPin, PowerOff, Play, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function AdminSessionsPage() {
+  const { user } = useAuth();
+  const isReadOnly = user?.role === 'advisor';
   const [sessions, setSessions] = useState<any[]>([]);
   const [teams, setTeams] = useState<any[]>([]);
   const [selectedSession, setSelectedSession] = useState<any>(null);
@@ -87,7 +90,7 @@ export default function AdminSessionsPage() {
                 <h1 className="text-xl sm:text-2xl font-bold text-foreground tracking-tight">
                   Sessions & Live QR
                 </h1>
-                <p className="text-sm text-muted-foreground mt-1">Schedule sessions, project dynamic QR codes, and monitor live check-ins</p>
+                <p className="text-sm text-muted-foreground mt-1">{isReadOnly ? 'View-only access — session controls are disabled for advisors' : 'Schedule sessions, project dynamic QR codes, and monitor live check-ins'}</p>
               </div>
 
               <div className="flex items-center gap-2">
@@ -178,7 +181,8 @@ export default function AdminSessionsPage() {
 
                     <button
                       onClick={handleToggleSessionStatus}
-                      disabled={isUpdatingStatus}
+                      disabled={isUpdatingStatus || isReadOnly}
+                      style={isReadOnly ? { display: 'none' } : undefined}
                       className={`px-3.5 py-2 rounded-xl text-sm font-semibold flex items-center gap-2 transition-colors shadow-sm ${
                         selectedSession.isActive === 'true'
                           ? 'bg-destructive/10 border border-destructive/30 text-destructive hover:bg-destructive/20'

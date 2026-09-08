@@ -7,9 +7,12 @@ import { Sidebar } from '@/components/layout/Sidebar';
 import { QRScannerModal } from '@/components/qr/QRScannerModal';
 import { PageLoader } from '@/components/layout/PageLoader';
 import { api } from '@/lib/api';
-import { Radio, Sparkles, RefreshCw, QrCode } from 'lucide-react';
+import { Radio, Sparkles, RefreshCw, QrCode, ShieldAlert } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
+import Link from 'next/link';
 
 export default function ScanPage() {
+  const { user } = useAuth();
   const [activeSession, setActiveSession] = useState<any>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
@@ -82,8 +85,24 @@ export default function ScanPage() {
               </div>
             </div>
 
-            {/* Scanner Card */}
-            {isLoading ? (
+            {/* Scanner Card (advisors are view-only — scanning disabled) */}
+            {user?.role === 'advisor' ? (
+              <div className="dash-card p-8 text-center space-y-3">
+                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10 text-destructive border border-destructive/30">
+                  <ShieldAlert className="w-6 h-6" />
+                </div>
+                <h2 className="text-base font-bold text-foreground">View-only access</h2>
+                <p className="text-sm text-muted-foreground">
+                  Advisor accounts cannot mark attendance. Scanning is disabled for your role.
+                </p>
+                <Link
+                  href="/dashboard"
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold"
+                >
+                  Back to Dashboard
+                </Link>
+              </div>
+            ) : isLoading ? (
               <PageLoader message="Initializing live QR scanner..." />
             ) : (
               <QRScannerModal activeSessionId={activeSession?.id} />
