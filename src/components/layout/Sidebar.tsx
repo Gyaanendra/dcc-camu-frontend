@@ -10,6 +10,7 @@ import {
   BarChart3,
   CalendarCheck,
   Users,
+  Table2,
   Award,
   ShieldCheck,
 } from 'lucide-react';
@@ -31,6 +32,7 @@ export const Sidebar: React.FC = () => {
     { name: 'Team Analytics', href: '/admin/analytics', icon: BarChart3 },
     { name: 'Sessions & QR', href: '/admin/sessions', icon: CalendarCheck },
     { name: 'Member Directory', href: '/admin/members', icon: Users },
+    { name: 'Attendance Sheet', href: '/admin/attendance-sheet', icon: Table2 },
   ];
 
   const isActive = (path: string) => pathname === path;

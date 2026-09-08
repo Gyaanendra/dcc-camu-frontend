@@ -12,6 +12,7 @@ import {
   BarChart3,
   CalendarCheck,
   Users,
+  Table2,
   X,
   LogOut,
   Sun,
@@ -49,6 +50,7 @@ export const MobileNav: React.FC = () => {
     { name: 'Team Analytics', href: '/admin/analytics', icon: BarChart3 },
     { name: 'Sessions & QR', href: '/admin/sessions', icon: CalendarCheck },
     { name: 'Member Directory', href: '/admin/members', icon: Users },
+    { name: 'Attendance Sheet', href: '/admin/attendance-sheet', icon: Table2 },
   ];
 
   return (

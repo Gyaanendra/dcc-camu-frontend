@@ -131,6 +131,11 @@ class ApiClient {
     return this.request('/attendance/admin-analytics');
   }
 
+  // Admin: Full attendance matrix (members × sessions)
+  async getAttendanceSheet() {
+    return this.request('/attendance/sheet');
+  }
+
   // Sessions Endpoints
   async getSessions() {
     return this.request('/sessions');
