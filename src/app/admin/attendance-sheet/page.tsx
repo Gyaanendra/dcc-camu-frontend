@@ -8,6 +8,23 @@ import { PageLoader } from '@/components/layout/PageLoader';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
 import { Table2, RefreshCw, Check, Clock, Minus } from 'lucide-react';
+import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+} from '@/components/ui/table';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 interface SheetSession {
   id: string;
@@ -91,12 +108,12 @@ export default function AttendanceSheetPage() {
           <Sidebar />
           <main className="flex-1 p-6 sm:p-8 max-w-7xl mx-auto w-full space-y-6">
             {/* Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 dash-card">
+            <Card className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6">
               <div>
-                <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest mb-1">
+                <div className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
                   Club Records
                 </div>
-                <h1 className="text-xl sm:text-2xl font-bold text-foreground tracking-tight">
+                <h1 className="text-2xl font-semibold text-foreground tracking-tight">
                   Attendance Sheet
                 </h1>
                 <p className="text-sm text-muted-foreground mt-1">
@@ -105,34 +122,36 @@ export default function AttendanceSheetPage() {
               </div>
 
               <div className="flex items-center gap-2.5">
-                <select
-                  value={teamFilter}
-                  onChange={(e) => setTeamFilter(e.target.value)}
-                  className="px-3 py-2.5 rounded-xl bg-secondary border border-border text-foreground focus:outline-none focus:ring-1 focus:ring-ring text-sm shadow-sm"
-                >
-                  <option value="ALL">All Wings</option>
-                  {teams.map(t => (
-                    <option key={t.id} value={t.id}>{t.name}</option>
-                  ))}
-                </select>
-                <button
+                <Select value={teamFilter} onValueChange={setTeamFilter}>
+                  <SelectTrigger className="w-40">
+                    <SelectValue placeholder="All Wings" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ALL">All Wings</SelectItem>
+                    {teams.map(t => (
+                      <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button
+                  variant="outline"
+                  size="icon"
                   onClick={loadData}
-                  className="p-2.5 rounded-xl bg-secondary border border-border text-muted-foreground hover:text-foreground hover:bg-muted transition-colors shadow-sm"
                   title="Refresh sheet"
                 >
                   <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
-                </button>
+                </Button>
               </div>
-            </div>
+            </Card>
 
             {isLoading ? (
               <PageLoader message="Building attendance matrix..." />
             ) : sessions.length === 0 ? (
-              <div className="p-12 text-center dash-card">
+              <Card className="p-12 text-center">
                 <Table2 className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
                 <p className="text-sm font-semibold text-foreground">No sessions recorded yet</p>
                 <p className="text-sm text-muted-foreground mt-0.5">Create a session to start building the sheet.</p>
-              </div>
+              </Card>
             ) : (
               <>
                 {/* Legend */}
@@ -143,76 +162,74 @@ export default function AttendanceSheetPage() {
                 </div>
 
                 {/* Matrix table */}
-                <div className="dash-card overflow-hidden">
-                  <div className="overflow-x-auto">
-                    <table className="text-left text-sm border-separate border-spacing-0">
-                      <thead>
-                        <tr>
-                          <th className="sticky left-0 z-20 bg-secondary/60 backdrop-blur p-3 min-w-[220px] border-b border-r border-border">
-                            <span className="text-[10px] font-semibold tracking-widest text-muted-foreground uppercase">Member / Wing</span>
-                          </th>
-                          {sessions.map(s => (
-                            <th
-                              key={s.id}
-                              className="p-3 min-w-[110px] max-w-[130px] border-b border-border align-bottom"
-                              title={`${s.title} — ${new Date(s.startTime).toLocaleString()}`}
-                            >
-                              <div className="flex items-center gap-1.5">
-                                <span className="text-xs font-semibold text-foreground truncate">{s.title}</span>
-                                {s.isActive === 'true' && (
-                                  <span className="shrink-0 h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" title="Live now" />
-                                )}
-                              </div>
-                              <div className="text-[11px] text-muted-foreground font-mono mt-0.5">
-                                {fmtDate(s.startTime)} · {fmtTime(s.startTime)}
-                              </div>
-                            </th>
-                          ))}
-                          <th className="p-3 min-w-[80px] border-b border-l border-border text-right">
-                            <span className="text-[10px] font-semibold tracking-widest text-muted-foreground uppercase">Rate</span>
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {rows.map((row) =>
-                          row.kind === 'team' ? (
-                            <tr key={`team-${row.teamName}`}>
-                              <td colSpan={sessions.length + 2} className="sticky left-0 bg-secondary/40 p-2 px-3 border-b border-border">
-                                <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-                                  {row.teamName} · {row.count} members
-                                </span>
-                              </td>
-                            </tr>
-                          ) : (
-                            <tr key={row.member!.id} className="hover:bg-secondary/40 transition-colors">
-                              <td className="sticky left-0 z-10 bg-card p-3 border-b border-r border-border">
-                                <div className="font-semibold text-foreground truncate">{row.member!.name}</div>
-                                <div className="text-[11px] text-muted-foreground font-mono">{row.member!.rollNumber}</div>
-                              </td>
-                              {sessions.map(s => {
-                                const status = row.member!.records[s.id];
-                                return (
-                                  <td key={s.id} className="p-3 border-b border-border text-center">
-                                    {status === 'present' ? (
-                                      <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400 mx-auto" />
-                                    ) : status === 'late' ? (
-                                      <Clock className="w-4 h-4 text-amber-600 dark:text-amber-400 mx-auto" />
-                                    ) : (
-                                      <Minus className="w-4 h-4 text-muted-foreground/50 mx-auto" />
-                                    )}
-                                  </td>
-                                );
-                              })}
-                              <td className="p-3 border-b border-l border-border text-right font-bold text-foreground tabular-nums">
-                                {row.member!.attendanceRate}%
-                              </td>
-                            </tr>
-                          )
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
+                <Card className="overflow-hidden p-0">
+                  <Table className="border-separate border-spacing-0">
+                    <TableHeader>
+                      <TableRow className="hover:bg-transparent">
+                        <TableHead className="sticky left-0 z-20 bg-secondary/60 backdrop-blur p-3 min-w-[220px] border-b border-r border-border">
+                          <span className="text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">Member / Wing</span>
+                        </TableHead>
+                        {sessions.map(s => (
+                          <TableHead
+                            key={s.id}
+                            className="p-3 min-w-[110px] max-w-[130px] border-b border-border align-bottom"
+                            title={`${s.title} — ${new Date(s.startTime).toLocaleString()}`}
+                          >
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-xs font-semibold text-foreground truncate">{s.title}</span>
+                              {s.isActive === 'true' && (
+                                <span className="shrink-0 h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" title="Live now" />
+                              )}
+                            </div>
+                            <div className="text-[11px] text-muted-foreground font-mono mt-0.5 font-normal">
+                              {fmtDate(s.startTime)} · {fmtTime(s.startTime)}
+                            </div>
+                          </TableHead>
+                        ))}
+                        <TableHead className="p-3 min-w-[80px] border-b border-l border-border text-right">
+                          <span className="text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">Rate</span>
+                        </TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {rows.map((row) =>
+                        row.kind === 'team' ? (
+                          <TableRow key={`team-${row.teamName}`} className="hover:bg-transparent">
+                            <TableCell colSpan={sessions.length + 2} className="sticky left-0 bg-secondary/40 p-2 px-3 border-b border-border">
+                              <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                                {row.teamName} · {row.count} members
+                              </span>
+                            </TableCell>
+                          </TableRow>
+                        ) : (
+                          <TableRow key={row.member!.id}>
+                            <TableCell className="sticky left-0 z-10 bg-card p-3 border-b border-r border-border">
+                              <div className="font-semibold text-foreground truncate">{row.member!.name}</div>
+                              <div className="text-[11px] text-muted-foreground font-mono">{row.member!.rollNumber}</div>
+                            </TableCell>
+                            {sessions.map(s => {
+                              const status = row.member!.records[s.id];
+                              return (
+                                <TableCell key={s.id} className="p-3 border-b border-border text-center">
+                                  {status === 'present' ? (
+                                    <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400 mx-auto" />
+                                  ) : status === 'late' ? (
+                                    <Clock className="w-4 h-4 text-amber-600 dark:text-amber-400 mx-auto" />
+                                  ) : (
+                                    <Minus className="w-4 h-4 text-muted-foreground/50 mx-auto" />
+                                  )}
+                                </TableCell>
+                              );
+                            })}
+                            <TableCell className="p-3 border-b border-l border-border text-right font-bold text-foreground tabular-nums">
+                              {row.member!.attendanceRate}%
+                            </TableCell>
+                          </TableRow>
+                        )
+                      )}
+                    </TableBody>
+                  </Table>
+                </Card>
               </>
             )}
           </main>

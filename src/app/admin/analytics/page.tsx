@@ -10,6 +10,8 @@ import { PageLoader } from '@/components/layout/PageLoader';
 import { api } from '@/lib/api';
 import { Download, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 
 export default function AdminAnalyticsPage() {
   const [data, setData] = useState<any>(null);
@@ -72,33 +74,34 @@ export default function AdminAnalyticsPage() {
         <div className="flex flex-1">
           <Sidebar />
           <main className="flex-1 p-6 sm:p-8 max-w-7xl mx-auto w-full space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 dash-card">
+            <Card className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6">
               <div>
-                <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest mb-1">
+                <div className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
                   Executive Insights
                 </div>
-                <h1 className="text-xl sm:text-2xl font-bold text-foreground tracking-tight">
+                <h1 className="text-2xl font-semibold text-foreground tracking-tight">
                   Team & Member Analytics
                 </h1>
                 <p className="text-sm text-muted-foreground mt-1">Live data queried from Neon PostgreSQL database</p>
               </div>
 
               <div className="flex items-center gap-2.5">
-                <button
+                <Button
+                  variant="secondary"
                   onClick={handleExportCSV}
-                  className="px-4 py-2.5 rounded-xl bg-secondary border border-border text-secondary-foreground hover:bg-muted font-semibold text-sm shadow-sm flex items-center gap-2 transition-colors"
                 >
                   <Download className="w-4 h-4 text-muted-foreground" /> Export CSV Report
-                </button>
-                <button
+                </Button>
+                <Button
+                  variant="outline"
+                  size="icon"
                   onClick={loadData}
-                  className="p-2.5 rounded-xl bg-secondary border border-border text-muted-foreground hover:text-foreground hover:bg-muted transition-colors shadow-sm"
                   title="Refresh"
                 >
                   <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
-                </button>
+                </Button>
               </div>
-            </div>
+            </Card>
 
             {isLoading ? (
               <PageLoader message="Loading team & member analytics..." />

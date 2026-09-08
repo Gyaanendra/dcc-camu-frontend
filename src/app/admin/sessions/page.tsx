@@ -11,6 +11,8 @@ import { PageLoader } from '@/components/layout/PageLoader';
 import { api } from '@/lib/api';
 import { Calendar, MapPin, PowerOff, Play, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 
 export default function AdminSessionsPage() {
   const { user } = useAuth();
@@ -82,12 +84,12 @@ export default function AdminSessionsPage() {
         <div className="flex flex-1">
           <Sidebar />
           <main className="flex-1 p-6 sm:p-8 max-w-7xl mx-auto w-full space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 dash-card">
+            <Card className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6">
               <div>
-                <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest mb-1">
+                <div className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
                   Event Management
                 </div>
-                <h1 className="text-xl sm:text-2xl font-bold text-foreground tracking-tight">
+                <h1 className="text-2xl font-semibold text-foreground tracking-tight">
                   Sessions & Live QR
                 </h1>
                 <p className="text-sm text-muted-foreground mt-1">{isReadOnly ? 'View-only access — session controls are disabled for advisors' : 'Schedule sessions, project dynamic QR codes, and monitor live check-ins'}</p>
@@ -95,15 +97,16 @@ export default function AdminSessionsPage() {
 
               <div className="flex items-center gap-2">
                 <CreateSessionModal teams={teams} onCreated={loadData} />
-                <button
+                <Button
+                  variant="outline"
+                  size="icon"
                   onClick={loadData}
-                  className="p-2.5 rounded-xl bg-secondary border border-border text-muted-foreground hover:text-foreground hover:bg-muted transition-colors shadow-sm"
                   title="Refresh Sessions"
                 >
                   <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
-                </button>
+                </Button>
               </div>
-            </div>
+            </Card>
 
             {isLoading ? (
               <PageLoader message="Loading session records..." />
@@ -124,7 +127,7 @@ export default function AdminSessionsPage() {
                         <button
                           key={s.id}
                           onClick={() => handleSelectSession(s)}
-                          className={`w-full text-left p-4 rounded-xl border transition-all shadow-sm ${
+                          className={`w-full text-left p-4 rounded-xl border transition-all ${
                             selectedSession?.id === s.id
                               ? 'bg-accent/10 border-accent/40 text-foreground'
                               : 'bg-card border-border hover:bg-secondary/60 text-foreground'
@@ -168,7 +171,7 @@ export default function AdminSessionsPage() {
             <div className="lg:col-span-2 space-y-6">
               {selectedSession ? (
                 <>
-                  <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 dash-card">
+                  <Card className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4">
                     <div className="flex items-center gap-3">
                       <div className={`p-2 rounded-xl ${selectedSession.isActive === 'true' ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'bg-secondary text-muted-foreground'}`}>
                         <Calendar className="w-5 h-5" />
@@ -179,15 +182,16 @@ export default function AdminSessionsPage() {
                       </div>
                     </div>
 
-                    <button
+                    <Button
+                      variant="outline"
                       onClick={handleToggleSessionStatus}
                       disabled={isUpdatingStatus || isReadOnly}
                       style={isReadOnly ? { display: 'none' } : undefined}
-                      className={`px-3.5 py-2 rounded-xl text-sm font-semibold flex items-center gap-2 transition-colors shadow-sm ${
+                      className={
                         selectedSession.isActive === 'true'
-                          ? 'bg-destructive/10 border border-destructive/30 text-destructive hover:bg-destructive/20'
-                          : 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20'
-                      }`}
+                          ? 'border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive'
+                          : 'border-emerald-500/20 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-500/10 hover:text-emerald-700 dark:hover:text-emerald-400'
+                      }
                     >
                       {selectedSession.isActive === 'true' ? (
                         <>
@@ -200,8 +204,8 @@ export default function AdminSessionsPage() {
                           <span>Re-activate Session QR</span>
                         </>
                       )}
-                    </button>
-                  </div>
+                    </Button>
+                  </Card>
 
                   <QRDisplayCard
                     title={selectedSession.title}
@@ -211,7 +215,7 @@ export default function AdminSessionsPage() {
                   />
 
                   {/* Real-time Attendees Feed */}
-                  <div className="p-6 dash-card space-y-4">
+                  <Card className="p-6 space-y-4">
                     <div className="flex items-center justify-between pb-3 border-b border-border">
                       <h3 className="text-sm font-bold text-foreground">Real-time Attendance Feed</h3>
                       <span className="px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-sm font-bold tabular-nums">
@@ -258,12 +262,12 @@ export default function AdminSessionsPage() {
                         </div>
                       )}
                     </div>
-                  </div>
+                  </Card>
                 </>
               ) : (
-                <div className="p-12 text-center text-muted-foreground text-sm dash-card">
+                <Card className="p-12 text-center text-muted-foreground text-sm">
                   Select a session to view QR code.
-                </div>
+                </Card>
               )}
             </div>
           </div>

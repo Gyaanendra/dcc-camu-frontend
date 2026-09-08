@@ -10,6 +10,8 @@ import { api } from '@/lib/api';
 import { Radio, Sparkles, RefreshCw, QrCode, ShieldAlert } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import Link from 'next/link';
+import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 
 export default function ScanPage() {
   const { user } = useAuth();
@@ -41,7 +43,7 @@ export default function ScanPage() {
           <Sidebar />
           <main className="flex-1 p-3.5 sm:p-6 lg:p-8 max-w-4xl mx-auto w-full space-y-4 sm:space-y-6">
             {/* Header with Auto-Detected Session Badge */}
-            <div className="dash-card p-4 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+            <Card className="p-4 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
               <div>
                 <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest mb-1">
                   Attendance Check-in
@@ -75,19 +77,20 @@ export default function ScanPage() {
                   </div>
                 )}
 
-                <button
+                <Button
+                  variant="outline"
+                  size="icon"
                   onClick={fetchActiveSession}
-                  className="p-2 rounded-lg bg-secondary border border-border text-muted-foreground hover:text-foreground transition-colors"
                   title="Check for newly started sessions"
                 >
                   <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
-                </button>
+                </Button>
               </div>
-            </div>
+            </Card>
 
             {/* Scanner Card (advisors are view-only — scanning disabled) */}
             {user?.role === 'advisor' ? (
-              <div className="dash-card p-8 text-center space-y-3">
+              <Card className="p-8 text-center space-y-3">
                 <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10 text-destructive border border-destructive/30">
                   <ShieldAlert className="w-6 h-6" />
                 </div>
@@ -95,13 +98,12 @@ export default function ScanPage() {
                 <p className="text-sm text-muted-foreground">
                   Advisor accounts cannot mark attendance. Scanning is disabled for your role.
                 </p>
-                <Link
-                  href="/dashboard"
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold"
-                >
-                  Back to Dashboard
-                </Link>
-              </div>
+                <Button asChild>
+                  <Link href="/dashboard">
+                    Back to Dashboard
+                  </Link>
+                </Button>
+              </Card>
             ) : isLoading ? (
               <PageLoader message="Initializing live QR scanner..." />
             ) : (

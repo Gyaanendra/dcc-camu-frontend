@@ -12,6 +12,8 @@ import { PageLoader } from '@/components/layout/PageLoader';
 import { api } from '@/lib/api';
 import { RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 
 export default function AdminMembersPage() {
   const { user } = useAuth();
@@ -44,12 +46,12 @@ export default function AdminMembersPage() {
         <div className="flex flex-1">
           <Sidebar />
           <main className="flex-1 p-6 sm:p-8 max-w-7xl mx-auto w-full space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 dash-card">
+            <Card className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6">
               <div>
-                <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest mb-1">
+                <div className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
                   Club Membership
                 </div>
-                <h1 className="text-xl sm:text-2xl font-bold text-foreground tracking-tight">
+                <h1 className="text-2xl font-semibold text-foreground tracking-tight">
                   Member Directory
                 </h1>
                 <p className="text-sm text-muted-foreground mt-1">{isReadOnly ? 'View-only access — editing is disabled for advisors' : 'Manage member assignments, positions, roles, and view attendance totals'}</p>
@@ -58,15 +60,16 @@ export default function AdminMembersPage() {
               <div className="flex items-center gap-2.5">
                 <AddMemberModal teams={teams} onCreated={loadData} />
                 <CreateTeamModal onCreated={loadData} />
-                <button
+                <Button
+                  variant="outline"
+                  size="icon"
                   onClick={loadData}
-                  className="p-2.5 rounded-xl bg-secondary border border-border text-muted-foreground hover:text-foreground hover:bg-muted transition-colors shadow-sm"
                   title="Refresh directory"
                 >
                   <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
-                </button>
+                </Button>
               </div>
-            </div>
+            </Card>
 
             {isLoading ? (
               <PageLoader message="Loading member directory..." />

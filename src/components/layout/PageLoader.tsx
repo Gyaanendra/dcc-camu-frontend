@@ -1,4 +1,5 @@
 import React from 'react';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface PageLoaderProps {
   message?: string;
@@ -27,14 +28,14 @@ export const PageLoader: React.FC<PageLoaderProps> = ({ message = 'Loading live 
 
       {/* ── Ambient: skeleton card placeholders ── */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <div className="skeleton h-24" />
-        <div className="skeleton h-24" />
-        <div className="skeleton h-24" />
+        <Skeleton className="h-24" />
+        <Skeleton className="h-24" />
+        <Skeleton className="h-24" />
       </div>
-      <div className="skeleton h-48" />
+      <Skeleton className="h-48" />
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <div className="skeleton h-16" />
-        <div className="skeleton h-16" />
+        <Skeleton className="h-16" />
+        <Skeleton className="h-16" />
       </div>
     </div>
   );

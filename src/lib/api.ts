@@ -2,29 +2,18 @@
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
 class ApiClient {
+  // In-memory only. The httpOnly session cookie is the primary credential
+  // (sent automatically via `credentials: include`); this token is just a
+  // same-tab fallback and is never persisted to localStorage.
   private token: string | null = null;
 
-  constructor() {
-    if (typeof window !== 'undefined') {
-      this.token = localStorage.getItem('dcc_auth_token');
-    }
-  }
+  constructor() {}
 
   setToken(token: string | null) {
     this.token = token;
-    if (typeof window !== 'undefined') {
-      if (token) {
-        localStorage.setItem('dcc_auth_token', token);
-      } else {
-        localStorage.removeItem('dcc_auth_token');
-      }
-    }
   }
 
   getToken(): string | null {
-    if (!this.token && typeof window !== 'undefined') {
-      this.token = localStorage.getItem('dcc_auth_token');
-    }
     return this.token;
   }
 
@@ -46,6 +35,7 @@ class ApiClient {
     try {
       const response = await fetch(url, {
         ...options,
+        credentials: 'include',
         headers,
       });
 
@@ -100,6 +90,14 @@ class ApiClient {
 
   async getMe() {
     return this.request('/auth/me');
+  }
+
+  async logout() {
+    try {
+      await this.request('/auth/logout', { method: 'POST' });
+    } finally {
+      this.setToken(null);
+    }
   }
 
   async updateProfile(profileData: { position?: string; name?: string }) {

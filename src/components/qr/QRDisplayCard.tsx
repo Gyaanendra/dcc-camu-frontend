@@ -4,6 +4,9 @@ import React, { useState } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { MapPin, Copy, Check } from 'lucide-react';
 import { toast } from 'sonner';
+import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 
 interface QRDisplayCardProps {
   title: string;
@@ -31,18 +34,18 @@ export const QRDisplayCard: React.FC<QRDisplayCardProps> = ({
   };
 
   return (
-    <div className="dash-card p-6 flex flex-col items-center text-center">
+    <Card className="p-6 flex flex-col items-center text-center">
       {/* Header Badge */}
       <div className="mb-2">
-        <span className="px-2.5 py-0.5 rounded-full bg-secondary border border-border text-muted-foreground font-mono text-[10px] font-bold uppercase tracking-wider">
+        <Badge variant="secondary" className="font-mono text-[10px] font-bold uppercase tracking-wider">
           {type === 'session' ? 'Live Session QR' : 'Digital Member ID'}
-        </span>
+        </Badge>
         <h3 className="text-sm font-bold text-foreground mt-2">{title}</h3>
         {subtitle && <p className="text-sm text-muted-foreground mt-0.5">{subtitle}</p>}
       </div>
 
       {/* Clean QR Render Box (High contrast white canvas for QR code readability) */}
-      <div className="p-4 rounded-xl bg-white border border-border shadow-sm my-3 flex items-center justify-center">
+      <div className="p-4 rounded-xl bg-white border border-border my-3 flex items-center justify-center">
         <QRCodeSVG value={qrCodeToken} size={160} level="H" includeMargin={false} />
       </div>
 
@@ -60,15 +63,17 @@ export const QRDisplayCard: React.FC<QRDisplayCardProps> = ({
           <code className="px-2 py-0.5 rounded bg-secondary border border-border text-foreground text-[11px] font-semibold">
             {qrCodeToken}
           </code>
-          <button
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7"
             onClick={handleCopy}
-            className="p-1 rounded bg-secondary text-muted-foreground hover:text-foreground hover:bg-muted transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
             title="Copy Token"
           >
             {copied ? <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-          </button>
+          </Button>
         </div>
       </div>
-    </div>
+    </Card>
   );
 };

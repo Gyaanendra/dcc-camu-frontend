@@ -196,6 +196,16 @@
 
     /* Shape — 8px control radius (12px cards come from rounded-lg) */
     --radius:             0.5rem;
+
+    /* Sidebar tokens — warm surfaces, orange active states (DESIGN.md) */
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 52 12% 13%;
+    --sidebar-primary: 19 100% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 19 100% 93%;
+    --sidebar-accent-foreground: 19 100% 32%;
+    --sidebar-border: 50 11% 89%;
+    --sidebar-ring: 19 100% 48%;
   }
 
   .dark {
@@ -235,6 +245,16 @@
     --border:             49 11% 18%;
     --input:              49 11% 18%;
     --ring:               19 100% 48%;    /* keep orange ring in dark too */
+
+    /* Sidebar tokens — warm-dark counterpart */
+    --sidebar-background: 50 12% 11%;
+    --sidebar-foreground: 51 26% 95%;
+    --sidebar-primary: 19 100% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 50 13% 14%;
+    --sidebar-accent-foreground: 51 26% 95%;
+    --sidebar-border: 49 11% 18%;
+    --sidebar-ring: 19 100% 48%;
   }
 }
 

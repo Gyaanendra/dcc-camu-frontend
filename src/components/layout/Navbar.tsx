@@ -6,6 +6,8 @@ import { useTheme } from '@/context/ThemeContext';
 import { LogOut, QrCode, Calendar, Sun, Moon, Menu } from 'lucide-react';
 import Link from 'next/link';
 import { openMobileNav } from '@/components/layout/MobileNav';
+import { Button } from '@/components/ui/button';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 
 export const Navbar: React.FC = () => {
   const { user, logout } = useAuth();
@@ -38,7 +40,7 @@ export const Navbar: React.FC = () => {
 
           {/* Brand */}
           <Link href="/dashboard" className="flex items-center gap-2.5 group">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-foreground font-bold text-background text-[11px] tracking-tight shadow-sm transition-transform group-hover:scale-105">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-foreground font-bold text-background text-[11px] tracking-tight transition-transform group-hover:scale-105">
               DCC
             </div>
             <div>
@@ -66,42 +68,40 @@ export const Navbar: React.FC = () => {
           </div>
 
           {/* Theme Toggle */}
-          <button
+          <Button
+            variant="outline"
+            size="icon"
             onClick={toggleTheme}
             id="theme-toggle"
-            className="p-2 rounded-lg bg-secondary border border-border text-muted-foreground hover:text-foreground transition-colors"
             title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
           >
             {theme === 'dark'
-              ? <Sun className="w-4 h-4 text-amber-400" />
+              ? <Sun className="w-4 h-4 text-amber-500" />
               : <Moon className="w-4 h-4" />
             }
-          </button>
+          </Button>
 
           {user ? (
             <>
               {/* Scan QR CTA — hidden on mobile + hidden for view-only advisors */}
               {user.role !== 'advisor' && (
-                <Link
-                  href="/scan"
-                  id="navbar-scan-qr"
-                  className="hidden sm:flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-accent text-accent-foreground hover:bg-accent/90 font-semibold text-sm shadow-sm transition-all"
-                >
-                  <QrCode className="w-3.5 h-3.5" />
-                  <span>Scan QR</span>
-                </Link>
+                <Button asChild id="navbar-scan-qr" className="hidden sm:inline-flex">
+                  <Link href="/scan">
+                    <QrCode className="w-3.5 h-3.5" />
+                    <span>Scan QR</span>
+                  </Link>
+                </Button>
               )}
 
               {/* Profile + Logout */}
               <div className="flex items-center gap-2 pl-2 border-l border-border">
                 <div className="flex items-center gap-2">
-                  <div className="flex h-7 w-7 items-center justify-center rounded-full bg-secondary border border-border font-semibold text-sm text-foreground overflow-hidden">
-                    {user.avatarUrl ? (
-                      <img src={user.avatarUrl} alt={user.name} className="h-full w-full object-cover" />
-                    ) : (
-                      user.name.charAt(0).toUpperCase()
-                    )}
-                  </div>
+                  <Avatar className="h-7 w-7 border border-border">
+                    {user.avatarUrl && <AvatarImage src={user.avatarUrl} alt={user.name} />}
+                    <AvatarFallback className="bg-secondary text-foreground text-xs font-semibold">
+                      {user.name.charAt(0).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
                   <div className="hidden lg:block text-left">
                     <div className="text-sm font-semibold text-foreground leading-tight">{user.name}</div>
                     <div className="text-[11px] text-muted-foreground font-mono flex items-center gap-1">
@@ -112,23 +112,22 @@ export const Navbar: React.FC = () => {
                   </div>
                 </div>
 
-                <button
+                <Button
+                  variant="ghost"
+                  size="icon"
                   onClick={logout}
                   id="navbar-logout"
-                  className="hidden lg:block p-1.5 text-muted-foreground hover:text-foreground hover:bg-secondary rounded-lg transition-colors"
+                  className="hidden lg:inline-flex h-8 w-8"
                   title="Sign Out"
                 >
                   <LogOut className="w-3.5 h-3.5" />
-                </button>
+                </Button>
               </div>
             </>
           ) : (
-            <Link
-              href="/"
-              className="px-4 py-1.5 rounded-lg bg-accent text-accent-foreground hover:bg-accent/90 font-semibold text-sm shadow-sm transition-all"
-            >
-              Sign In
-            </Link>
+            <Button asChild>
+              <Link href="/">Sign In</Link>
+            </Button>
           )}
         </div>
       </div>

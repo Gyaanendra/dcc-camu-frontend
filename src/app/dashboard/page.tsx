@@ -11,6 +11,10 @@ import { api } from '@/lib/api';
 import { toast } from 'sonner';
 import { PageLoader } from '@/components/layout/PageLoader';
 import { cn } from '@/lib/utils';
+import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   QrCode,
   Award,
@@ -81,7 +85,7 @@ export default function DashboardPage() {
           <main className="flex-1 p-4 sm:p-6 lg:p-6 max-w-7xl mx-auto w-full space-y-4">
 
             {/* ── Greeting Header ───────────────────────────────── */}
-            <div className="dash-card p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 anim-fade-up">
+            <Card className="p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 anim-fade-up">
               <div className="min-w-0">
                 <div className="flex items-center gap-1.5 text-[10px] font-semibold text-muted-foreground uppercase tracking-widest mb-1">
                   <span>Bennett University</span>
@@ -112,29 +116,28 @@ export default function DashboardPage() {
 
               <div className="flex items-center gap-2 shrink-0">
                 {user?.role !== 'advisor' && (
-                  <Link
-                    href="/scan"
-                    id="dashboard-scan-cta"
-                    className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-accent text-accent-foreground hover:bg-accent/90 font-semibold text-sm shadow-sm transition-all"
-                  >
-                    <QrCode className="w-3.5 h-3.5" />
-                    <span>Instant QR Scan</span>
-                  </Link>
+                  <Button asChild id="dashboard-scan-cta">
+                    <Link href="/scan">
+                      <QrCode className="w-3.5 h-3.5" />
+                      <span>Instant QR Scan</span>
+                    </Link>
+                  </Button>
                 )}
-                <button
+                <Button
+                  variant="outline"
+                  size="icon"
                   onClick={loadDashboardData}
                   id="dashboard-refresh"
-                  className="p-2 rounded-lg bg-secondary border border-border text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
                   title="Refresh Data"
                 >
                   <RefreshCw className={cn('w-4 h-4', isLoading && 'animate-spin')} />
-                </button>
+                </Button>
               </div>
-            </div>
+            </Card>
 
             {/* ── Active Session Banner ──────────────────────────── */}
             {activeLiveSession && (
-              <div className="dash-card p-4 border-emerald-500/30 dark:border-emerald-500/20 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 anim-fade-up anim-delay-1">
+              <Card className="p-4 border-emerald-500/30 dark:border-emerald-500/20 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 anim-fade-up anim-delay-1">
                 <div className="flex items-center gap-3">
                   <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 shrink-0">
                     <Radio className="w-4 h-4 animate-pulse" />
@@ -149,26 +152,26 @@ export default function DashboardPage() {
 
                 <div className="flex items-center gap-2">
                   {user?.role === 'admin' && (
-                    <button
+                    <Button
+                      variant="outline"
                       onClick={() => handleCloseActiveSession(activeLiveSession.id)}
                       disabled={isClosingSession}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-destructive/10 border border-destructive/30 text-destructive hover:bg-destructive/20 text-sm font-semibold transition-colors"
+                      className="border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive"
                     >
                       <PowerOff className="w-3.5 h-3.5" />
                       <span>Close Live QR</span>
-                    </button>
+                    </Button>
                   )}
                   {user?.role !== 'advisor' && (
-                    <Link
-                      href="/scan"
-                      className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold transition-colors shadow-sm"
-                    >
-                      <span>Mark Attendance</span>
-                      <ArrowRight className="w-3.5 h-3.5" />
-                    </Link>
+                    <Button asChild className="bg-emerald-600 hover:bg-emerald-700 text-white">
+                      <Link href="/scan">
+                        <span>Mark Attendance</span>
+                        <ArrowRight className="w-3.5 h-3.5" />
+                      </Link>
+                    </Button>
                   )}
                 </div>
-              </div>
+              </Card>
             )}
 
             {/* ── Main Content ───────────────────────────────────── */}
@@ -199,21 +202,22 @@ export default function DashboardPage() {
                       />
                     </div>
 
-                    <div className="lg:col-span-2 dash-card p-5 space-y-4">
+                    <Card className="lg:col-span-2 p-5 space-y-4">
                       <div className="flex items-center justify-between pb-3 border-b border-border">
                         <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
                           <Calendar className="w-4 h-4 text-accent" />
                           Active Session Details
                         </h3>
                         {user?.role === 'admin' && (
-                          <button
+                          <Button
+                            variant="outline"
                             onClick={() => handleCloseActiveSession(activeLiveSession.id)}
                             disabled={isClosingSession}
-                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-destructive/10 border border-destructive/30 text-destructive hover:bg-destructive/20 text-sm font-semibold transition-colors"
+                            className="border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive"
                           >
                             <PowerOff className="w-3.5 h-3.5" />
                             <span>End Session</span>
-                          </button>
+                          </Button>
                         )}
                       </div>
 
@@ -236,7 +240,7 @@ export default function DashboardPage() {
                           </div>
                         ))}
                       </div>
-                    </div>
+                    </Card>
                   </div>
                 )}
               </div>
@@ -248,7 +252,7 @@ export default function DashboardPage() {
                   {/* KPI Stat Cards */}
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     {/* Attendance Rate */}
-                    <div className="dash-card p-5 anim-fade-up anim-delay-1">
+                    <Card className="p-5 anim-fade-up anim-delay-1">
                       <div className="flex items-center justify-between">
                         <span className="text-[10px] font-semibold tracking-widest text-muted-foreground uppercase">
                           Attendance Rate
@@ -267,10 +271,10 @@ export default function DashboardPage() {
                       <div className="text-[11px] text-muted-foreground mt-1.5">
                         {userStats?.stats?.attendedCount || 0} of {userStats?.stats?.totalSessions || 0} sessions
                       </div>
-                    </div>
+                    </Card>
 
                     {/* Active Streak */}
-                    <div className="dash-card p-5 anim-fade-up anim-delay-2">
+                    <Card className="p-5 anim-fade-up anim-delay-2">
                       <div className="flex items-center justify-between">
                         <span className="text-[10px] font-semibold tracking-widest text-muted-foreground uppercase">
                           Active Streak
@@ -283,10 +287,10 @@ export default function DashboardPage() {
                       <div className="text-[11px] text-muted-foreground mt-1.5">
                         consecutive check-ins
                       </div>
-                    </div>
+                    </Card>
 
                     {/* Club Position */}
-                    <div className="dash-card p-5 anim-fade-up anim-delay-3">
+                    <Card className="p-5 anim-fade-up anim-delay-3">
                       <div className="flex items-center justify-between">
                         <span className="text-[10px] font-semibold tracking-widest text-muted-foreground uppercase">
                           Club Position
@@ -299,11 +303,11 @@ export default function DashboardPage() {
                       <div className="text-[11px] text-muted-foreground mt-1.5">
                         Role: <span className="text-accent font-semibold capitalize">{user?.role}</span>
                       </div>
-                    </div>
+                    </Card>
                   </div>
 
                   {/* ── Recent Attendance History ───────────────── */}
-                  <div className="dash-card p-5 space-y-4 anim-fade-up anim-delay-4">
+                  <Card className="p-5 space-y-4 anim-fade-up anim-delay-4">
                     <div className="flex items-center justify-between">
                       <h3 className="text-sm font-bold text-foreground">Recent Attendance History</h3>
                       <Link
@@ -314,12 +318,12 @@ export default function DashboardPage() {
                       </Link>
                     </div>
 
-                    <div className="space-y-2">
-                      {isLoading ? (
-                        [1, 2, 3].map(i => (
-                          <div key={i} className="skeleton h-14" />
-                        ))
-                      ) : userStats?.history?.length > 0 ? (
+                      <div className="space-y-2">
+                        {isLoading ? (
+                          [1, 2, 3].map(i => (
+                            <Skeleton key={i} className="h-14" />
+                          ))
+                        ) : userStats?.history?.length > 0 ? (
                         userStats.history.map((log: any) => (
                           <div
                             key={log.id}
@@ -330,14 +334,16 @@ export default function DashboardPage() {
                               <div className="text-[11px] text-muted-foreground mt-0.5 truncate">{log.location}</div>
                             </div>
                             <div className="text-right ml-3 shrink-0">
-                              <span className={cn(
-                                'px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider',
-                                log.status === 'late'
-                                  ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20'
-                                  : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
-                              )}>
+                              <Badge
+                                variant="secondary"
+                                className={
+                                  log.status === 'late'
+                                    ? 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20 font-mono text-[10px] font-bold uppercase tracking-wider'
+                                    : 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20 font-mono text-[10px] font-bold uppercase tracking-wider'
+                                }
+                              >
                                 {log.status}
-                              </span>
+                              </Badge>
                               <div className="text-[10px] text-muted-foreground mt-1">
                                 {new Date(log.scannedAt).toLocaleDateString()}
                               </div>
@@ -349,17 +355,16 @@ export default function DashboardPage() {
                           <QrCode className="w-8 h-8 text-muted-foreground mb-2" />
                           <p className="text-sm font-medium text-foreground">No records yet</p>
                           <p className="text-sm text-muted-foreground mt-0.5">Scan a session QR code to record attendance</p>
-                          <Link
-                            href="/scan"
-                            className="mt-3 flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-accent text-accent-foreground hover:bg-accent/90 text-sm font-semibold transition-all shadow-sm"
-                          >
-                            <QrCode className="w-3.5 h-3.5" />
-                            Scan Now
-                          </Link>
+                          <Button asChild className="mt-3">
+                            <Link href="/scan">
+                              <QrCode className="w-3.5 h-3.5" />
+                              Scan Now
+                            </Link>
+                          </Button>
                         </div>
                       )}
                     </div>
-                  </div>
+                  </Card>
                 </div>
 
                 {/* ── Member QR ID Badge ──────────────────────── */}

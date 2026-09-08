@@ -35,18 +35,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const refreshProfile = async () => {
     try {
-      const storedToken = localStorage.getItem('dcc_auth_token');
-      if (!storedToken) {
-        setIsLoading(false);
-        return;
-      }
-
-      setToken(storedToken);
+      // Session restores from the httpOnly cookie (or the in-memory token).
+      // Nothing auth-related is read from persistent browser storage.
       const res = await api.getMe();
       setUser(res.user);
+      setToken(api.getToken());
     } catch (error) {
       console.warn('[Auth] Failed to restore active session:', error);
-      localStorage.removeItem('dcc_auth_token');
       api.setToken(null);
       setUser(null);
       setToken(null);
@@ -64,8 +59,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const normalizedEmail = email.trim().toLowerCase();
       const res = await api.login(normalizedEmail, password);
-      localStorage.setItem('dcc_auth_token', res.token);
-      setToken(res.token);
+      setToken(res.token || null);
       setUser(res.user);
       toast.success(`Welcome back, ${res.user.name}!`);
     } catch (error: any) {
@@ -83,8 +77,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = () => {
-    localStorage.removeItem('dcc_auth_token');
-    api.setToken(null);
+    api.logout().catch(() => {
+      // Cookie already expired or server unreachable — still log out locally.
+    });
     setUser(null);
     setToken(null);
     toast.info('Logged out from Club DCC Camu.');

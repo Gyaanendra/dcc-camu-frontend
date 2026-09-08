@@ -9,6 +9,8 @@ import { PageLoader } from '@/components/layout/PageLoader';
 import { useAuth } from '@/context/AuthContext';
 import { api } from '@/lib/api';
 import { CheckCircle2 } from 'lucide-react';
+import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 
 export default function MyAttendancePage() {
   const { user } = useAuth();
@@ -31,7 +33,7 @@ export default function MyAttendancePage() {
         <div className="flex flex-1">
           <Sidebar />
           <main className="flex-1 p-6 sm:p-8 max-w-7xl mx-auto w-full space-y-6">
-            <div className="p-6 dash-card">
+            <Card className="p-6">
               <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest mb-1">
                 Member Record
               </div>
@@ -39,7 +41,7 @@ export default function MyAttendancePage() {
                 My Attendance & Streak History
               </h1>
               <p className="text-sm text-muted-foreground mt-1">Individual check-in record for {user?.name}</p>
-            </div>
+            </Card>
 
             {isLoading ? (
               <PageLoader message="Loading your attendance & streak records..." />
@@ -48,35 +50,35 @@ export default function MyAttendancePage() {
                 <div className="lg:col-span-2 space-y-6">
                   {/* Stat Counters */}
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div className="dash-card p-5">
-                      <span className="text-[10px] font-semibold tracking-widest text-muted-foreground uppercase">Attendance Rate</span>
-                      <div className="text-2xl font-bold text-foreground mt-2 tabular-nums tracking-tight">
+                    <Card className="p-5">
+                      <span className="text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">Attendance Rate</span>
+                      <div className="text-2xl font-semibold text-foreground mt-2 tabular-nums tracking-tight">
                         {myStats?.stats?.attendancePercentage || 0}%
                       </div>
-                      <div className="text-[11px] text-muted-foreground mt-1">
+                      <div className="text-xs text-muted-foreground mt-1">
                         {myStats?.stats?.attendedCount || 0} of {myStats?.stats?.totalSessions || 0} sessions
                       </div>
-                    </div>
+                    </Card>
 
-                    <div className="dash-card p-5">
-                      <span className="text-[10px] font-semibold tracking-widest text-muted-foreground uppercase">Active Streak</span>
-                      <div className="text-2xl font-bold text-foreground mt-2 tabular-nums tracking-tight">
+                    <Card className="p-5">
+                      <span className="text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">Active Streak</span>
+                      <div className="text-2xl font-semibold text-foreground mt-2 tabular-nums tracking-tight">
                         {myStats?.stats?.currentStreak || 0}
                       </div>
-                      <div className="text-[11px] text-muted-foreground mt-1">consecutive check-ins</div>
-                    </div>
+                      <div className="text-xs text-muted-foreground mt-1">consecutive check-ins</div>
+                    </Card>
 
-                    <div className="dash-card p-5">
-                      <span className="text-[10px] font-semibold tracking-widest text-muted-foreground uppercase">Punctuality Score</span>
-                      <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-2 tabular-nums tracking-tight">
+                    <Card className="p-5">
+                      <span className="text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">Punctuality Score</span>
+                      <div className="text-2xl font-semibold text-emerald-600 dark:text-emerald-400 mt-2 tabular-nums tracking-tight">
                         {myStats?.stats?.punctualityPercentage || 100}%
                       </div>
-                      <div className="text-[11px] text-muted-foreground mt-1">On-time check-ins</div>
-                    </div>
+                      <div className="text-xs text-muted-foreground mt-1">On-time check-ins</div>
+                    </Card>
                   </div>
 
                   {/* History Timeline */}
-                  <div className="dash-card p-6 space-y-4">
+                  <Card className="p-6 space-y-4">
                     <h3 className="text-sm font-bold text-foreground">Attendance History</h3>
 
                     <div className="space-y-2.5">
@@ -97,15 +99,16 @@ export default function MyAttendancePage() {
                             </div>
 
                             <div className="text-right">
-                              <span
-                                className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                              <Badge
+                                variant="secondary"
+                                className={
                                   h.status === 'late'
-                                    ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20'
-                                    : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
-                                }`}
+                                    ? 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20 font-mono text-[10px] font-bold uppercase tracking-wider'
+                                    : 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20 font-mono text-[10px] font-bold uppercase tracking-wider'
+                                }
                               >
                                 {h.status}
-                              </span>
+                              </Badge>
                               <div className="text-[10px] text-muted-foreground mt-1 font-mono">
                                 {new Date(h.scannedAt).toLocaleString()}
                               </div>
@@ -118,7 +121,7 @@ export default function MyAttendancePage() {
                         </div>
                       )}
                     </div>
-                  </div>
+                  </Card>
                 </div>
 
                 <div className="lg:col-span-1">
