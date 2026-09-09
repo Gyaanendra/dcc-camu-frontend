@@ -29,8 +29,6 @@ class ApiClient {
     }
 
     const url = `${API_BASE}${endpoint}`;
-    const start = performance.now();
-    console.log(`📡 [API Request] ${options.method || 'GET'} ${url}`);
 
     try {
       const response = await fetch(url, {
@@ -39,18 +37,15 @@ class ApiClient {
         headers,
       });
 
-      const duration = Math.round(performance.now() - start);
       const data = await response.json().catch(() => ({}));
 
       if (!response.ok) {
-        console.warn(`⚠️ [API Error] ${options.method || 'GET'} ${url} -> ${response.status} (${duration}ms):`, data.error || data.message);
         throw new Error(data.error || data.message || `Request failed with status ${response.status}`);
       }
 
-      console.log(`✅ [API Response] ${options.method || 'GET'} ${url} -> ${response.status} (${duration}ms)`);
       return data;
     } catch (error: any) {
-      console.error(`❌ [Network/API Error] ${options.method || 'GET'} ${url}:`, error.message);
+      console.error(`[API Error] ${options.method || 'GET'} ${url}:`, error.message);
       throw error;
     }
   }
@@ -58,7 +53,6 @@ class ApiClient {
   // Auth Endpoints
   async login(email: string, password: string) {
     const normalizedEmail = email.trim().toLowerCase();
-    console.log(`🔑 [Auth] Attempting login for Bennett email: ${normalizedEmail}`);
     const data = await this.request('/auth/login', {
       method: 'POST',
       body: JSON.stringify({ email: normalizedEmail, password }),
@@ -79,7 +73,6 @@ class ApiClient {
       ...userData,
       email: userData.email.trim().toLowerCase(),
     };
-    console.log(`📝 [Auth] Registering member: ${normalizedUserData.name} (${normalizedUserData.rollNumber})`);
     const data = await this.request('/auth/register', {
       method: 'POST',
       body: JSON.stringify(normalizedUserData),
@@ -102,7 +95,6 @@ class ApiClient {
 
   async updateProfile(profileData: { position?: string; name?: string }) {
     // Disabled: backend returns 403 — self-editing is turned off. Kept for backwards compat.
-    console.log(`✏️ [Profile] Update attempted (disabled):`, profileData);
     return this.request('/auth/profile', {
       method: 'PUT',
       body: JSON.stringify(profileData),
@@ -115,7 +107,6 @@ class ApiClient {
     memberRollNumber?: string;
     sessionId?: string;
   }) {
-    console.log(`📷 [QR Scan] Processing attendance payload:`, payload);
     return this.request('/attendance/scan', {
       method: 'POST',
       body: JSON.stringify(payload),
@@ -152,7 +143,6 @@ class ApiClient {
     location?: string;
     durationMinutes?: string;
   }) {
-    console.log(`📅 [Sessions] Creating new event: ${sessionData.title}`);
     return this.request('/sessions', {
       method: 'POST',
       body: JSON.stringify(sessionData),
@@ -161,7 +151,6 @@ class ApiClient {
 
   // Close or Re-activate Live Session QR
   async updateSessionStatus(sessionId: string, status: { isActive: boolean | string }) {
-    console.log(`⏹️ [Sessions] Updating live session ${sessionId} status:`, status);
     return this.request(`/sessions/${sessionId}/status`, {
       method: 'PATCH',
       body: JSON.stringify(status),
@@ -207,7 +196,6 @@ class ApiClient {
     teamId?: string | null;
     role?: string;
   }) {
-    console.log(`🛡️ [Admin] Creating new member: ${memberData.name} (${memberData.rollNumber})`);
     return this.request('/users', {
       method: 'POST',
       body: JSON.stringify(memberData),
@@ -222,7 +210,6 @@ class ApiClient {
   }
 
   async updateUserRole(userId: string, roleData: { role: string; position?: string; teamId?: string | null; name?: string }) {
-    console.log(`🛡️ [Admin] Updating role/team for user ${userId}:`, roleData);
     return this.request(`/users/${userId}/role`, {
       method: 'PATCH',
       body: JSON.stringify(roleData),

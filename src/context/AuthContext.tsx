@@ -41,7 +41,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(res.user);
       setToken(api.getToken());
     } catch (error) {
-      console.warn('[Auth] Failed to restore active session:', error);
+      // No active session (logged out or expired) — stay logged out silently.
       api.setToken(null);
       setUser(null);
       setToken(null);

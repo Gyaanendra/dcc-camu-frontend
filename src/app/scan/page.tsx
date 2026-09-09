@@ -25,7 +25,7 @@ export default function ScanPage() {
       const live = res.sessions?.find((s: any) => s.isActive === 'true');
       setActiveSession(live || null);
     } catch (err) {
-      console.warn('Failed to load active session:', err);
+      // No live session — the scanner auto-detects via QR instead.
     } finally {
       setIsLoading(false);
     }

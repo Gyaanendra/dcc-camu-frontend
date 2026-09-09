@@ -49,7 +49,7 @@ export default function DashboardPage() {
       const sessionsRes = await api.getSessions();
       setActiveSessions(sessionsRes.sessions || []);
     } catch (error) {
-      console.warn('Dashboard load warning:', error);
+      // Dashboard shows empty states when data fails to load.
     } finally {
       setIsLoading(false);
     }
