@@ -6,8 +6,9 @@ import { Navbar } from '@/components/layout/Navbar';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { PageLoader } from '@/components/layout/PageLoader';
 import { api } from '@/lib/api';
+import { useAuth } from '@/context/AuthContext';
 import { toast } from 'sonner';
-import { Table2, RefreshCw, Check, Clock, Minus } from 'lucide-react';
+import { Table2, RefreshCw, Check, Clock, Minus, Loader2, MousePointerClick } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
@@ -46,16 +47,21 @@ interface SheetMember {
   records: Record<string, string | null>;
 }
 
-const fmtDate = (iso: string) =>
-  new Date(iso).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' });
-const fmtTime = (iso: string) =>
-  new Date(iso).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+// startTime can be missing on legacy rows — never render "Invalid Date".
+const fmtDate = (iso?: string | null) =>
+  iso ? new Date(iso).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' }) : '—';
+const fmtTime = (iso?: string | null) =>
+  iso ? new Date(iso).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) : '—';
 
 export default function AttendanceSheetPage() {
+  const { user } = useAuth();
+  const isReadOnly = user?.role === 'advisor';
   const [sessions, setSessions] = useState<SheetSession[]>([]);
   const [members, setMembers] = useState<SheetMember[]>([]);
   const [teamFilter, setTeamFilter] = useState('ALL');
   const [isLoading, setIsLoading] = useState(true);
+  // `${memberId}:${sessionId}` of the cell with an in-flight toggle, if any.
+  const [updatingCell, setUpdatingCell] = useState<string | null>(null);
 
   const loadData = async () => {
     setIsLoading(true);
@@ -73,6 +79,46 @@ export default function AttendanceSheetPage() {
   useEffect(() => {
     loadData();
   }, []);
+
+  // Admin: flip a single matrix cell (present <-> absent) with an optimistic
+  // update. The member snapshot is restored verbatim if the API rejects.
+  const handleToggleCell = async (member: SheetMember, session: SheetSession) => {
+    if (updatingCell) return;
+
+    const currentStatus = member.records[session.id] || null;
+    const action: 'mark_present' | 'mark_absent' = currentStatus ? 'mark_absent' : 'mark_present';
+    const newStatus: string | null = currentStatus ? null : 'present';
+
+    const snapshot = member;
+    const newRecords = { ...member.records, [session.id]: newStatus };
+    const attended = Object.values(newRecords).filter(Boolean).length;
+
+    setMembers(prev =>
+      prev.map(m =>
+        m.id === member.id
+          ? {
+              ...m,
+              records: newRecords,
+              attended,
+              attendanceRate: sessions.length > 0 ? Math.round((attended / sessions.length) * 100) : 0,
+            }
+          : m
+      )
+    );
+    setUpdatingCell(`${member.id}:${session.id}`);
+
+    try {
+      await api.manualAttendance({ sessionId: session.id, userId: member.id, action });
+      toast.success(
+        action === 'mark_present' ? `Marked ${member.name} present` : `Marked ${member.name} absent`
+      );
+    } catch (e: any) {
+      setMembers(prev => prev.map(m => (m.id === snapshot.id ? snapshot : m)));
+      toast.error(e.message || 'Failed to update attendance');
+    } finally {
+      setUpdatingCell(null);
+    }
+  };
 
   const teams = useMemo(() => {
     const seen = new Map<string, string>();
@@ -159,6 +205,12 @@ export default function AttendanceSheetPage() {
                   <span className="flex items-center gap-1.5"><Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" /> Present</span>
                   <span className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" /> Late</span>
                   <span className="flex items-center gap-1.5"><Minus className="w-3.5 h-3.5" /> Absent / no record</span>
+                  {!isReadOnly && (
+                    <span className="flex items-center gap-1.5 ml-auto text-xs font-medium text-muted-foreground bg-secondary border border-border rounded-full px-3 py-1">
+                      <MousePointerClick className="w-3.5 h-3.5" />
+                      Tip: Click any cell to manually toggle attendance
+                    </span>
+                  )}
                 </div>
 
                 {/* Matrix table */}
@@ -173,7 +225,7 @@ export default function AttendanceSheetPage() {
                           <TableHead
                             key={s.id}
                             className="p-3 min-w-[110px] max-w-[130px] border-b border-border align-bottom"
-                            title={`${s.title} — ${new Date(s.startTime).toLocaleString()}`}
+                            title={s.startTime ? `${s.title} — ${new Date(s.startTime).toLocaleString()}` : s.title}
                           >
                             <div className="flex items-center gap-1.5">
                               <span className="text-xs font-semibold text-foreground truncate">{s.title}</span>
@@ -208,15 +260,36 @@ export default function AttendanceSheetPage() {
                               <div className="text-[11px] text-muted-foreground font-mono">{row.member!.rollNumber}</div>
                             </TableCell>
                             {sessions.map(s => {
-                              const status = row.member!.records[s.id];
+                              const member = row.member!;
+                              const status = member.records[s.id];
+                              const cellKey = `${member.id}:${s.id}`;
+                              const isUpdating = updatingCell === cellKey;
+
+                              const cellIcon = isUpdating ? (
+                                <Loader2 className="w-4 h-4 text-muted-foreground animate-spin mx-auto" />
+                              ) : status === 'present' ? (
+                                <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400 mx-auto" />
+                              ) : status === 'late' ? (
+                                <Clock className="w-4 h-4 text-amber-600 dark:text-amber-400 mx-auto" />
+                              ) : (
+                                <Minus className="w-4 h-4 text-muted-foreground/50 mx-auto" />
+                              );
+
                               return (
                                 <TableCell key={s.id} className="p-3 border-b border-border text-center">
-                                  {status === 'present' ? (
-                                    <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400 mx-auto" />
-                                  ) : status === 'late' ? (
-                                    <Clock className="w-4 h-4 text-amber-600 dark:text-amber-400 mx-auto" />
+                                  {isReadOnly ? (
+                                    cellIcon
                                   ) : (
-                                    <Minus className="w-4 h-4 text-muted-foreground/50 mx-auto" />
+                                    <button
+                                      type="button"
+                                      onClick={() => handleToggleCell(member, s)}
+                                      disabled={isUpdating || updatingCell !== null}
+                                      title={status ? `Mark ${member.name} absent` : `Mark ${member.name} present`}
+                                      aria-label={status ? `Mark ${member.name} absent for ${s.title}` : `Mark ${member.name} present for ${s.title}`}
+                                      className="hover:bg-accent/20 cursor-pointer rounded-md p-1 transition-colors disabled:cursor-wait disabled:opacity-60"
+                                    >
+                                      {cellIcon}
+                                    </button>
                                   )}
                                 </TableCell>
                               );

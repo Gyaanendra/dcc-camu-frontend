@@ -143,6 +143,14 @@ class ApiClient {
     return this.request('/attendance/my-stats');
   }
 
+  // Admin: Manually mark a member present/absent for a session
+  async manualAttendance(payload: { sessionId: string; userId: string; action: 'mark_present' | 'mark_absent' }) {
+    return this.request('/attendance/manual', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  }
+
   async getAdminAnalytics() {
     return this.request('/attendance/admin-analytics');
   }
