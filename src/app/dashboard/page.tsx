@@ -15,6 +15,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import {
   QrCode,
   Award,
@@ -86,31 +87,39 @@ export default function DashboardPage() {
 
             {/* ── Greeting Header ───────────────────────────────── */}
             <Card className="p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 anim-fade-up">
-              <div className="min-w-0">
-                <div className="flex items-center gap-1.5 text-[10px] font-semibold text-muted-foreground uppercase tracking-widest mb-1">
-                  <span>Bennett University</span>
-                  <span className="text-border">·</span>
-                  <span>Club DCC Portal</span>
-                </div>
-                <h1 className="text-xl sm:text-2xl font-bold text-foreground tracking-tight">
-                  Welcome back, {user?.name?.split(' ')[0] || 'Member'}
-                </h1>
+              <div className="flex items-center gap-4 min-w-0">
+                <Avatar className="h-14 w-14 sm:h-16 sm:w-16 border-2 border-border shadow-sm ring-2 ring-background shrink-0">
+                  {user?.avatarUrl && <AvatarImage src={user.avatarUrl} alt={user.name} />}
+                  <AvatarFallback className="bg-secondary text-foreground text-lg font-bold">
+                    {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1.5 text-[10px] font-semibold text-muted-foreground uppercase tracking-widest mb-1">
+                    <span>Bennett University</span>
+                    <span className="text-border">·</span>
+                    <span>Club DCC Portal</span>
+                  </div>
+                  <h1 className="text-xl sm:text-2xl font-bold text-foreground tracking-tight">
+                    Welcome back, {user?.name?.split(' ')[0] || 'Member'}
+                  </h1>
 
-                {/* Position + Wing + Role pills (read-only — self-edit disabled) */}
-                <div className="flex flex-wrap items-center gap-1.5 mt-2 text-sm">
-                  <span className="text-muted-foreground">Position:</span>
+                  {/* Position + Wing + Role pills (read-only — self-edit disabled) */}
+                  <div className="flex flex-wrap items-center gap-1.5 mt-2 text-sm">
+                    <span className="text-muted-foreground">Position:</span>
 
-                  <span className="px-2 py-0.5 rounded-full bg-secondary border border-border text-foreground font-medium text-sm">
-                    {user?.position || 'Member'}
-                  </span>
+                    <span className="px-2 py-0.5 rounded-full bg-secondary border border-border text-foreground font-medium text-sm">
+                      {user?.position || 'Member'}
+                    </span>
 
-                  <span className="text-border">·</span>
-                  <span className="text-muted-foreground">Wing:</span>
-                  <span className="font-medium text-foreground">{user?.teamName || 'All Club Members'}</span>
-                  <span className="text-border">·</span>
-                  <span className="px-2 py-0.5 rounded-full bg-accent/10 border border-accent/20 text-accent font-semibold text-[10px] uppercase tracking-wider">
-                    {user?.role || 'user'}
-                  </span>
+                    <span className="text-border">·</span>
+                    <span className="text-muted-foreground">Wing:</span>
+                    <span className="font-medium text-foreground">{user?.teamName || 'All Club Members'}</span>
+                    <span className="text-border">·</span>
+                    <span className="px-2 py-0.5 rounded-full bg-accent/10 border border-accent/20 text-accent font-semibold text-[10px] uppercase tracking-wider">
+                      {user?.role || 'user'}
+                    </span>
+                  </div>
                 </div>
               </div>
 

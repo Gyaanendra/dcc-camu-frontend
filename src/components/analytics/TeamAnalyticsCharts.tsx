@@ -43,6 +43,9 @@ interface TeamAnalyticsProps {
   }>;
   summary: {
     totalMembers: number;
+    totalAdmins?: number;
+    totalAdvisors?: number;
+    totalUsers?: number;
     totalSessions: number;
     overallAttendanceRate: number;
     onTimeCount: number;
@@ -109,9 +112,9 @@ export const TeamAnalyticsCharts: React.FC<TeamAnalyticsProps> = ({ teamAnalytic
       {/* Stat Cards Querying Real Data */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
-          label="Total Members"
-          value={summary?.totalMembers || 0}
-          sub="Registered in the club"
+          label="Total Club Roster"
+          value={summary?.totalUsers ?? summary?.totalMembers ?? 0}
+          sub={`${summary?.totalMembers ?? 0} Members · ${summary?.totalAdmins ?? 0} Admins · ${summary?.totalAdvisors ?? 0} Advisors`}
           icon={<Users className="w-4 h-4" />}
         />
         <StatCard

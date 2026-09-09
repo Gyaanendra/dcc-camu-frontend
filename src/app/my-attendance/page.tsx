@@ -11,6 +11,7 @@ import { api } from '@/lib/api';
 import { CheckCircle2 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 
 export default function MyAttendancePage() {
   const { user } = useAuth();
@@ -33,14 +34,22 @@ export default function MyAttendancePage() {
         <div className="flex flex-1">
           <Sidebar />
           <main className="flex-1 p-6 sm:p-8 max-w-7xl mx-auto w-full space-y-6">
-            <Card className="p-6">
-              <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest mb-1">
-                Member Record
+            <Card className="p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center gap-4">
+              <Avatar className="h-14 w-14 sm:h-16 sm:w-16 border-2 border-border shadow-sm ring-2 ring-background shrink-0">
+                {user?.avatarUrl && <AvatarImage src={user.avatarUrl} alt={user.name} />}
+                <AvatarFallback className="bg-secondary text-foreground text-lg font-bold">
+                  {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
+                </AvatarFallback>
+              </Avatar>
+              <div>
+                <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest mb-1">
+                  Member Record
+                </div>
+                <h1 className="text-xl sm:text-2xl font-bold text-foreground tracking-tight">
+                  My Attendance & Streak History
+                </h1>
+                <p className="text-sm text-muted-foreground mt-1">Individual check-in record for {user?.name}</p>
               </div>
-              <h1 className="text-xl sm:text-2xl font-bold text-foreground tracking-tight">
-                My Attendance & Streak History
-              </h1>
-              <p className="text-sm text-muted-foreground mt-1">Individual check-in record for {user?.name}</p>
             </Card>
 
             {isLoading ? (

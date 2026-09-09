@@ -229,6 +229,7 @@ class ApiClient {
     position?: string;
     teamId?: string | null;
     role?: string;
+    avatarUrl?: string;
   }) {
     return this.request('/users', {
       method: 'POST',
@@ -236,7 +237,7 @@ class ApiClient {
     });
   }
 
-  async updateUser(userId: string, userData: { role?: string; position?: string; teamId?: string | null; name?: string; email?: string; rollNumber?: string; password?: string }) {
+  async updateUser(userId: string, userData: { role?: string; position?: string; teamId?: string | null; name?: string; email?: string; rollNumber?: string; password?: string; avatarUrl?: string }) {
     return this.request(`/users/${userId}`, {
       method: 'PATCH',
       body: JSON.stringify(userData),
@@ -247,6 +248,22 @@ class ApiClient {
     return this.request(`/users/${userId}/role`, {
       method: 'PATCH',
       body: JSON.stringify(roleData),
+    });
+  }
+
+  // Admin: Re-roll a single member's Notionist avatar
+  async rerollMemberAvatar(userId: string, gender?: 'male' | 'female') {
+    return this.request(`/users/${userId}/reroll-avatar`, {
+      method: 'POST',
+      body: JSON.stringify({ gender }),
+    });
+  }
+
+  // Admin: Bulk randomize Notionist avatars for all members
+  async randomizeAllAvatars(forceAll = false) {
+    return this.request('/users/randomize-avatars', {
+      method: 'POST',
+      body: JSON.stringify({ forceAll }),
     });
   }
 

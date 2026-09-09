@@ -96,7 +96,7 @@ export const Navbar: React.FC = () => {
               {/* Profile + Logout */}
               <div className="flex items-center gap-2 pl-2 border-l border-border">
                 <div className="flex items-center gap-2">
-                  <Avatar className="h-7 w-7 border border-border">
+                  <Avatar className="h-8 w-8 border border-border shadow-xs hover:scale-105 transition-transform shrink-0">
                     {user.avatarUrl && <AvatarImage src={user.avatarUrl} alt={user.name} />}
                     <AvatarFallback className="bg-secondary text-foreground text-xs font-semibold">
                       {user.name.charAt(0).toUpperCase()}

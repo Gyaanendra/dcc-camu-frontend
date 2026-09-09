@@ -14,6 +14,7 @@ import { RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 
 export default function AdminMembersPage() {
   const { user } = useAuth();
@@ -54,7 +55,25 @@ export default function AdminMembersPage() {
                 <h1 className="text-2xl font-semibold text-foreground tracking-tight">
                   Member Directory
                 </h1>
-                <p className="text-sm text-muted-foreground mt-1">{isReadOnly ? 'View-only access — editing is disabled for advisors' : 'Manage member assignments, positions, roles, and view attendance totals'}</p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {isReadOnly
+                    ? 'View-only access — editing is disabled for advisors'
+                    : 'Manage member assignments, positions, roles, and view attendance totals'}
+                </p>
+                <div className="flex flex-wrap items-center gap-2 mt-2.5">
+                  <Badge variant="outline" className="text-xs font-medium">
+                    {users.length} Total People
+                  </Badge>
+                  <Badge variant="secondary" className="text-xs font-medium text-blue-600 dark:text-blue-400 bg-blue-500/10 border-blue-500/20">
+                    {users.filter((u) => u.role === 'user').length} Members
+                  </Badge>
+                  <Badge variant="secondary" className="text-xs font-medium text-accent bg-accent/10 border-accent/20">
+                    {users.filter((u) => u.role === 'admin').length} Admins
+                  </Badge>
+                  <Badge variant="secondary" className="text-xs font-medium text-amber-600 dark:text-amber-400 bg-amber-500/10 border-amber-500/20">
+                    {users.filter((u) => u.role === 'advisor').length} Advisors
+                  </Badge>
+                </div>
               </div>
 
               <div className="flex items-center gap-2.5">

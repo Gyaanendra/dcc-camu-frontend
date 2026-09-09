@@ -23,6 +23,7 @@ import {
   FlipHorizontal2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 
 interface QRScannerModalProps {
   activeSessionId?: string;
@@ -35,6 +36,7 @@ interface ScanResult {
   type: 'success' | 'error';
   name?: string;
   rollNumber?: string;
+  avatarUrl?: string;
   status?: string;
   sessionTitle?: string;
   time?: string;
@@ -269,6 +271,7 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({ activeSessionId,
         type: 'success',
         name: res.user?.name,
         rollNumber: res.user?.rollNumber,
+        avatarUrl: res.user?.avatarUrl,
         status: res.status,
         sessionTitle: res.session?.title,
         time: new Date(res.record?.scannedAt || Date.now()).toLocaleTimeString(),
@@ -595,8 +598,16 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({ activeSessionId,
       {scanState === 'success' && scanResult && (
         <div className="flex flex-col items-center gap-0 p-0">
           <div className="w-full px-6 py-8 bg-gradient-to-br from-emerald-500 to-emerald-600 flex flex-col items-center gap-3 text-center">
-            <div className="h-16 w-16 rounded-full bg-white/20 border-2 border-white/40 flex items-center justify-center">
-              <CheckCircle2 className="w-9 h-9 text-white" />
+            <div className="relative">
+              <Avatar className="h-20 w-20 border-4 border-white/40 shadow-lg ring-4 ring-white/20">
+                {scanResult.avatarUrl && <AvatarImage src={scanResult.avatarUrl} alt={scanResult.name} />}
+                <AvatarFallback className="bg-white/30 text-white text-xl font-bold">
+                  {scanResult.name ? scanResult.name.charAt(0).toUpperCase() : '✓'}
+                </AvatarFallback>
+              </Avatar>
+              <div className="absolute -bottom-1 -right-1 h-7 w-7 rounded-full bg-emerald-500 border-2 border-white flex items-center justify-center shadow-xs">
+                <CheckCircle2 className="w-4 h-4 text-white" />
+              </div>
             </div>
             <div>
               <p className="text-white text-xl font-bold leading-tight">{scanResult.name}</p>

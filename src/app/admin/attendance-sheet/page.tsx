@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 import { Table2, RefreshCw, Check, Clock, Minus, Loader2, MousePointerClick } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import {
   Table,
   TableHeader,
@@ -42,6 +43,8 @@ interface SheetMember {
   teamId: string | null;
   teamName: string;
   teamCode: string;
+  role?: string;
+  avatarUrl?: string;
   attended: number;
   attendanceRate: number;
   records: Record<string, string | null>;
@@ -163,7 +166,7 @@ export default function AttendanceSheetPage() {
                   Attendance Sheet
                 </h1>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Full member × session matrix — {members.length} members across {sessions.length} sessions
+                  Full member × session matrix — {members.length} people ({members.filter(m => m.role === 'user').length} members, {members.filter(m => m.role === 'admin').length} admins, {members.filter(m => m.role === 'advisor').length} advisors) across {sessions.length} sessions
                 </p>
               </div>
 
@@ -255,9 +258,19 @@ export default function AttendanceSheetPage() {
                           </TableRow>
                         ) : (
                           <TableRow key={row.member!.id}>
-                            <TableCell className="sticky left-0 z-10 bg-card p-3 border-b border-r border-border">
-                              <div className="font-semibold text-foreground truncate">{row.member!.name}</div>
-                              <div className="text-[11px] text-muted-foreground font-mono">{row.member!.rollNumber}</div>
+                            <TableCell className="sticky left-0 z-10 bg-card p-2.5 sm:p-3 border-b border-r border-border">
+                              <div className="flex items-center gap-2.5">
+                                <Avatar className="h-8 w-8 border border-border shadow-2xs hover:scale-110 transition-transform duration-150 shrink-0">
+                                  {row.member!.avatarUrl && <AvatarImage src={row.member!.avatarUrl} alt={row.member!.name} />}
+                                  <AvatarFallback className="bg-secondary text-foreground text-xs font-bold">
+                                    {row.member!.name.charAt(0)}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <div className="min-w-0">
+                                  <div className="font-semibold text-foreground truncate">{row.member!.name}</div>
+                                  <div className="text-[11px] text-muted-foreground font-mono truncate">{row.member!.rollNumber}</div>
+                                </div>
+                              </div>
                             </TableCell>
                             {sessions.map(s => {
                               const member = row.member!;

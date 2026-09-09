@@ -3,8 +3,10 @@
 import React, { useState } from 'react';
 import { api } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
+import { generateClientNotionistAvatar } from '@/lib/avatar';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { toast } from 'sonner';
-import { UserPlus } from 'lucide-react';
+import { UserPlus, Dices } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -39,10 +41,16 @@ export const AddMemberModal: React.FC<AddMemberModalProps> = ({ teams, onCreated
   const [position, setPosition] = useState('Member');
   const [teamId, setTeamId] = useState('');
   const [role, setRole] = useState<'admin' | 'advisor' | 'user'>('user');
+  const [gender, setGender] = useState<'male' | 'female'>('male');
+  const [avatarUrl, setAvatarUrl] = useState(() => generateClientNotionistAvatar(undefined, 'male'));
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Advisors are view-only — never show the create control to them.
   if (user?.role === 'advisor') return null;
+
+  const handleShuffleAvatar = () => {
+    setAvatarUrl(generateClientNotionistAvatar(rollNumber || name, gender));
+  };
 
   const resetForm = () => {
     setName('');
@@ -52,6 +60,8 @@ export const AddMemberModal: React.FC<AddMemberModalProps> = ({ teams, onCreated
     setPosition('Member');
     setTeamId('');
     setRole('user');
+    setGender('male');
+    setAvatarUrl(generateClientNotionistAvatar(undefined, 'male'));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -73,9 +83,10 @@ export const AddMemberModal: React.FC<AddMemberModalProps> = ({ teams, onCreated
         position,
         teamId: teamId || null,
         role,
+        avatarUrl,
       });
 
-      toast.success(`Member "${name.trim()}" added successfully`);
+      toast.success(`Member "${name.trim()}" added successfully with gender-matched avatar`);
       setIsOpen(false);
       resetForm();
       if (onCreated) onCreated();
@@ -87,7 +98,12 @@ export const AddMemberModal: React.FC<AddMemberModalProps> = ({ teams, onCreated
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog open={isOpen} onOpenChange={(open) => {
+      setIsOpen(open);
+      if (open && !avatarUrl) {
+        setAvatarUrl(generateClientNotionistAvatar(undefined, gender));
+      }
+    }}>
       <DialogTrigger asChild>
         <Button>
           <UserPlus className="w-4 h-4" /> Add Member
@@ -98,6 +114,62 @@ export const AddMemberModal: React.FC<AddMemberModalProps> = ({ teams, onCreated
           <DialogTitle>Add New Member</DialogTitle>
         </DialogHeader>
 
+        {/* Funky Notionist Avatar Preview Card with Gender Switch */}
+        <div className="flex items-center gap-3 p-3 bg-secondary/40 border border-border rounded-lg">
+          <Avatar className="h-14 w-14 border-2 border-border shadow-sm ring-2 ring-background shrink-0">
+            <AvatarImage src={avatarUrl} alt="Notionist Avatar Preview" />
+            <AvatarFallback className="bg-secondary text-foreground text-sm font-bold">
+              {name ? name.charAt(0).toUpperCase() : 'N'}
+            </AvatarFallback>
+          </Avatar>
+          <div className="flex-1 min-w-0">
+            <div className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+              Funky Notionist Avatar
+              <span className="text-[10px] px-1.5 py-0.5 rounded bg-primary/10 text-primary font-mono font-medium">gender-matched</span>
+            </div>
+            <div className="flex items-center gap-1.5 mt-1.5">
+              <button
+                type="button"
+                onClick={() => {
+                  setGender('male');
+                  setAvatarUrl(generateClientNotionistAvatar(rollNumber || name, 'male'));
+                }}
+                className={`px-2 py-0.5 rounded text-[11px] font-medium border transition-colors ${
+                  gender === 'male'
+                    ? 'bg-primary text-primary-foreground border-primary shadow-xs'
+                    : 'bg-background text-muted-foreground border-border hover:text-foreground'
+                }`}
+              >
+                👦 Male
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setGender('female');
+                  setAvatarUrl(generateClientNotionistAvatar(rollNumber || name, 'female'));
+                }}
+                className={`px-2 py-0.5 rounded text-[11px] font-medium border transition-colors ${
+                  gender === 'female'
+                    ? 'bg-primary text-primary-foreground border-primary shadow-xs'
+                    : 'bg-background text-muted-foreground border-border hover:text-foreground'
+                }`}
+              >
+                👧 Female
+              </button>
+            </div>
+          </div>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={handleShuffleAvatar}
+            className="h-8 text-xs gap-1.5 shrink-0"
+            title="Shuffle avatar with current gender"
+          >
+            <Dices className="w-3.5 h-3.5" /> Shuffle
+          </Button>
+        </div>
+
         <form onSubmit={handleSubmit} className="space-y-3.5 text-sm">
           <div className="space-y-1.5">
             <Label htmlFor="add-name">Full Name</Label>
@@ -106,7 +178,9 @@ export const AddMemberModal: React.FC<AddMemberModalProps> = ({ teams, onCreated
               type="text"
               placeholder="e.g. Rohan Gupta"
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(e) => {
+                setName(e.target.value);
+              }}
               required
             />
           </div>
