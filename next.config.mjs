@@ -10,6 +10,18 @@ const nextConfig = {
       },
     ],
   },
+  // Proxy same-origin /api/* calls to the backend. The browser only ever
+  // talks to the frontend origin, so every request is first-party: no CORS
+  // preflights and no third-party cookie blocking between Vercel apps.
+  async rewrites() {
+    const backendApi = process.env.NEXT_PUBLIC_API_URL || 'https://dcc-camu-backend.vercel.app/api';
+    return [
+      {
+        source: '/api/:path*',
+        destination: `${backendApi}/:path*`,
+      },
+    ];
+  },
 };
 
 export default nextConfig;

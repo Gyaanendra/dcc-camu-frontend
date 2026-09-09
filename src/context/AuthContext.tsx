@@ -35,8 +35,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const refreshProfile = async () => {
     try {
-      // Session restores from the httpOnly cookie (or the in-memory token).
-      // Nothing auth-related is read from persistent browser storage.
+      // Session restores from the localStorage Bearer token (set on
+      // login/register) with the httpOnly cookie as a parallel credential.
       const res = await api.getMe();
       setUser(res.user);
       setToken(api.getToken());

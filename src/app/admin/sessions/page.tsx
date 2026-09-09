@@ -152,7 +152,7 @@ export default function AdminSessionsPage() {
                           </div>
 
                           <div className="flex items-center justify-between text-[11px] font-mono mt-3 pt-2 border-t border-border text-muted-foreground">
-                            <span>{new Date(s.startTime).toLocaleDateString()}</span>
+                            <span>{s?.startTime ? new Date(s.startTime).toLocaleDateString() : 'N/A'}</span>
                             <span className="text-foreground font-bold tabular-nums">
                               {s.attendeeCount} attended
                             </span>

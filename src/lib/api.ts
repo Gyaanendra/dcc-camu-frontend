@@ -1,19 +1,45 @@
 // API Service Client for Club DCC Camu Backend
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+// All calls go to same-origin `/api/*` and are proxied to the backend by the
+// Next.js rewrite in next.config.mjs. This makes every request first-party:
+// no CORS preflights, no third-party cookie blocking between Vercel apps.
+const API_BASE = '/api';
+
+const TOKEN_STORAGE_KEY = 'dcc_token';
 
 class ApiClient {
-  // In-memory only. The httpOnly session cookie is the primary credential
-  // (sent automatically via `credentials: include`); this token is just a
-  // same-tab fallback and is never persisted to localStorage.
+  // Bearer token persisted in localStorage so sessions survive page reloads
+  // even when the browser blocks the cross-site httpOnly cookie. The cookie
+  // (sent via `credentials: include`) remains a parallel credential.
   private token: string | null = null;
+  private hydrated = false;
 
   constructor() {}
 
   setToken(token: string | null) {
     this.token = token;
+    if (typeof window !== 'undefined') {
+      try {
+        if (token) window.localStorage.setItem(TOKEN_STORAGE_KEY, token);
+        else window.localStorage.removeItem(TOKEN_STORAGE_KEY);
+      } catch {
+        // Storage unavailable (private mode / quota): in-memory token only.
+      }
+    }
   }
 
   getToken(): string | null {
+    // Lazily hydrate from localStorage on first access (client-side only —
+    // this module also executes during SSR/prerender, where storage is absent).
+    if (!this.hydrated) {
+      this.hydrated = true;
+      if (typeof window !== 'undefined') {
+        try {
+          this.token = window.localStorage.getItem(TOKEN_STORAGE_KEY);
+        } catch {
+          // Storage unavailable: keep in-memory token only.
+        }
+      }
+    }
     return this.token;
   }
 
