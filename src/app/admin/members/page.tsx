@@ -64,7 +64,7 @@ export default function AdminMembersPage() {
                   <Badge variant="outline" className="text-xs font-medium">
                     {users.length} Total People
                   </Badge>
-                  <Badge variant="secondary" className="text-xs font-medium text-blue-600 dark:text-blue-400 bg-blue-500/10 border-blue-500/20">
+                  <Badge variant="secondary" className="text-xs font-medium text-accent bg-accent/10 border-accent/20">
                     {users.filter((u) => u.role === 'user').length} Members
                   </Badge>
                   <Badge variant="secondary" className="text-xs font-medium text-accent bg-accent/10 border-accent/20">

@@ -124,7 +124,7 @@ export const CreateTeamModal: React.FC<CreateTeamModalProps> = ({ onCreated }) =
                   key={c}
                   type="button"
                   onClick={() => setColor(c)}
-                  className={`h-7 w-7 rounded-full border-2 transition-all ${
+                  className={`h-7 w-7 rounded-full border-2 transition-all focus-orange ${
                     color === c ? 'border-foreground scale-110' : 'border-transparent'
                   }`}
                   style={{ backgroundColor: c }}
@@ -135,7 +135,7 @@ export const CreateTeamModal: React.FC<CreateTeamModalProps> = ({ onCreated }) =
                 type="color"
                 value={color}
                 onChange={(e) => setColor(e.target.value)}
-                className="h-7 w-7 rounded-full cursor-pointer bg-transparent border border-border"
+                className="h-7 w-7 rounded-full cursor-pointer bg-transparent border border-border focus-orange"
                 title="Custom color"
               />
             </div>
@@ -146,14 +146,14 @@ export const CreateTeamModal: React.FC<CreateTeamModalProps> = ({ onCreated }) =
               type="button"
               variant="secondary"
               onClick={() => setIsOpen(false)}
-              className="flex-1"
+              className="flex-1 focus-orange"
             >
               Cancel
             </Button>
             <Button
               type="submit"
               disabled={isSubmitting}
-              className="flex-1"
+              className="flex-1 focus-orange"
             >
               {isSubmitting ? 'Creating...' : 'Create Team'}
             </Button>

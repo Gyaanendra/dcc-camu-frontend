@@ -56,16 +56,6 @@ module.exports = {
   			border: 'hsl(var(--border))',
   			input: 'hsl(var(--input))',
   			ring: 'hsl(var(--ring))',
-  			dcc: {
-  				'50': '#eff6ff',
-  				'100': '#dbeafe',
-  				'500': '#3b82f6',
-  				'600': '#2563eb',
-  				'700': '#1d4ed8',
-  				'800': '#1e40af',
-  				'900': '#1e3a8a',
-  				accent: '#06b6d4'
-  			},
   			sidebar: {
   				DEFAULT: 'hsl(var(--sidebar-background))',
   				foreground: 'hsl(var(--sidebar-foreground))',

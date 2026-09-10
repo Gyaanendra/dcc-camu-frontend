@@ -62,7 +62,7 @@ export const Navbar: React.FC = () => {
         {/* Right side */}
         <div className="flex items-center gap-2">
           {/* Date Badge — desktop only */}
-          <div className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-secondary border border-border text-sm font-medium text-muted-foreground">
+          <div className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-secondary border border-border font-mono text-[12px] font-medium text-muted-foreground">
             <Calendar className="w-3.5 h-3.5" />
             <span>{today}</span>
           </div>
@@ -73,6 +73,7 @@ export const Navbar: React.FC = () => {
             size="icon"
             onClick={toggleTheme}
             id="theme-toggle"
+            className="focus-orange"
             title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
           >
             {theme === 'dark'
@@ -85,7 +86,7 @@ export const Navbar: React.FC = () => {
             <>
               {/* Scan QR CTA — hidden on mobile + hidden for view-only advisors */}
               {user.role !== 'advisor' && (
-                <Button asChild id="navbar-scan-qr" className="hidden sm:inline-flex">
+                <Button asChild id="navbar-scan-qr" className="hidden sm:inline-flex focus-orange">
                   <Link href="/scan">
                     <QrCode className="w-3.5 h-3.5" />
                     <span>Scan QR</span>
@@ -96,14 +97,14 @@ export const Navbar: React.FC = () => {
               {/* Profile + Logout */}
               <div className="flex items-center gap-2 pl-2 border-l border-border">
                 <div className="flex items-center gap-2">
-                  <Avatar className="h-8 w-8 border border-border shadow-xs hover:scale-105 transition-transform shrink-0">
+                  <Avatar className="h-8 w-8 border border-border hover:scale-105 transition-transform shrink-0">
                     {user.avatarUrl && <AvatarImage src={user.avatarUrl} alt={user.name} />}
                     <AvatarFallback className="bg-secondary text-foreground text-xs font-semibold">
                       {user.name.charAt(0).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
                   <div className="hidden lg:block text-left">
-                    <div className="text-sm font-semibold text-foreground leading-tight">{user.name}</div>
+                    <div className="text-sm font-semibold text-foreground leading-tight max-w-[140px] truncate">{user.name}</div>
                     <div className="text-[11px] text-muted-foreground font-mono flex items-center gap-1">
                       <span>{user.rollNumber}</span>
                       <span>·</span>
@@ -117,7 +118,7 @@ export const Navbar: React.FC = () => {
                   size="icon"
                   onClick={logout}
                   id="navbar-logout"
-                  className="hidden lg:inline-flex h-8 w-8"
+                  className="hidden lg:inline-flex h-8 w-8 focus-orange"
                   title="Sign Out"
                 >
                   <LogOut className="w-3.5 h-3.5" />

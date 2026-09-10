@@ -60,10 +60,11 @@ export const Sidebar: React.FC = () => {
                   key={item.href}
                   href={item.href}
                   id={`sidebar-${item.name.toLowerCase().replace(/\s+/g, '-')}`}
+                  aria-current={active ? 'page' : undefined}
                   className={cn(
                     'flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-all',
                     active
-                      ? 'bg-accent/10 text-accent'
+                      ? 'bg-accent/10 text-accent relative before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-5 before:w-[3px] before:rounded-full before:bg-accent'
                       : 'text-muted-foreground hover:text-foreground hover:bg-secondary'
                   )}
                 >
@@ -91,10 +92,11 @@ export const Sidebar: React.FC = () => {
                     key={item.href}
                     href={item.href}
                     id={`sidebar-admin-${item.name.toLowerCase().replace(/\s+/g, '-')}`}
+                    aria-current={active ? 'page' : undefined}
                     className={cn(
                       'flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-all',
                       active
-                        ? 'bg-accent/10 text-accent'
+                        ? 'bg-accent/10 text-accent relative before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-5 before:w-[3px] before:rounded-full before:bg-accent'
                         : 'text-muted-foreground hover:text-foreground hover:bg-secondary'
                     )}
                   >

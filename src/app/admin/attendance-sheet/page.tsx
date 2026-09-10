@@ -5,6 +5,7 @@ import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { Navbar } from '@/components/layout/Navbar';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { PageLoader } from '@/components/layout/PageLoader';
+import { PageHeader } from '@/components/layout/PageHeader';
 import { api } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from 'sonner';
@@ -13,7 +14,6 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import {
-  Table,
   TableHeader,
   TableBody,
   TableRow,
@@ -156,42 +156,40 @@ export default function AttendanceSheetPage() {
         <div className="flex flex-1">
           <Sidebar />
           <main className="flex-1 p-6 sm:p-8 max-w-7xl mx-auto w-full space-y-6">
-            {/* Header */}
-            <Card className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6">
-              <div>
-                <div className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
-                  Club Records
-                </div>
-                <h1 className="text-2xl font-semibold text-foreground tracking-tight">
-                  Attendance Sheet
-                </h1>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Full member × session matrix — {members.length} people ({members.filter(m => m.role === 'user').length} members, {members.filter(m => m.role === 'admin').length} admins, {members.filter(m => m.role === 'advisor').length} advisors) across {sessions.length} sessions
-                </p>
-              </div>
-
-              <div className="flex items-center gap-2.5">
-                <Select value={teamFilter} onValueChange={setTeamFilter}>
-                  <SelectTrigger className="w-40">
-                    <SelectValue placeholder="All Wings" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="ALL">All Wings</SelectItem>
-                    {teams.map(t => (
-                      <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+            <PageHeader
+              kicker="Club Records"
+              title="Attendance Sheet"
+              description={`Full member × session matrix — ${members.length} people (${members.filter(m => m.role === 'user').length} members, ${members.filter(m => m.role === 'admin').length} admins, ${members.filter(m => m.role === 'advisor').length} advisors) across ${sessions.length} sessions`}
+              actions={
                 <Button
                   variant="outline"
                   size="icon"
                   onClick={loadData}
                   title="Refresh sheet"
+                  className="focus-orange"
                 >
                   <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
                 </Button>
-              </div>
-            </Card>
+              }
+            />
+
+            {/* Filter bar */}
+            <div className="flex flex-wrap items-center gap-2 pb-3 border-b border-border">
+              <Select value={teamFilter} onValueChange={setTeamFilter}>
+                <SelectTrigger className="w-40">
+                  <SelectValue placeholder="All Wings" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ALL">All Wings</SelectItem>
+                  {teams.map(t => (
+                    <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <span className="ml-auto font-mono text-[12px] text-muted-foreground tabular-nums">
+                {visibleMembers.length} of {members.length}
+              </span>
+            </div>
 
             {isLoading ? (
               <PageLoader message="Building attendance matrix..." />
@@ -218,7 +216,8 @@ export default function AttendanceSheetPage() {
 
                 {/* Matrix table */}
                 <Card className="overflow-hidden p-0">
-                  <Table className="border-separate border-spacing-0">
+                  <div className="overflow-auto max-h-[60vh] table-sticky-head">
+                    <table className="w-full caption-bottom text-sm border-separate border-spacing-0">
                     <TableHeader>
                       <TableRow className="hover:bg-transparent">
                         <TableHead className="sticky left-0 z-20 bg-secondary/60 backdrop-blur p-3 min-w-[220px] border-b border-r border-border">
@@ -236,7 +235,7 @@ export default function AttendanceSheetPage() {
                                 <span className="shrink-0 h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" title="Live now" />
                               )}
                             </div>
-                            <div className="text-[11px] text-muted-foreground font-mono mt-0.5 font-normal">
+                            <div className="font-mono text-[13px] text-muted-foreground font-normal mt-0.5">
                               {fmtDate(s.startTime)} · {fmtTime(s.startTime)}
                             </div>
                           </TableHead>
@@ -260,7 +259,7 @@ export default function AttendanceSheetPage() {
                           <TableRow key={row.member!.id}>
                             <TableCell className="sticky left-0 z-10 bg-card p-2.5 sm:p-3 border-b border-r border-border">
                               <div className="flex items-center gap-2.5">
-                                <Avatar className="h-8 w-8 border border-border shadow-2xs hover:scale-110 transition-transform duration-150 shrink-0">
+                                <Avatar className="h-8 w-8 border border-border hover:scale-110 transition-transform duration-150 shrink-0">
                                   {row.member!.avatarUrl && <AvatarImage src={row.member!.avatarUrl} alt={row.member!.name} />}
                                   <AvatarFallback className="bg-secondary text-foreground text-xs font-bold">
                                     {row.member!.name.charAt(0)}
@@ -268,7 +267,7 @@ export default function AttendanceSheetPage() {
                                 </Avatar>
                                 <div className="min-w-0">
                                   <div className="font-semibold text-foreground truncate">{row.member!.name}</div>
-                                  <div className="text-[11px] text-muted-foreground font-mono truncate">{row.member!.rollNumber}</div>
+                                  <div className="font-mono text-[13px] text-muted-foreground truncate" title={row.member!.rollNumber}>{row.member!.rollNumber}</div>
                                 </div>
                               </div>
                             </TableCell>
@@ -299,7 +298,7 @@ export default function AttendanceSheetPage() {
                                       disabled={isUpdating || updatingCell !== null}
                                       title={status ? `Mark ${member.name} absent` : `Mark ${member.name} present`}
                                       aria-label={status ? `Mark ${member.name} absent for ${s.title}` : `Mark ${member.name} present for ${s.title}`}
-                                      className="hover:bg-accent/20 cursor-pointer rounded-md p-1 transition-colors disabled:cursor-wait disabled:opacity-60"
+                                      className="hover:bg-accent/20 cursor-pointer rounded-md p-1 transition-colors disabled:cursor-wait disabled:opacity-60 focus-orange"
                                     >
                                       {cellIcon}
                                     </button>
@@ -314,7 +313,8 @@ export default function AttendanceSheetPage() {
                         )
                       )}
                     </TableBody>
-                  </Table>
+                    </table>
+                  </div>
                 </Card>
               </>
             )}

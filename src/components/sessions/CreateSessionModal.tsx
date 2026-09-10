@@ -170,14 +170,14 @@ export const CreateSessionModal: React.FC<CreateSessionModalProps> = ({ teams, o
               type="button"
               variant="secondary"
               onClick={() => setIsOpen(false)}
-              className="flex-1"
+              className="flex-1 focus-orange"
             >
               Cancel
             </Button>
             <Button
               type="submit"
               disabled={isSubmitting}
-              className="flex-1"
+              className="flex-1 focus-orange"
             >
               {isSubmitting ? 'Creating...' : 'Create & Generate QR'}
             </Button>

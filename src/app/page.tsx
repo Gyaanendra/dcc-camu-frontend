@@ -61,7 +61,7 @@ export default function SigninPage() {
         size="icon"
         onClick={toggleTheme}
         id="login-theme-toggle"
-        className="absolute top-5 right-5"
+        className="absolute top-5 right-5 focus-orange"
         title="Toggle Theme"
       >
         {theme === 'dark'
@@ -74,7 +74,7 @@ export default function SigninPage() {
 
         {/* Brand mark */}
         <div className="text-center space-y-3 anim-fade-up">
-          <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-xl bg-foreground font-extrabold text-background text-sm">
+          <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-xl bg-foreground font-extrabold text-background text-sm ring-1 ring-border">
             DCC
           </div>
           <div>
@@ -88,7 +88,7 @@ export default function SigninPage() {
         </div>
 
         {/* Sign-in card */}
-        <Card className="p-6 sm:p-8 space-y-5 anim-fade-up anim-delay-1">
+        <Card className="p-6 sm:p-8 space-y-5 anim-fade-up anim-delay-1 dash-card">
           <div className="pb-4 border-b border-border">
             <h2 className="text-sm font-bold text-foreground">Sign In to Portal</h2>
             <p className="text-sm text-muted-foreground mt-0.5">
@@ -113,7 +113,7 @@ export default function SigninPage() {
                   autoCapitalize="none"
                   autoCorrect="off"
                   spellCheck={false}
-                  className="pl-9 font-mono"
+                  className="pl-9 font-mono focus-orange"
                   required
                 />
               </div>
@@ -132,7 +132,7 @@ export default function SigninPage() {
                   placeholder="••••••••"
                   value={password}
                   onChange={e => setPassword(e.target.value)}
-                  className="pl-9 font-mono"
+                  className="pl-9 font-mono focus-orange"
                   required
                 />
               </div>
@@ -143,7 +143,7 @@ export default function SigninPage() {
               type="submit"
               id="login-submit"
               disabled={isSubmitting}
-              className="w-full"
+              className="w-full anim-btn-press focus-orange"
             >
               <span>{isSubmitting ? 'Verifying...' : 'Sign In'}</span>
               <ArrowRight className="w-3.5 h-3.5" />

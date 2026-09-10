@@ -18,12 +18,11 @@ import {
   VolumeX,
   ZoomIn,
   ZoomOut,
-  Loader2,
   Clock,
   FlipHorizontal2,
 } from 'lucide-react';
+import Link from 'next/link';
 import { cn } from '@/lib/utils';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 
 interface QRScannerModalProps {
   activeSessionId?: string;
@@ -326,7 +325,7 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({ activeSessionId,
 
   // ─── UI ──────────────────────────────────────────────────────────────────
   return (
-    <div className="w-full max-w-lg mx-auto rounded-2xl bg-card border border-border shadow-lg overflow-hidden anim-fade-up">
+    <div className="w-full max-w-lg mx-auto rounded-2xl bg-card border border-border overflow-hidden anim-fade-up">
 
       {/* ── HEADER ── */}
       <div className="flex items-center justify-between px-5 py-3.5 border-b border-border bg-secondary/40">
@@ -350,7 +349,7 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({ activeSessionId,
           <button
             onClick={() => setIsSoundEnabled(s => !s)}
             id="scanner-sound-toggle"
-            className="p-2 rounded-lg bg-secondary border border-border text-muted-foreground hover:text-foreground transition-colors"
+            className="p-2 rounded-lg bg-secondary border border-border text-muted-foreground hover:text-foreground transition-colors focus-orange"
             title={isSoundEnabled ? 'Mute sound' : 'Enable sound'}
           >
             {isSoundEnabled
@@ -365,7 +364,7 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({ activeSessionId,
               onClick={isCameraActive ? stopCamera : () => startCamera()}
               id="scanner-toggle-camera"
               className={cn(
-                'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all active:scale-[0.97]',
+                'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all active:scale-[0.97] focus-orange',
                 isCameraActive
                   ? 'bg-destructive/10 border border-destructive/30 text-destructive hover:bg-destructive/20'
                   : 'bg-accent text-accent-foreground hover:bg-accent/90'
@@ -399,7 +398,7 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({ activeSessionId,
                     .map((cls, i) => (
                       <div key={i} className={`absolute w-5 h-5 ${cls} border-accent`} />
                     ))}
-                  <div className="absolute inset-x-0 h-0.5 bg-accent/70 top-1/2 animate-bounce" style={{ animationDuration: '2s' }} />
+                  <div className="absolute inset-x-0 h-0.5 bg-accent/70 top-1/2 motion-safe:animate-bounce" style={{ animationDuration: '2s' }} />
                 </div>
               </div>
             )}
@@ -408,7 +407,7 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({ activeSessionId,
             {isCameraActive && (
               <div className="absolute top-3 left-3 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-sm border border-white/10">
                 <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                  <span className="motion-safe:animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
                 </span>
                 <span className="text-[10px] font-bold text-white uppercase tracking-widest">Live</span>
@@ -433,7 +432,7 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({ activeSessionId,
                     <p className="text-xs text-zinc-300 max-w-xs leading-relaxed">{cameraError}</p>
                     <button
                       onClick={() => startCamera()}
-                      className="mt-1 px-4 py-2 rounded-lg bg-accent text-accent-foreground text-xs font-semibold hover:bg-accent/90 transition-colors"
+                      className="mt-1 px-4 py-2 rounded-lg bg-accent text-accent-foreground text-xs font-semibold hover:bg-accent/90 transition-colors focus-orange"
                     >
                       Retry Camera
                     </button>
@@ -446,7 +445,7 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({ activeSessionId,
                     <p className="text-xs text-zinc-400">Camera is off</p>
                     <button
                       onClick={() => startCamera()}
-                      className="px-5 py-2.5 rounded-lg bg-accent text-accent-foreground text-xs font-semibold hover:bg-accent/90 transition-colors"
+                      className="px-5 py-2.5 rounded-lg bg-accent text-accent-foreground text-xs font-semibold hover:bg-accent/90 transition-colors focus-orange"
                     >
                       Start Camera
                     </button>
@@ -473,9 +472,9 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({ activeSessionId,
                         onClick={() => handleCameraSelect(cam.id)}
                         id={`cam-${cam.id.slice(-6)}`}
                         className={cn(
-                          'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all active:scale-[0.97]',
+                          'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all active:scale-[0.97] focus-orange',
                           selectedCameraId === cam.id
-                            ? 'bg-accent text-accent-foreground border-accent shadow-sm'
+                            ? 'bg-accent text-accent-foreground border-accent'
                             : 'bg-secondary border-border text-muted-foreground hover:text-foreground hover:border-accent/40'
                         )}
                       >
@@ -500,9 +499,9 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({ activeSessionId,
                     onClick={() => handleCameraSelect(cam.id)}
                     id={`cam-${cam.id.slice(-6)}`}
                     className={cn(
-                      'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all',
+                      'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all focus-orange',
                       selectedCameraId === cam.id
-                        ? 'bg-accent text-accent-foreground border-accent shadow-sm'
+                        ? 'bg-accent text-accent-foreground border-accent'
                         : 'bg-secondary border-border text-muted-foreground hover:text-foreground hover:border-accent/40'
                     )}
                   >
@@ -518,9 +517,9 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({ activeSessionId,
                     onClick={() => handleCameraSelect(cam.id)}
                     id={`cam-${cam.id.slice(-6)}`}
                     className={cn(
-                      'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all',
+                      'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all focus-orange',
                       selectedCameraId === cam.id
-                        ? 'bg-accent text-accent-foreground border-accent shadow-sm'
+                        ? 'bg-accent text-accent-foreground border-accent'
                         : 'bg-secondary border-border text-muted-foreground hover:text-foreground hover:border-accent/40'
                     )}
                   >
@@ -556,7 +555,7 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({ activeSessionId,
                     onClick={() => applyZoom(p)}
                     id={`zoom-preset-${p}x`}
                     className={cn(
-                      'px-2 py-0.5 rounded-md text-[10px] font-bold font-mono transition-all border active:scale-[0.97]',
+                      'px-2 py-0.5 rounded-md text-[10px] font-bold font-mono transition-all border active:scale-[0.97] focus-orange',
                       Math.abs(zoomLevel - p) < 0.15
                         ? 'bg-accent text-accent-foreground border-accent'
                         : 'bg-secondary text-muted-foreground border-border hover:border-accent/40 hover:text-foreground'
@@ -580,12 +579,10 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({ activeSessionId,
       {/* ── PROCESSING STATE ── */}
       {scanState === 'processing' && (
         <div className="flex flex-col items-center justify-center gap-5 py-16 px-8">
-          <div className="relative">
-            <div className="h-20 w-20 rounded-full border-4 border-secondary" />
-            <Loader2 className="h-20 w-20 text-accent animate-spin absolute inset-0" />
-            <div className="absolute inset-0 flex items-center justify-center">
-              <QrCode className="w-7 h-7 text-muted-foreground" />
-            </div>
+          <div className="dot-loader flex items-end gap-1.5" aria-label="Processing check-in">
+            <span />
+            <span />
+            <span />
           </div>
           <div className="text-center space-y-1">
             <p className="text-sm font-bold text-foreground">Processing Check-in</p>
@@ -596,35 +593,24 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({ activeSessionId,
 
       {/* ── SUCCESS STATE ── */}
       {scanState === 'success' && scanResult && (
-        <div className="flex flex-col items-center gap-0 p-0">
-          <div className="w-full px-6 py-8 bg-gradient-to-br from-emerald-500 to-emerald-600 flex flex-col items-center gap-3 text-center">
-            <div className="relative">
-              <Avatar className="h-20 w-20 border-4 border-white/40 shadow-lg ring-4 ring-white/20">
-                {scanResult.avatarUrl && <AvatarImage src={scanResult.avatarUrl} alt={scanResult.name} />}
-                <AvatarFallback className="bg-white/30 text-white text-xl font-bold">
-                  {scanResult.name ? scanResult.name.charAt(0).toUpperCase() : '✓'}
-                </AvatarFallback>
-              </Avatar>
-              <div className="absolute -bottom-1 -right-1 h-7 w-7 rounded-full bg-emerald-500 border-2 border-white flex items-center justify-center shadow-xs">
-                <CheckCircle2 className="w-4 h-4 text-white" />
-              </div>
-            </div>
-            <div>
-              <p className="text-white text-xl font-bold leading-tight">{scanResult.name}</p>
-              <p className="text-emerald-100 text-sm font-mono mt-0.5">{scanResult.rollNumber}</p>
-            </div>
-            <span className={cn(
-              'px-4 py-1 rounded-full text-sm font-bold uppercase tracking-wider',
-              scanResult.status === 'late'
-                ? 'bg-amber-400/30 text-amber-100 border border-amber-300/40'
-                : 'bg-white/20 text-white border border-white/30'
-            )}>
-              {scanResult.status === 'late' ? '🕐 Late Arrival' : '✓ Present (On-Time)'}
-            </span>
+        <div className="flex flex-col items-center gap-3 px-6 py-8 text-center">
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500/10 border border-emerald-500/20">
+            <CheckCircle2 className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
           </div>
+          <div>
+            <p className="text-base font-bold text-foreground">{scanResult.name}</p>
+            <p className="font-mono text-[12px] text-muted-foreground mt-0.5">{scanResult.rollNumber}</p>
+          </div>
+          <span className={cn(
+            'px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider border',
+            scanResult.status === 'late'
+              ? 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20'
+              : 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20'
+          )}>
+            {scanResult.status === 'late' ? 'Late Arrival' : 'Present · On-Time'}
+          </span>
 
-          <div className="w-full px-6 py-5 space-y-3">
-            <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-3 w-full">
               <div className="p-3 rounded-xl bg-secondary border border-border">
                 <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Session</p>
                 <p className="text-xs font-semibold text-foreground mt-0.5 truncate">{scanResult.sessionTitle || '—'}</p>
@@ -641,45 +627,50 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({ activeSessionId,
             <button
               onClick={handleScanAgain}
               id="scan-again-btn"
-              className="w-full py-3 rounded-xl bg-accent text-accent-foreground hover:bg-accent/90 font-bold text-sm flex items-center justify-center gap-2 transition-all shadow-sm"
+              className="w-full py-3 rounded-xl bg-accent text-accent-foreground hover:bg-accent/90 font-bold text-sm flex items-center justify-center gap-2 transition-all focus-orange"
             >
               <RotateCcw className="w-4 h-4" />
               Scan Next Attendee
             </button>
-          </div>
+            <Link
+              href="/my-attendance"
+              className="text-sm font-semibold text-accent hover:underline underline-offset-4 focus-orange rounded"
+            >
+              View attendance
+            </Link>
         </div>
       )}
 
       {/* ── ERROR STATE ── */}
       {scanState === 'error' && scanResult && (
-        <div className="flex flex-col items-center gap-0 p-0">
+        <div className="flex flex-col items-center gap-3 px-6 py-8 text-center">
           <div className={cn(
-            'w-full px-6 py-8 flex flex-col items-center gap-3 text-center',
+            'flex h-12 w-12 items-center justify-center rounded-full border',
             scanResult.isEnded
-              ? 'bg-gradient-to-br from-amber-500 to-orange-600'
-              : 'bg-gradient-to-br from-rose-500 to-rose-700'
+              ? 'bg-amber-500/10 border-amber-500/20'
+              : 'bg-destructive/10 border-destructive/20'
           )}>
-            <div className="h-16 w-16 rounded-full bg-white/20 border-2 border-white/40 flex items-center justify-center">
-              <AlertCircle className="w-9 h-9 text-white" />
-            </div>
-            <div>
-              <p className="text-white text-lg font-bold leading-tight">
-                {scanResult.isEnded ? 'Session Ended' : 'Check-in Failed'}
-              </p>
-              <p className="text-white/80 text-xs mt-1.5 max-w-xs leading-relaxed">{scanResult.message}</p>
-            </div>
+            <AlertCircle className={cn(
+              'w-6 h-6',
+              scanResult.isEnded ? 'text-amber-600 dark:text-amber-400' : 'text-destructive'
+            )} />
+          </div>
+          <div>
+            <p className="text-base font-bold text-foreground">
+              {scanResult.isEnded ? 'Session Ended' : 'Check-in Failed'}
+            </p>
+            <p className="text-sm text-muted-foreground mt-1 max-w-xs leading-relaxed">{scanResult.message}</p>
           </div>
 
-          <div className="w-full px-6 py-5">
-            <button
-              onClick={handleScanAgain}
+          <button
+            onClick={handleScanAgain}
               id="scan-retry-btn"
-              className="w-full py-3 rounded-xl bg-accent text-accent-foreground hover:bg-accent/90 font-bold text-sm flex items-center justify-center gap-2 transition-all shadow-sm"
+              autoFocus
+              className="w-full py-3 rounded-xl bg-accent text-accent-foreground hover:bg-accent/90 font-bold text-sm flex items-center justify-center gap-2 transition-all focus-orange"
             >
               <RotateCcw className="w-4 h-4" />
               Try Again
             </button>
-          </div>
         </div>
       )}
     </div>

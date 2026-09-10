@@ -165,13 +165,23 @@ export const TeamAnalyticsCharts: React.FC<TeamAnalyticsProps> = ({ teamAnalytic
                 teamAnalytics.length > 0 ? (
                   <ChartContainer config={barConfig} className="h-full w-full">
                     <BarChart data={teamAnalytics} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                      <CartesianGrid vertical={false} />
-                      <XAxis dataKey="code" tickLine={false} axisLine={false} fontSize={11} />
-                      <YAxis domain={[0, 100]} unit="%" tickLine={false} axisLine={false} fontSize={11} />
+                      <CartesianGrid vertical={false} stroke="hsl(var(--border))" />
+                      <XAxis dataKey="code" tickLine={false} axisLine={false} fontSize={11} tick={{ fill: 'hsl(var(--muted-foreground))' }} />
+                      <YAxis domain={[0, 100]} unit="%" tickLine={false} axisLine={false} fontSize={11} tick={{ fill: 'hsl(var(--muted-foreground))' }} />
                       <ChartTooltip
-                        content={<ChartTooltipContent formatter={(value) => `${value}% Attendance Rate`} />}
+                        content={
+                          <ChartTooltipContent
+                            labelClassName="font-mono text-[12px]"
+                            formatter={(value) => (
+                              <div className="flex w-full items-center justify-between gap-4">
+                                <span className="text-muted-foreground">Attendance %</span>
+                                <span className="font-mono font-medium tabular-nums text-foreground">{value}%</span>
+                              </div>
+                            )}
+                          />
+                        }
                       />
-                      <Bar dataKey="attendanceRate" name="Attendance %" radius={[6, 6, 0, 0]}>
+                      <Bar dataKey="attendanceRate" name="Attendance %" radius={[6, 6, 0, 0]} maxBarSize={36}>
                         {teamAnalytics.map((entry, index) => (
                           <Cell key={`cell-${index}`} fill={entry.color || 'var(--color-attendanceRate)'} />
                         ))}
@@ -188,25 +198,45 @@ export const TeamAnalyticsCharts: React.FC<TeamAnalyticsProps> = ({ teamAnalytic
                   </div>
                 )
               ) : totalLogs > 0 ? (
-                <ChartContainer config={pieConfig} className="h-full w-full">
-                  <PieChart>
-                    <Pie
-                      data={pieData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={65}
-                      outerRadius={95}
-                      paddingAngle={5}
-                      dataKey="value"
-                      nameKey="name"
-                    >
-                      {pieData.map((entry) => (
-                        <Cell key={entry.key} fill={entry.fill} />
-                      ))}
-                    </Pie>
-                    <ChartTooltip content={<ChartTooltipContent />} />
-                  </PieChart>
-                </ChartContainer>
+                <div className="flex h-full w-full flex-col">
+                  <div className="relative min-h-0 flex-1">
+                    <ChartContainer config={pieConfig} className="h-full w-full">
+                      <PieChart>
+                        <Pie
+                          data={pieData}
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={65}
+                          outerRadius={95}
+                          paddingAngle={5}
+                          dataKey="value"
+                          nameKey="name"
+                        >
+                          {pieData.map((entry) => (
+                            <Cell key={entry.key} fill={entry.fill} />
+                          ))}
+                        </Pie>
+                        <ChartTooltip content={<ChartTooltipContent labelClassName="font-mono text-[12px]" />} />
+                      </PieChart>
+                    </ChartContainer>
+                    <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
+                      <span className="text-2xl font-semibold tabular-nums text-foreground">{totalLogs}</span>
+                      <span className="text-xs text-muted-foreground">check-ins</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-center gap-2 pt-2">
+                    <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-secondary px-2.5 py-1 text-xs text-muted-foreground">
+                      <span className="h-2 w-2 rounded-full" style={{ backgroundColor: '#1f8a65' }} />
+                      On-time
+                      <span className="font-mono tabular-nums text-foreground">{onTime}</span>
+                    </span>
+                    <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-secondary px-2.5 py-1 text-xs text-muted-foreground">
+                      <span className="h-2 w-2 rounded-full" style={{ backgroundColor: '#b45309' }} />
+                      Late
+                      <span className="font-mono tabular-nums text-foreground">{late}</span>
+                    </span>
+                  </div>
+                </div>
               ) : (
                 <div className="h-full flex flex-col items-center justify-center text-center p-6">
                   <PieIcon className="w-8 h-8 text-muted-foreground mb-2" />
@@ -234,7 +264,12 @@ export const TeamAnalyticsCharts: React.FC<TeamAnalyticsProps> = ({ teamAnalytic
                 sortedTeams.map((team, idx) => (
                   <div
                     key={team.teamId}
-                    className="flex items-center justify-between p-3 rounded-lg bg-secondary border border-border"
+                    style={{ animationDelay: `${Math.min(idx, 4) * 40}ms` }}
+                    className={`flex items-center justify-between p-3 rounded-lg border anim-fade-up ${
+                      idx === 0
+                        ? 'bg-amber-500/5 border-amber-500/20'
+                        : 'bg-secondary border-border'
+                    }`}
                   >
                     <div className="flex items-center gap-3">
                       <div

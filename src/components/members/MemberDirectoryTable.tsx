@@ -28,7 +28,6 @@ import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import {
-  Table,
   TableHeader,
   TableBody,
   TableRow,
@@ -264,7 +263,7 @@ export const MemberDirectoryTable: React.FC<MemberDirectoryProps> = ({ members, 
         {/* Total Roster Card */}
         <Card
           onClick={() => setSelectedRoleFilter('ALL')}
-          className={`p-4 cursor-pointer transition-all duration-150 hover:border-primary/50 hover:shadow-xs ${
+          className={`p-4 cursor-pointer transition-all duration-150 hover:border-primary/50 ${
             selectedRoleFilter === 'ALL'
               ? 'border-primary ring-2 ring-primary/20 bg-primary/5'
               : 'bg-card'
@@ -285,9 +284,9 @@ export const MemberDirectoryTable: React.FC<MemberDirectoryProps> = ({ members, 
         {/* Club Members Card */}
         <Card
           onClick={() => setSelectedRoleFilter('user')}
-          className={`p-4 cursor-pointer transition-all duration-150 hover:border-blue-500/50 hover:shadow-xs ${
+          className={`p-4 cursor-pointer transition-all duration-150 hover:border-accent/50 ${
             selectedRoleFilter === 'user'
-              ? 'border-blue-500 ring-2 ring-blue-500/20 bg-blue-500/5'
+              ? 'border-accent ring-2 ring-accent/20 bg-accent/5'
               : 'bg-card'
           }`}
         >
@@ -295,7 +294,7 @@ export const MemberDirectoryTable: React.FC<MemberDirectoryProps> = ({ members, 
             <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
               Members
             </span>
-            <User className="w-4 h-4 text-blue-500" />
+            <User className="w-4 h-4 text-accent" />
           </div>
           <div className="mt-2 text-2xl font-bold tracking-tight text-foreground tabular-nums">
             {userCount}
@@ -306,7 +305,7 @@ export const MemberDirectoryTable: React.FC<MemberDirectoryProps> = ({ members, 
         {/* Admins Card */}
         <Card
           onClick={() => setSelectedRoleFilter('admin')}
-          className={`p-4 cursor-pointer transition-all duration-150 hover:border-accent/50 hover:shadow-xs ${
+          className={`p-4 cursor-pointer transition-all duration-150 hover:border-accent/50 ${
             selectedRoleFilter === 'admin'
               ? 'border-accent ring-2 ring-accent/20 bg-accent/5'
               : 'bg-card'
@@ -327,7 +326,7 @@ export const MemberDirectoryTable: React.FC<MemberDirectoryProps> = ({ members, 
         {/* Advisors Card */}
         <Card
           onClick={() => setSelectedRoleFilter('advisor')}
-          className={`p-4 cursor-pointer transition-all duration-150 hover:border-amber-500/50 hover:shadow-xs ${
+          className={`p-4 cursor-pointer transition-all duration-150 hover:border-amber-500/50 ${
             selectedRoleFilter === 'advisor'
               ? 'border-amber-500 ring-2 ring-amber-500/20 bg-amber-500/5'
               : 'bg-card'
@@ -347,7 +346,7 @@ export const MemberDirectoryTable: React.FC<MemberDirectoryProps> = ({ members, 
       </div>
 
       {/* ── 2. Comprehensive Controls & Filters Bar ───────────────── */}
-      <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 pt-1">
+      <div className="flex flex-wrap items-center gap-2 pb-3 border-b border-border">
         {/* Search Input */}
         <div className="relative flex-1 min-w-[200px] max-w-md">
           <Search className="w-4 h-4 absolute left-3 top-3 text-muted-foreground pointer-events-none" />
@@ -361,7 +360,7 @@ export const MemberDirectoryTable: React.FC<MemberDirectoryProps> = ({ members, 
           {searchTerm && (
             <button
               onClick={() => setSearchTerm('')}
-              className="absolute right-2.5 top-3 text-muted-foreground hover:text-foreground"
+              className="absolute right-2.5 top-3 text-muted-foreground hover:text-foreground focus-orange rounded"
             >
               <X className="w-3.5 h-3.5" />
             </button>
@@ -369,7 +368,6 @@ export const MemberDirectoryTable: React.FC<MemberDirectoryProps> = ({ members, 
         </div>
 
         {/* Dropdown Filters & Sorting */}
-        <div className="flex flex-wrap items-center gap-2">
           {/* Role Filter */}
           <Select
             value={selectedRoleFilter}
@@ -453,7 +451,9 @@ export const MemberDirectoryTable: React.FC<MemberDirectoryProps> = ({ members, 
               <span className="hidden sm:inline">Randomize Avatars</span>
             </Button>
           )}
-        </div>
+          <span className="ml-auto font-mono text-[12px] text-muted-foreground tabular-nums">
+            {sortedAndFilteredMembers.length} of {totalCount}
+          </span>
       </div>
 
       {/* Filter Status & Reset Action */}
@@ -467,7 +467,7 @@ export const MemberDirectoryTable: React.FC<MemberDirectoryProps> = ({ members, 
             variant="ghost"
             size="sm"
             onClick={handleResetFilters}
-            className="h-7 text-xs text-muted-foreground hover:text-foreground gap-1.5 px-2"
+            className="h-7 text-xs text-muted-foreground hover:text-foreground gap-1.5 px-2 focus-orange"
           >
             <RotateCcw className="w-3 h-3" />
             Reset all filters
@@ -477,7 +477,8 @@ export const MemberDirectoryTable: React.FC<MemberDirectoryProps> = ({ members, 
 
       {/* ── 3. Directory Table with Clickable Sort Headers ────────── */}
       <Card className="overflow-hidden p-0">
-        <Table>
+        <div className="overflow-auto max-h-[60vh] table-sticky-head">
+          <table className="w-full caption-bottom text-sm">
           <TableHeader className="bg-secondary/60">
             <TableRow className="hover:bg-transparent">
               {/* Member Name */}
@@ -616,7 +617,7 @@ export const MemberDirectoryTable: React.FC<MemberDirectoryProps> = ({ members, 
                         variant="outline"
                         size="sm"
                         onClick={handleResetFilters}
-                        className="text-xs mt-1"
+                        className="text-xs mt-1 focus-orange"
                       >
                         Reset filters
                       </Button>
@@ -629,7 +630,7 @@ export const MemberDirectoryTable: React.FC<MemberDirectoryProps> = ({ members, 
                 <TableRow key={member.id} className="hover:bg-muted/40 transition-colors">
                   <TableCell>
                     <div className="flex items-center gap-3">
-                      <Avatar className="h-9 w-9 border border-border shadow-xs hover:scale-110 transition-transform duration-200 shrink-0">
+                      <Avatar className="h-9 w-9 border border-border hover:scale-110 transition-transform duration-200 shrink-0">
                         {member.avatarUrl && <AvatarImage src={member.avatarUrl} alt={member.name} />}
                         <AvatarFallback className="bg-secondary text-foreground text-sm font-bold">
                           {member.name.charAt(0)}
@@ -639,8 +640,8 @@ export const MemberDirectoryTable: React.FC<MemberDirectoryProps> = ({ members, 
                     </div>
                   </TableCell>
                   <TableCell>
-                    <div className="font-mono text-foreground font-medium">{member.rollNumber}</div>
-                    <div className="text-[11px] text-muted-foreground font-mono">{member.email}</div>
+                    <div className="font-mono text-[13px] text-foreground font-medium">{member.rollNumber}</div>
+                    <div className="font-mono text-[13px] text-muted-foreground max-w-[180px] truncate" title={member.email}>{member.email}</div>
                   </TableCell>
                   <TableCell>
                     <Badge variant="secondary" className="font-medium">
@@ -701,7 +702,8 @@ export const MemberDirectoryTable: React.FC<MemberDirectoryProps> = ({ members, 
               ))
             )}
           </TableBody>
-        </Table>
+          </table>
+        </div>
       </Card>
 
       {/* Edit Role, Position & Wing Dialog (admins only) */}
@@ -719,7 +721,7 @@ export const MemberDirectoryTable: React.FC<MemberDirectoryProps> = ({ members, 
           {/* Member Avatar with Re-roll & Gender Switch */}
           {editingUser && (
             <div className="flex items-center gap-3 p-3 bg-secondary/40 border border-border rounded-lg">
-              <Avatar className="h-14 w-14 border-2 border-border shadow-xs shrink-0">
+              <Avatar className="h-14 w-14 border border-border shrink-0">
                 {editingUser.avatarUrl && <AvatarImage src={editingUser.avatarUrl} alt={editingUser.name} />}
                 <AvatarFallback className="bg-secondary text-foreground text-sm font-bold">
                   {editingUser.name.charAt(0)}

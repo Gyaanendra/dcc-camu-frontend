@@ -29,6 +29,21 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 
+function useCountUp(target: number, ms = 700) {
+  const [v, setV] = React.useState(0);
+  React.useEffect(() => {
+    let raf = 0; const t0 = performance.now();
+    const tick = (t: number) => {
+      const p = Math.min(1, (t - t0) / ms);
+      setV(Math.round(target * (1 - Math.pow(1 - p, 3))));
+      if (p < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [target, ms]);
+  return v;
+}
+
 export default function DashboardPage() {
   const { user } = useAuth();
   const [adminAnalytics, setAdminAnalytics] = useState<any>(null);
@@ -77,6 +92,11 @@ export default function DashboardPage() {
 
   const activeLiveSession = activeSessions.find(s => s.isActive === 'true');
 
+  const hour = new Date().getHours();
+  const daypart = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+  const firstName = user?.name?.split(' ')[0] || 'Member';
+  const animatedAttendance = useCountUp(userStats?.stats?.attendancePercentage || 0);
+
   return (
     <ProtectedRoute>
       <div className="min-h-screen flex flex-col bg-background text-foreground transition-colors">
@@ -88,7 +108,7 @@ export default function DashboardPage() {
             {/* ── Greeting Header ───────────────────────────────── */}
             <Card className="p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 anim-fade-up">
               <div className="flex items-center gap-4 min-w-0">
-                <Avatar className="h-14 w-14 sm:h-16 sm:w-16 border-2 border-border shadow-sm ring-2 ring-background shrink-0">
+                <Avatar className="h-14 w-14 sm:h-16 sm:w-16 border border-border shrink-0">
                   {user?.avatarUrl && <AvatarImage src={user.avatarUrl} alt={user.name} />}
                   <AvatarFallback className="bg-secondary text-foreground text-lg font-bold">
                     {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
@@ -101,8 +121,12 @@ export default function DashboardPage() {
                     <span>Club DCC Portal</span>
                   </div>
                   <h1 className="text-xl sm:text-2xl font-bold text-foreground tracking-tight">
-                    Welcome back, {user?.name?.split(' ')[0] || 'Member'}
+                    {daypart}, {firstName}
                   </h1>
+                  <p className="font-mono text-[12px] text-muted-foreground mt-1">
+                    {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}
+                    {activeLiveSession ? ` · ${activeLiveSession.attendeeCount ?? 0} live check-ins` : ''}
+                  </p>
 
                   {/* Position + Wing + Role pills (read-only — self-edit disabled) */}
                   <div className="flex flex-wrap items-center gap-1.5 mt-2 text-sm">
@@ -208,6 +232,7 @@ export default function DashboardPage() {
                         qrCodeToken={activeLiveSession.qrCodeToken}
                         subtitle="Broadcast on Screen for Member Check-in"
                         location={activeLiveSession.location}
+                        status="live"
                       />
                     </div>
 
@@ -269,7 +294,7 @@ export default function DashboardPage() {
                         <Award className="w-4 h-4 text-accent" />
                       </div>
                       <div className="text-2xl font-bold text-foreground mt-2 tabular-nums tracking-tight">
-                        {userStats?.stats?.attendancePercentage || 0}%
+                        {animatedAttendance}%
                       </div>
                       <div className="mt-2 w-full h-1.5 rounded-full bg-secondary">
                         <div
@@ -333,10 +358,11 @@ export default function DashboardPage() {
                             <Skeleton key={i} className="h-14" />
                           ))
                         ) : userStats?.history?.length > 0 ? (
-                        userStats.history.map((log: any) => (
+                        userStats.history.map((log: any, i: number) => (
                           <div
                             key={log.id}
-                            className="flex items-center justify-between p-3.5 rounded-xl bg-secondary border border-border text-sm"
+                            className="flex items-center justify-between p-3.5 rounded-xl bg-secondary border border-border text-sm anim-fade-up"
+                            style={{ animationDelay: `${Math.min(i, 4) * 40}ms` }}
                           >
                             <div className="min-w-0 flex-1">
                               <div className="font-semibold text-foreground truncate">{log.sessionTitle}</div>
@@ -351,6 +377,7 @@ export default function DashboardPage() {
                                     : 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20 font-mono text-[10px] font-bold uppercase tracking-wider'
                                 }
                               >
+                                <span className="inline-block h-1.5 w-1.5 rounded-full bg-current mr-1" />
                                 {log.status}
                               </Badge>
                               <div className="text-[10px] text-muted-foreground mt-1">
@@ -364,7 +391,7 @@ export default function DashboardPage() {
                           <QrCode className="w-8 h-8 text-muted-foreground mb-2" />
                           <p className="text-sm font-medium text-foreground">No records yet</p>
                           <p className="text-sm text-muted-foreground mt-0.5">Scan a session QR code to record attendance</p>
-                          <Button asChild className="mt-3">
+                          <Button asChild variant="outline" className="mt-3">
                             <Link href="/scan">
                               <QrCode className="w-3.5 h-3.5" />
                               Scan Now

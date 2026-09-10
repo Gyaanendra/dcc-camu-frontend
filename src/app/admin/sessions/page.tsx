@@ -8,6 +8,8 @@ import { Sidebar } from '@/components/layout/Sidebar';
 import { CreateSessionModal } from '@/components/sessions/CreateSessionModal';
 import { QRDisplayCard } from '@/components/qr/QRDisplayCard';
 import { PageLoader } from '@/components/layout/PageLoader';
+import { PageHeader } from '@/components/layout/PageHeader';
+import { Skeleton } from '@/components/ui/skeleton';
 import { api } from '@/lib/api';
 import { Calendar, MapPin, PowerOff, Play, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
@@ -84,29 +86,25 @@ export default function AdminSessionsPage() {
         <div className="flex flex-1">
           <Sidebar />
           <main className="flex-1 p-6 sm:p-8 max-w-7xl mx-auto w-full space-y-6">
-            <Card className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6">
-              <div>
-                <div className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
-                  Event Management
-                </div>
-                <h1 className="text-2xl font-semibold text-foreground tracking-tight">
-                  Sessions & Live QR
-                </h1>
-                <p className="text-sm text-muted-foreground mt-1">{isReadOnly ? 'View-only access — session controls are disabled for advisors' : 'Schedule sessions, project dynamic QR codes, and monitor live check-ins'}</p>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <CreateSessionModal teams={teams} onCreated={loadData} />
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={loadData}
-                  title="Refresh Sessions"
-                >
-                  <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
-                </Button>
-              </div>
-            </Card>
+            <PageHeader
+              kicker="Event Management"
+              title="Sessions & Live QR"
+              description={isReadOnly ? 'View-only access — session controls are disabled for advisors' : 'Schedule sessions, project dynamic QR codes, and monitor live check-ins'}
+              actions={
+                <>
+                  <CreateSessionModal teams={teams} onCreated={loadData} />
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={loadData}
+                    title="Refresh Sessions"
+                    className="focus-orange"
+                  >
+                    <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+                  </Button>
+                </>
+              }
+            />
 
             {isLoading ? (
               <PageLoader message="Loading session records..." />
@@ -114,20 +112,25 @@ export default function AdminSessionsPage() {
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Sessions List */}
                 <div className="space-y-3">
-                  <h2 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">
-                    Sessions Directory
-                  </h2>
+                  <div className="flex items-center justify-between gap-2 pb-3 border-b border-border">
+                    <h2 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">
+                      Sessions Directory
+                    </h2>
+                    <span className="font-mono text-[12px] text-muted-foreground tabular-nums">
+                      {sessions.length} of {sessions.length}
+                    </span>
+                  </div>
                   <div className="space-y-2 max-h-[600px] overflow-y-auto pr-1">
                     {isLoading ? (
-                      [1, 2, 3, 4].map((i) => (
-                        <div key={i} className="p-4 rounded-xl border border-border bg-card h-28 animate-pulse" />
+                      [1, 2, 3].map((i) => (
+                        <Skeleton key={i} className="h-[52px] rounded-lg" />
                       ))
                     ) : sessions.length > 0 ? (
                       sessions.map((s) => (
                         <button
                           key={s.id}
                           onClick={() => handleSelectSession(s)}
-                          className={`w-full text-left p-4 rounded-xl border transition-all ${
+                          className={`w-full text-left p-4 rounded-xl border transition-all focus-orange ${
                             selectedSession?.id === s.id
                               ? 'bg-accent/10 border-accent/40 text-foreground'
                               : 'bg-card border-border hover:bg-secondary/60 text-foreground'
@@ -151,7 +154,7 @@ export default function AdminSessionsPage() {
                             <MapPin className="w-3 h-3" /> {s.location}
                           </div>
 
-                          <div className="flex items-center justify-between text-[11px] font-mono mt-3 pt-2 border-t border-border text-muted-foreground">
+                          <div className="flex items-center justify-between font-mono text-[13px] mt-3 pt-2 border-t border-border text-muted-foreground">
                             <span>{s?.startTime ? new Date(s.startTime).toLocaleDateString() : 'N/A'}</span>
                             <span className="text-foreground font-bold tabular-nums">
                               {s.attendeeCount} attended
@@ -189,8 +192,8 @@ export default function AdminSessionsPage() {
                       style={isReadOnly ? { display: 'none' } : undefined}
                       className={
                         selectedSession.isActive === 'true'
-                          ? 'border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive'
-                          : 'border-emerald-500/20 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-500/10 hover:text-emerald-700 dark:hover:text-emerald-400'
+                          ? 'border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive focus-orange'
+                          : 'border-emerald-500/20 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-500/10 hover:text-emerald-700 dark:hover:text-emerald-400 focus-orange'
                       }
                     >
                       {selectedSession.isActive === 'true' ? (
@@ -212,6 +215,7 @@ export default function AdminSessionsPage() {
                     qrCodeToken={selectedSession.qrCodeToken}
                     subtitle={selectedSession.isActive === 'true' ? "Broadcast on Screen for Member Check-in" : "Session Closed (Attendance Disabled)"}
                     location={selectedSession.location}
+                    status={selectedSession.isActive === 'true' ? 'live' : 'idle'}
                   />
 
                   {/* Real-time Attendees Feed */}
@@ -236,7 +240,7 @@ export default function AdminSessionsPage() {
                               </div>
                               <div>
                                 <div className="font-semibold text-foreground">{a.name}</div>
-                                <div className="text-[11px] text-muted-foreground font-mono">{a.rollNumber}</div>
+                                <div className="font-mono text-[13px] text-muted-foreground max-w-[180px] truncate" title={a.rollNumber}>{a.rollNumber}</div>
                               </div>
                             </div>
 
@@ -250,7 +254,7 @@ export default function AdminSessionsPage() {
                               >
                                 {a.status}
                               </span>
-                              <div className="text-[10px] text-muted-foreground mt-1 font-mono">
+                              <div className="font-mono text-[13px] text-muted-foreground mt-1">
                                 {new Date(a.scannedAt).toLocaleTimeString()}
                               </div>
                             </div>

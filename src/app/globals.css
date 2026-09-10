@@ -281,6 +281,17 @@
   border-color: hsl(var(--input));
 }
 
+/* ─── Shared utilities (Tasks 4–5 consumers) ── */
+.table-sticky-head thead th {
+  position: sticky; top: 0; z-index: 10;
+  background: hsl(var(--secondary) / 0.85);
+  backdrop-filter: blur(6px);
+}
+.focus-orange:focus-visible {
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: 2px;
+}
+
 /* ─── Bottom Tab Bar (Mobile) ────────────────────────────── */
 .tab-bar {
   background-color: hsl(var(--card));

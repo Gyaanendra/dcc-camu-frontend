@@ -116,7 +116,7 @@ export const AddMemberModal: React.FC<AddMemberModalProps> = ({ teams, onCreated
 
         {/* Funky Notionist Avatar Preview Card with Gender Switch */}
         <div className="flex items-center gap-3 p-3 bg-secondary/40 border border-border rounded-lg">
-          <Avatar className="h-14 w-14 border-2 border-border shadow-sm ring-2 ring-background shrink-0">
+          <Avatar className="h-14 w-14 border border-border shrink-0">
             <AvatarImage src={avatarUrl} alt="Notionist Avatar Preview" />
             <AvatarFallback className="bg-secondary text-foreground text-sm font-bold">
               {name ? name.charAt(0).toUpperCase() : 'N'}
@@ -136,7 +136,7 @@ export const AddMemberModal: React.FC<AddMemberModalProps> = ({ teams, onCreated
                 }}
                 className={`px-2 py-0.5 rounded text-[11px] font-medium border transition-colors ${
                   gender === 'male'
-                    ? 'bg-primary text-primary-foreground border-primary shadow-xs'
+                    ? 'bg-primary text-primary-foreground border-primary focus-orange'
                     : 'bg-background text-muted-foreground border-border hover:text-foreground'
                 }`}
               >
@@ -150,7 +150,7 @@ export const AddMemberModal: React.FC<AddMemberModalProps> = ({ teams, onCreated
                 }}
                 className={`px-2 py-0.5 rounded text-[11px] font-medium border transition-colors ${
                   gender === 'female'
-                    ? 'bg-primary text-primary-foreground border-primary shadow-xs'
+                    ? 'bg-primary text-primary-foreground border-primary focus-orange'
                     : 'bg-background text-muted-foreground border-border hover:text-foreground'
                 }`}
               >
@@ -163,7 +163,7 @@ export const AddMemberModal: React.FC<AddMemberModalProps> = ({ teams, onCreated
             variant="outline"
             size="sm"
             onClick={handleShuffleAvatar}
-            className="h-8 text-xs gap-1.5 shrink-0"
+            className="h-8 text-xs gap-1.5 shrink-0 focus-orange"
             title="Shuffle avatar with current gender"
           >
             <Dices className="w-3.5 h-3.5" /> Shuffle
@@ -273,14 +273,14 @@ export const AddMemberModal: React.FC<AddMemberModalProps> = ({ teams, onCreated
               type="button"
               variant="secondary"
               onClick={() => setIsOpen(false)}
-              className="flex-1"
+              className="flex-1 focus-orange"
             >
               Cancel
             </Button>
             <Button
               type="submit"
               disabled={isSubmitting}
-              className="flex-1"
+              className="flex-1 focus-orange"
             >
               {isSubmitting ? 'Adding...' : 'Add Member'}
             </Button>

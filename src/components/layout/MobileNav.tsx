@@ -76,7 +76,7 @@ export const MobileNav: React.FC = () => {
           />
 
           {/* Panel — slides from left */}
-          <aside className="relative z-10 flex flex-col w-72 max-w-[85vw] h-full bg-card border-r border-border shadow-xl anim-slide-left">
+          <aside className="relative z-10 flex flex-col w-72 max-w-[85vw] h-full bg-card border-r border-border anim-slide-left">
 
             {/* Header */}
             <div className="flex items-center justify-between px-4 py-3.5 border-b border-border">
@@ -132,10 +132,11 @@ export const MobileNav: React.FC = () => {
                         href={item.href}
                         onClick={close}
                         id={`mobile-nav-${item.name.toLowerCase().replace(/\s+/g, '-')}`}
+                        aria-current={active ? 'page' : undefined}
                         className={cn(
                           'flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium transition-all anim-btn-press active:scale-[0.97]',
                           active
-                            ? 'bg-accent/10 text-accent'
+                            ? 'bg-accent/10 text-accent relative before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-5 before:w-[3px] before:rounded-full before:bg-accent'
                             : 'text-muted-foreground hover:text-foreground hover:bg-secondary'
                         )}
                       >
@@ -164,10 +165,11 @@ export const MobileNav: React.FC = () => {
                           href={item.href}
                           onClick={close}
                           id={`mobile-nav-admin-${item.name.toLowerCase().replace(/\s+/g, '-')}`}
+                          aria-current={active ? 'page' : undefined}
                           className={cn(
                             'flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium transition-all',
                             active
-                              ? 'bg-accent/10 text-accent'
+                              ? 'bg-accent/10 text-accent relative before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-5 before:w-[3px] before:rounded-full before:bg-accent'
                               : 'text-muted-foreground hover:text-foreground hover:bg-secondary'
                           )}
                         >

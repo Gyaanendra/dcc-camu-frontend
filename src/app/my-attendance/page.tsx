@@ -35,7 +35,7 @@ export default function MyAttendancePage() {
           <Sidebar />
           <main className="flex-1 p-6 sm:p-8 max-w-7xl mx-auto w-full space-y-6">
             <Card className="p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center gap-4">
-              <Avatar className="h-14 w-14 sm:h-16 sm:w-16 border-2 border-border shadow-sm ring-2 ring-background shrink-0">
+              <Avatar className="h-14 w-14 sm:h-16 sm:w-16 border border-border shrink-0">
                 {user?.avatarUrl && <AvatarImage src={user.avatarUrl} alt={user.name} />}
                 <AvatarFallback className="bg-secondary text-foreground text-lg font-bold">
                   {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
