@@ -14,7 +14,8 @@ class ApiClient {
   private hydrated = false;
   private getCache = new Map<string, { data: any; expiry: number }>();
   private inflight = new Map<string, Promise<any>>();
-  private static GET_TTL_MS = 30_000;
+  private static GET_TTL_MS = 45_000; // 45 seconds fresh
+  private static CACHE_PREFIX = 'dcc_swr_';
 
   constructor() {}
 
@@ -46,9 +47,44 @@ class ApiClient {
     return this.token;
   }
 
+  private readStorageCache(key: string): { data: any; expiry: number } | null {
+    if (typeof window === 'undefined') return null;
+    try {
+      const raw = window.sessionStorage.getItem(ApiClient.CACHE_PREFIX + key);
+      if (raw) return JSON.parse(raw);
+    } catch {
+      // Ignore storage read error
+    }
+    return null;
+  }
+
+  private writeStorageCache(key: string, value: { data: any; expiry: number }) {
+    if (typeof window === 'undefined') return;
+    try {
+      window.sessionStorage.setItem(ApiClient.CACHE_PREFIX + key, JSON.stringify(value));
+    } catch {
+      // Ignore quota exceeded
+    }
+  }
+
+  private clearStorageCache() {
+    if (typeof window === 'undefined') return;
+    try {
+      const keysToRemove: string[] = [];
+      for (let i = 0; i < window.sessionStorage.length; i++) {
+        const k = window.sessionStorage.key(i);
+        if (k?.startsWith(ApiClient.CACHE_PREFIX)) keysToRemove.push(k);
+      }
+      keysToRemove.forEach(k => window.sessionStorage.removeItem(k));
+    } catch {
+      // Ignore storage errors
+    }
+  }
+
   private async request(endpoint: string, options: RequestInit = {}) {
     if (options.method !== undefined && options.method !== 'GET') {
       this.getCache.clear();
+      this.clearStorageCache();
       this.inflight.clear();
     }
     const token = this.getToken();
@@ -86,19 +122,48 @@ class ApiClient {
   private cachedGet(endpoint: string) {
     const key = `GET ${endpoint}`;
     const now = Date.now();
-    const cached = this.getCache.get(key);
-    if (cached && now < cached.expiry) return Promise.resolve(cached.data);
+
+    // 1. Check in-memory cache
+    let cached = this.getCache.get(key);
+
+    // 2. Check sessionStorage if memory cache missed
+    if (!cached) {
+      cached = this.readStorageCache(key) || undefined;
+      if (cached) {
+        this.getCache.set(key, cached);
+      }
+    }
+
+    // If cache is fresh, return immediately (0ms response)
+    if (cached && now < cached.expiry) {
+      return Promise.resolve(cached.data);
+    }
+
+    // Deduplicate in-flight requests for the same endpoint
     const ongoing = this.inflight.get(key);
     if (ongoing) return ongoing;
+
     const promise = this.request(endpoint).then((data) => {
-      this.getCache.set(key, { data, expiry: Date.now() + ApiClient.GET_TTL_MS });
+      const entry = { data, expiry: Date.now() + ApiClient.GET_TTL_MS };
+      this.getCache.set(key, entry);
+      this.writeStorageCache(key, entry);
       this.inflight.delete(key);
       return data;
     }).catch((err) => {
       this.inflight.delete(key);
+      // Fallback to stale cached data if network times out
+      if (cached?.data) return cached.data;
       throw err;
     });
+
     this.inflight.set(key, promise);
+
+    // Stale-While-Revalidate: If we have cached data (even if slightly stale),
+    // return it immediately to avoid UI loading skeletons while revalidating in background!
+    if (cached?.data && (now - cached.expiry < 10 * 60 * 1000)) {
+      return Promise.resolve(cached.data);
+    }
+
     return promise;
   }
 

@@ -28,10 +28,37 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const USER_STORAGE_KEY = 'dcc_user';
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [user, setUser] = useState<User | null>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const stored = window.localStorage.getItem(USER_STORAGE_KEY);
+        if (stored) return JSON.parse(stored);
+      } catch (_) {}
+    }
+    return null;
+  });
+
+  const [token, setToken] = useState<string | null>(() => {
+    if (typeof window !== 'undefined') {
+      return api.getToken();
+    }
+    return null;
+  });
+
+  // If already authenticated in localStorage, don't block the UI with a full-page loading spinner
+  const [isLoading, setIsLoading] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const storedUser = window.localStorage.getItem(USER_STORAGE_KEY);
+        const storedToken = api.getToken();
+        if (storedUser && storedToken) return false;
+      } catch (_) {}
+    }
+    return true;
+  });
 
   const refreshProfile = async () => {
     try {
@@ -40,11 +67,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const res = await api.getMe();
       setUser(res.user);
       setToken(api.getToken());
+      if (typeof window !== 'undefined' && res.user) {
+        window.localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(res.user));
+      }
     } catch (error) {
       // No active session (logged out or expired) — stay logged out silently.
       api.setToken(null);
       setUser(null);
       setToken(null);
+      if (typeof window !== 'undefined') {
+        window.localStorage.removeItem(USER_STORAGE_KEY);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -61,6 +94,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const res = await api.login(normalizedEmail, password);
       setToken(res.token || null);
       setUser(res.user);
+      if (typeof window !== 'undefined' && res.user) {
+        window.localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(res.user));
+      }
       toast.success(`Welcome back, ${res.user.name}!`);
     } catch (error: any) {
       toast.error(error.message || 'Login failed.');
@@ -82,6 +118,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
     setUser(null);
     setToken(null);
+    if (typeof window !== 'undefined') {
+      window.localStorage.removeItem(USER_STORAGE_KEY);
+    }
     toast.info('Logged out from Club DCC Camu.');
   };
 

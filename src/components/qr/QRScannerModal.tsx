@@ -20,21 +20,12 @@ import {
   ZoomOut,
   Clock,
   FlipHorizontal2,
-  Keyboard,
-  UploadCloud,
-  Flashlight,
-  ArrowRight,
-  Pause,
-  Play,
-  User,
   Sparkles,
-  FileImage,
 } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { MemberAvatar } from '@/components/ui/member-avatar';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 
 interface QRScannerModalProps {
   activeSessionId?: string;
@@ -42,7 +33,6 @@ interface QRScannerModalProps {
 }
 
 type ScanState = 'scanning' | 'processing' | 'success' | 'error';
-type ScanMode = 'camera' | 'manual' | 'upload';
 
 interface ScanResult {
   type: 'success' | 'error';
@@ -75,9 +65,6 @@ function parseCameraLabel(rawLabel: string, index: number): { name: string; faci
 const ZOOM_PRESETS = [1, 2, 5];
 
 export const QRScannerModal: React.FC<QRScannerModalProps> = ({ activeSessionId, onScanSuccess }) => {
-  // Mode selection
-  const [activeMode, setActiveMode] = useState<ScanMode>('camera');
-
   // Camera & Device state
   const [cameras, setCameras] = useState<CameraDevice[]>([]);
   const [selectedCameraId, setSelectedCameraId] = useState<string>('');
@@ -91,14 +78,6 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({ activeSessionId,
   // Scanning state
   const [scanState, setScanState] = useState<ScanState>('scanning');
   const [scanResult, setScanResult] = useState<ScanResult | null>(null);
-
-  // Manual entry state
-  const [manualInput, setManualInput] = useState<string>('');
-  const [isSubmittingManual, setIsSubmittingManual] = useState<boolean>(false);
-
-  // Image upload state
-  const [isUploading, setIsUploading] = useState<boolean>(false);
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   // Auto-advance continuous scanning (for rapid queue check-in)
   const [autoAdvance, setAutoAdvance] = useState<boolean>(true);
@@ -303,10 +282,7 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({ activeSessionId,
   // ─── Process Check-in ─────────────────────────────────────────────────────
   const handleScanned = async (token: string) => {
     const clean = token.trim();
-    if (!clean) {
-      toast.error('Please enter a valid QR token or Roll Number');
-      return;
-    }
+    if (!clean) return;
 
     if (typeof window !== 'undefined' && 'vibrate' in navigator) navigator.vibrate([80]);
     await stopCamera();
@@ -351,62 +327,6 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({ activeSessionId,
     }
   };
 
-  // ─── Manual Check-in Handler ──────────────────────────────────────────────
-  const handleManualSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!manualInput.trim()) {
-      toast.error('Please enter a member Roll Number or token');
-      return;
-    }
-    setIsSubmittingManual(true);
-    try {
-      await handleScanned(manualInput.trim());
-      setManualInput('');
-    } finally {
-      setIsSubmittingManual(false);
-    }
-  };
-
-  // ─── Image File Upload Scanner ────────────────────────────────────────────
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setIsUploading(true);
-    setScanState('processing');
-    try {
-      const tempReaderId = 'qr-file-upload-temp';
-      let tempEl = document.getElementById(tempReaderId);
-      if (!tempEl) {
-        tempEl = document.createElement('div');
-        tempEl.id = tempReaderId;
-        tempEl.style.display = 'none';
-        document.body.appendChild(tempEl);
-      }
-
-      const fileScanner = new Html5Qrcode(tempReaderId);
-      const decodedText = await fileScanner.scanFile(file, true);
-      await fileScanner.clear();
-      if (tempEl) tempEl.remove();
-
-      if (decodedText) {
-        await handleScanned(decodedText);
-      } else {
-        throw new Error('No QR code detected in this image');
-      }
-    } catch (err: any) {
-      playAudio('error');
-      setScanResult({
-        type: 'error',
-        message: err?.message || 'Could not find a valid QR code in the uploaded image.',
-      });
-      setScanState('error');
-    } finally {
-      setIsUploading(false);
-      if (fileInputRef.current) fileInputRef.current.value = '';
-    }
-  };
-
   // ─── Continuous Scanning Auto-Advance Timer ───────────────────────────────
   useEffect(() => {
     if (scanState === 'success' && autoAdvance && !isTimerPaused) {
@@ -431,24 +351,17 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({ activeSessionId,
   useEffect(() => {
     isMountedRef.current = true;
     discoverCameras();
-    if (activeMode === 'camera') {
-      const t = setTimeout(() => startCamera(), 250);
-      return () => {
-        isMountedRef.current = false;
-        clearTimeout(t);
-        stopCamera();
-      };
-    }
+    const t = setTimeout(() => startCamera(), 250);
     return () => {
       isMountedRef.current = false;
+      clearTimeout(t);
       stopCamera();
     };
-  }, [activeMode]);
+  }, []);
 
   // Keyboard shortcut listener
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Don't trigger if user is actively typing into an input
       if (['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)) return;
 
       if (e.key === ' ' || e.key === 'Spacebar') {
@@ -493,9 +406,7 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({ activeSessionId,
     setScanState('scanning');
     setAutoAdvanceTimer(4);
     setIsTimerPaused(false);
-    if (activeMode === 'camera') {
-      startCamera();
-    }
+    startCamera();
   };
 
   const parsedCameras = cameras.map((c, i) => ({ ...c, ...parseCameraLabel(c.label, i) }));
@@ -503,22 +414,22 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({ activeSessionId,
 
   // ─── Render UI ────────────────────────────────────────────────────────────
   return (
-    <div className="w-full max-w-lg mx-auto rounded-xl bg-card border border-border overflow-hidden shadow-sm">
+    <div className="w-full max-w-lg mx-auto rounded-2xl bg-card border border-border overflow-hidden shadow-sm">
       {/* Screen Reader Live Announcements */}
       <div aria-live="polite" className="sr-only">
         {a11yAnnouncement}
       </div>
 
-      {/* ── HEADER & ACCESSIBILITY CONTROLS ── */}
+      {/* ── HEADER & TOOLBAR ── */}
       <div className="px-5 py-3.5 border-b border-border bg-secondary/30 flex items-center justify-between gap-3">
         <div className="flex items-center gap-2.5">
           <div className="h-8 w-8 rounded-lg bg-foreground flex items-center justify-center text-background shadow-xs">
             <QrCode className="w-4 h-4" />
           </div>
           <div>
-            <h2 className="text-sm font-bold text-foreground leading-tight">Attendance Check-in</h2>
+            <h2 className="text-sm font-bold text-foreground leading-tight">Live QR Scanner</h2>
             <p className="text-xs text-muted-foreground">
-              {scanState === 'scanning' && (activeMode === 'camera' ? 'Aim camera at QR badge' : activeMode === 'manual' ? 'Enter roll number or token' : 'Upload QR screenshot')}
+              {scanState === 'scanning' && 'Point camera at a member QR badge'}
               {scanState === 'processing' && 'Verifying attendee record…'}
               {scanState === 'success' && 'Attendee verified & checked in'}
               {scanState === 'error' && 'Check-in validation issue'}
@@ -526,10 +437,10 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({ activeSessionId,
           </div>
         </div>
 
-        {/* Quick Toolbar (Sound, Flashlight, Camera toggle) */}
+        {/* Quick Toolbar (Sound, Flashlight, Camera Flip, Start/Stop) */}
         <div className="flex items-center gap-1.5">
           {/* Torch toggle (if supported) */}
-          {activeMode === 'camera' && isCameraActive && isTorchSupported && (
+          {isCameraActive && isTorchSupported && (
             <button
               onClick={toggleTorch}
               className={cn(
@@ -562,7 +473,7 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({ activeSessionId,
           </button>
 
           {/* Camera Flip (quick toggle if > 1 camera) */}
-          {activeMode === 'camera' && hasMultipleCameras && scanState === 'scanning' && (
+          {hasMultipleCameras && scanState === 'scanning' && (
             <button
               onClick={flipCamera}
               className="p-2 rounded-lg bg-secondary border border-border text-muted-foreground hover:text-foreground transition-colors focus-orange"
@@ -574,7 +485,7 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({ activeSessionId,
           )}
 
           {/* Camera Start / Stop */}
-          {activeMode === 'camera' && scanState === 'scanning' && (
+          {scanState === 'scanning' && (
             <button
               onClick={isCameraActive ? stopCamera : () => startCamera()}
               id="scanner-toggle-camera"
@@ -603,74 +514,21 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({ activeSessionId,
         </div>
       </div>
 
-      {/* ── MODE SWITCHER TABS ── */}
+      {/* ── SCANNING VIEWPORT ── */}
       {scanState === 'scanning' && (
-        <div className="flex border-b border-border bg-secondary/15 p-1 gap-1">
-          <button
-            onClick={() => {
-              setActiveMode('camera');
-              if (!isCameraActive) startCamera();
-            }}
-            className={cn(
-              'flex-1 flex items-center justify-center gap-2 py-2 rounded-md text-xs font-semibold transition-all focus-orange',
-              activeMode === 'camera'
-                ? 'bg-card text-foreground shadow-xs border border-border'
-                : 'text-muted-foreground hover:text-foreground hover:bg-secondary/50'
-            )}
-          >
-            <Camera className="w-3.5 h-3.5 text-accent" />
-            <span>Live Camera</span>
-          </button>
-
-          <button
-            onClick={() => {
-              setActiveMode('manual');
-              stopCamera();
-            }}
-            className={cn(
-              'flex-1 flex items-center justify-center gap-2 py-2 rounded-md text-xs font-semibold transition-all focus-orange',
-              activeMode === 'manual'
-                ? 'bg-card text-foreground shadow-xs border border-border'
-                : 'text-muted-foreground hover:text-foreground hover:bg-secondary/50'
-            )}
-          >
-            <Keyboard className="w-3.5 h-3.5 text-accent" />
-            <span>Manual Entry</span>
-          </button>
-
-          <button
-            onClick={() => {
-              setActiveMode('upload');
-              stopCamera();
-            }}
-            className={cn(
-              'flex-1 flex items-center justify-center gap-2 py-2 rounded-md text-xs font-semibold transition-all focus-orange',
-              activeMode === 'upload'
-                ? 'bg-card text-foreground shadow-xs border border-border'
-                : 'text-muted-foreground hover:text-foreground hover:bg-secondary/50'
-            )}
-          >
-            <UploadCloud className="w-3.5 h-3.5 text-accent" />
-            <span>Upload Image</span>
-          </button>
-        </div>
-      )}
-
-      {/* ── 1. LIVE CAMERA MODE ── */}
-      {scanState === 'scanning' && activeMode === 'camera' && (
         <>
           {/* Camera Viewport Container */}
-          <div className="relative bg-zinc-950 min-h-[300px] sm:min-h-[350px] max-h-[390px] flex items-center justify-center overflow-hidden">
+          <div className="relative bg-zinc-950 min-h-[320px] sm:min-h-[360px] max-h-[400px] flex items-center justify-center overflow-hidden">
             {/* Target element for html5-qrcode video */}
             <div
               id={readerElementId}
-              className="w-full h-full [&_video]:max-h-[390px] [&_video]:w-full [&_video]:object-cover [&_input[type=range]]:!hidden [&_.zoom-range-selector]:!hidden [&_select]:!hidden [&_span]:!hidden [&_button]:!hidden [&_img]:!hidden [&_#qr-shaded-region]:!border-0 [&_#qr-shaded-region_div]:!border-0 [&_#qr-shaded-region_svg]:!hidden overflow-hidden"
+              className="w-full h-full [&_video]:max-h-[400px] [&_video]:w-full [&_video]:object-cover [&_input[type=range]]:!hidden [&_.zoom-range-selector]:!hidden [&_select]:!hidden [&_span]:!hidden [&_button]:!hidden [&_img]:!hidden [&_#qr-shaded-region]:!border-0 [&_#qr-shaded-region_div]:!border-0 [&_#qr-shaded-region_svg]:!hidden overflow-hidden"
             />
 
-            {/* UNIFIED SLEEK VIEWFINDER RETICLE (Eliminates confusing double border) */}
+            {/* UNIFIED SLEEK VIEWFINDER RETICLE */}
             {isCameraActive && (
               <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
-                <div className="relative w-56 h-56 sm:w-64 sm:h-64 rounded-2xl border border-white/25 shadow-[0_0_0_9999px_rgba(0,0,0,0.50)] overflow-hidden">
+                <div className="relative w-56 h-56 sm:w-64 sm:h-64 rounded-2xl border border-white/25 shadow-[0_0_0_9999px_rgba(0,0,0,0.52)] overflow-hidden">
                   {/* High-tech Corner Brackets */}
                   <div className="absolute top-0 left-0 w-6 h-6 border-t-[3px] border-l-[3px] border-accent rounded-tl-xl" />
                   <div className="absolute top-0 right-0 w-6 h-6 border-t-[3px] border-r-[3px] border-accent rounded-tr-xl" />
@@ -710,20 +568,12 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({ activeSessionId,
                       <AlertCircle className="w-7 h-7 text-destructive" />
                     </div>
                     <p className="text-xs text-zinc-300 max-w-xs leading-relaxed font-medium">{cameraError}</p>
-                    <div className="flex gap-2 mt-2">
-                      <button
-                        onClick={() => startCamera()}
-                        className="px-4 py-2 rounded-lg bg-accent text-accent-foreground text-xs font-semibold hover:bg-accent/90 transition-colors focus-orange"
-                      >
-                        Retry Camera
-                      </button>
-                      <button
-                        onClick={() => setActiveMode('manual')}
-                        className="px-4 py-2 rounded-lg bg-secondary border border-border text-foreground text-xs font-semibold hover:bg-secondary/80 transition-colors"
-                      >
-                        Use Manual Entry
-                      </button>
-                    </div>
+                    <button
+                      onClick={() => startCamera()}
+                      className="mt-2 px-5 py-2.5 rounded-lg bg-accent text-accent-foreground text-xs font-bold hover:bg-accent/90 transition-colors focus-orange"
+                    >
+                      Retry Camera
+                    </button>
                   </>
                 ) : (
                   <>
@@ -809,81 +659,6 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({ activeSessionId,
             )}
           </div>
         </>
-      )}
-
-      {/* ── 2. MANUAL CODE / ROLL NUMBER ENTRY ── */}
-      {scanState === 'scanning' && activeMode === 'manual' && (
-        <form onSubmit={handleManualSubmit} className="p-6 space-y-4">
-          <div className="space-y-1.5">
-            <label htmlFor="manual-token-input" className="text-xs font-semibold text-foreground flex items-center gap-1.5">
-              <Keyboard className="w-3.5 h-3.5 text-accent" />
-              Member Roll Number or QR Token
-            </label>
-            <p className="text-xs text-muted-foreground">
-              Type or paste a Bennett Roll Number (e.g. <span className="font-mono text-foreground font-semibold">S24CSEU0771</span>) or live session token.
-            </p>
-          </div>
-
-          <div className="flex gap-2">
-            <Input
-              id="manual-token-input"
-              type="text"
-              autoFocus
-              value={manualInput}
-              onChange={e => setManualInput(e.target.value)}
-              placeholder="e.g. S24CSEU0771"
-              className="font-mono text-sm uppercase tracking-wide h-11"
-              disabled={isSubmittingManual}
-            />
-            <Button
-              type="submit"
-              disabled={isSubmittingManual || !manualInput.trim()}
-              className="h-11 px-5 font-bold focus-orange shrink-0"
-            >
-              {isSubmittingManual ? 'Checking in…' : 'Check In'}
-            </Button>
-          </div>
-
-          <div className="rounded-lg bg-secondary/40 border border-border p-3 flex items-start gap-2.5 text-xs text-muted-foreground">
-            <Sparkles className="w-4 h-4 text-accent shrink-0 mt-0.5" />
-            <div>
-              <span className="font-semibold text-foreground">Keyboard Accessibility:</span> Press <kbd className="px-1 py-0.5 rounded border border-border bg-card font-mono text-[10px]">Enter</kbd> to submit instantly. The system validates roll numbers and automatically checks into the active session.
-            </div>
-          </div>
-        </form>
-      )}
-
-      {/* ── 3. UPLOAD QR IMAGE ── */}
-      {scanState === 'scanning' && activeMode === 'upload' && (
-        <div className="p-6 space-y-4 text-center">
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            onChange={handleFileUpload}
-            className="hidden"
-            id="qr-image-upload"
-          />
-          <div
-            onClick={() => fileInputRef.current?.click()}
-            className="border-2 border-dashed border-border hover:border-accent/60 rounded-xl p-8 cursor-pointer transition-all hover:bg-secondary/20 flex flex-col items-center justify-center gap-3 group"
-          >
-            <div className="p-3 rounded-full bg-secondary border border-border group-hover:bg-accent/10 group-hover:border-accent/30 transition-colors">
-              <FileImage className="w-8 h-8 text-accent" />
-            </div>
-            <div>
-              <p className="text-sm font-bold text-foreground">
-                {isUploading ? 'Decoding QR image…' : 'Click to select or drop QR image'}
-              </p>
-              <p className="text-xs text-muted-foreground mt-1">
-                Supports PNG, JPEG, SVG, or screenshot from phones
-              </p>
-            </div>
-            <Button variant="secondary" size="sm" className="mt-1 font-semibold">
-              Browse Files
-            </Button>
-          </div>
-        </div>
       )}
 
       {/* ── PROCESSING STATE ── */}
@@ -1012,32 +787,22 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({ activeSessionId,
             </p>
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-2 w-full pt-2">
+          <div className="w-full pt-2">
             <Button
               onClick={handleScanAgain}
               id="scan-retry-btn"
               autoFocus
-              className="flex-1 h-11 font-bold gap-2 focus-orange"
+              className="w-full h-11 font-bold gap-2 focus-orange"
             >
               <RotateCcw className="w-4 h-4" />
               Try Again
-            </Button>
-            <Button
-              onClick={() => {
-                setActiveMode('manual');
-                handleScanAgain();
-              }}
-              variant="outline"
-              className="h-11 font-semibold"
-            >
-              Enter Manually
             </Button>
           </div>
         </div>
       )}
 
       {/* Bottom Keyboard Shortcut Help Footer */}
-      {scanState === 'scanning' && activeMode === 'camera' && (
+      {scanState === 'scanning' && (
         <div className="px-4 py-2.5 border-t border-border bg-secondary/10 flex items-center justify-between text-[11px] text-muted-foreground">
           <span className="flex items-center gap-1.5">
             <ScanLine className="w-3.5 h-3.5 text-accent" />
