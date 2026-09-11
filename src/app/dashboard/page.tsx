@@ -105,9 +105,9 @@ export default function DashboardPage() {
     <ProtectedRoute>
       <div className="min-h-screen flex flex-col bg-background text-foreground transition-colors">
         <Navbar crumbs={[{ label: 'Dashboard' }]} />
-        <div className="flex flex-1">
+        <div className="flex flex-1 items-start">
           <Sidebar />
-          <main className="flex-1 p-4 sm:p-6 max-w-7xl mx-auto w-full space-y-4">
+          <main className="flex-1 min-w-0 p-4 sm:p-6 max-w-7xl mx-auto w-full space-y-4">
 
             {/* ── Notion-Style Gen-Z Student Club Header Banner ── */}
             <div className="relative overflow-hidden rounded-2xl border border-border/80 bg-gradient-to-br from-accent/[0.08] via-card to-amber-500/[0.04] p-5 sm:p-6 shadow-sm">
@@ -162,11 +162,11 @@ export default function DashboardPage() {
                       )}
                     </div>
 
-                    <h1 className="text-xl sm:text-2xl font-black text-foreground tracking-tight leading-tight truncate">
+                    <h1 suppressHydrationWarning className="text-xl sm:text-2xl font-black text-foreground tracking-tight leading-tight truncate">
                       {daypart}, {firstName}! 👋
                     </h1>
 
-                    <p className="text-xs text-muted-foreground mt-0.5 truncate">
+                    <p suppressHydrationWarning className="text-xs text-muted-foreground mt-0.5 truncate">
                       {dateLine} · {user?.position || 'Member'} · {user?.teamName || 'Developer Wing'}
                     </p>
                   </div>

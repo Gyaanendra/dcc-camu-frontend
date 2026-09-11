@@ -39,9 +39,9 @@ export default function ScanPage() {
     <ProtectedRoute>
       <div className="min-h-screen flex flex-col bg-background text-foreground transition-colors">
         <Navbar />
-        <div className="flex flex-1">
+        <div className="flex flex-1 items-start">
           <Sidebar />
-          <main className="flex-1 p-4 sm:p-6 max-w-xl mx-auto w-full space-y-4">
+          <main className="flex-1 min-w-0 p-4 sm:p-6 max-w-xl mx-auto w-full space-y-4">
             {/* Focused header */}
             <div className="flex items-start gap-3">
               <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-secondary border border-border text-foreground">

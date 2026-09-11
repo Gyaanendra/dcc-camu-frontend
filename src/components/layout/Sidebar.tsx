@@ -13,13 +13,29 @@ import {
   Table2,
   Award,
   ShieldCheck,
+  LogOut,
+  Sparkles,
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import {
+  Sidebar as ShadcnSidebar,
+  SidebarHeader,
+  SidebarContent,
+  SidebarGroup,
+  SidebarGroupLabel,
+  SidebarGroupContent,
+  SidebarMenu,
+  SidebarMenuItem,
+  SidebarMenuButton,
+  SidebarFooter,
+  SidebarSeparator,
+} from '@/components/ui/sidebar';
+import { Badge } from '@/components/ui/badge';
 import { MemberAvatar } from '@/components/ui/member-avatar';
+import { Button } from '@/components/ui/button';
 
 export const Sidebar: React.FC = () => {
   const pathname = usePathname();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
 
   const isAdmin = user?.role === 'admin';
   const isViewer = user?.role === 'admin' || user?.role === 'advisor';
@@ -43,99 +59,127 @@ export const Sidebar: React.FC = () => {
 
   const isActive = (path: string) => pathname === path;
 
-  const rowClass = (active: boolean) =>
-    cn(
-      'flex items-center gap-2.5 px-2.5 py-[7px] rounded-md text-[13px] transition-colors duration-150',
-      active
-        ? 'bg-accent/10 text-accent font-semibold'
-        : 'text-muted-foreground hover:text-foreground hover:bg-secondary/60 font-medium'
-    );
-
-  const iconClass = (active: boolean) =>
-    cn('w-3.5 h-3.5 shrink-0', active && 'text-accent');
-
   return (
-    <aside className="w-60 shrink-0 hidden lg:flex flex-col border-r border-border bg-sidebar min-h-[calc(100vh-3rem)] transition-colors">
-      <div className="flex-1 p-3 space-y-5 overflow-y-auto">
-        {/* User navigation */}
-        <div>
-          <p className="px-2.5 mb-1 text-xs font-medium text-muted-foreground">
-            Overview
-          </p>
-          <nav className="space-y-px">
-            {userNav.map(item => {
-              const Icon = item.icon;
-              const active = isActive(item.href);
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  id={`sidebar-${item.name.toLowerCase().replace(/\s+/g, '-')}`}
-                  aria-current={active ? 'page' : undefined}
-                  className={rowClass(active)}
-                >
-                  <Icon className={iconClass(active)} />
-                  <span className="truncate">{item.name}</span>
-                </Link>
-              );
-            })}
-          </nav>
+    <ShadcnSidebar id="main-sidebar" aria-label="Main sidebar navigation">
+      {/* Club workspace subheader */}
+      <SidebarHeader className="border-b border-sidebar-border/60 px-3 py-2.5">
+        <div className="flex items-center justify-between gap-2 px-1">
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded bg-accent/15 text-accent font-bold text-[10px]">
+              D
+            </div>
+            <span className="truncate text-xs font-semibold text-foreground tracking-tight">
+              DCC Portal
+            </span>
+          </div>
+          <Badge
+            variant={isAdmin ? 'default' : 'secondary'}
+            className="text-[10px] px-1.5 py-0 uppercase tracking-wider font-semibold"
+          >
+            {user?.role || 'Member'}
+          </Badge>
         </div>
+      </SidebarHeader>
 
-        {/* Admin navigation (advisors: view-only) */}
-        {isViewer && (
-          <div>
-            <p className="px-2.5 mb-1 flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
-              <ShieldCheck className="w-3 h-3" />
-              {isAdmin ? 'Admin' : 'View only'}
-            </p>
-            <nav className="space-y-px">
-              {adminNav.map(item => {
+      {/* Independently scrollable nav items area */}
+      <SidebarContent>
+        {/* User navigation */}
+        <SidebarGroup>
+          <SidebarGroupLabel>Overview</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {userNav.map(item => {
                 const Icon = item.icon;
                 const active = isActive(item.href);
                 return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    id={`sidebar-admin-${item.name.toLowerCase().replace(/\s+/g, '-')}`}
-                    aria-current={active ? 'page' : undefined}
-                    className={rowClass(active)}
-                  >
-                    <Icon className={iconClass(active)} />
-                    <span className="truncate">{item.name}</span>
-                  </Link>
+                  <SidebarMenuItem key={item.href}>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={active}
+                      id={`sidebar-${item.name.toLowerCase().replace(/\s+/g, '-')}`}
+                      aria-current={active ? 'page' : undefined}
+                    >
+                      <Link href={item.href}>
+                        <Icon className={active ? 'text-accent' : 'text-muted-foreground'} />
+                        <span className="truncate">{item.name}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
                 );
               })}
-            </nav>
-          </div>
-        )}
-      </div>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
 
-      {/* User card — pinned at bottom */}
+        {/* Admin navigation (advisors: view-only) */}
+        {isViewer && (
+          <SidebarGroup>
+            <SidebarGroupLabel>
+              <ShieldCheck className="w-3 h-3 text-muted-foreground shrink-0" />
+              <span>{isAdmin ? 'Admin & Ops' : 'View only'}</span>
+            </SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {adminNav.map(item => {
+                  const Icon = item.icon;
+                  const active = isActive(item.href);
+                  return (
+                    <SidebarMenuItem key={item.href}>
+                      <SidebarMenuButton
+                        asChild
+                        isActive={active}
+                        id={`sidebar-admin-${item.name.toLowerCase().replace(/\s+/g, '-')}`}
+                        aria-current={active ? 'page' : undefined}
+                      >
+                        <Link href={item.href}>
+                          <Icon className={active ? 'text-accent' : 'text-muted-foreground'} />
+                          <span className="truncate">{item.name}</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  );
+                })}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
+      </SidebarContent>
+
+      {/* User profile card — permanently pinned at bottom of viewport */}
       {user && (
-        <div className="p-3 border-t border-border">
-          <div className="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-secondary/70 transition-all duration-150 group">
+        <SidebarFooter>
+          <div className="flex items-center gap-2.5 p-1 rounded-lg hover:bg-sidebar-accent/60 transition-colors group">
             <div className="relative shrink-0">
               <MemberAvatar
                 src={user.avatarUrl}
                 name={user.name}
-                className="h-10 w-10 rounded-xl border-2 border-border shadow-sm ring-1 ring-border/60 group-hover:ring-accent/40 group-hover:scale-105 transition-all"
+                className="h-8 w-8 rounded-lg border border-border shadow-xs group-hover:scale-105 transition-transform"
               />
-              <span className="absolute -bottom-0.5 -right-0.5 flex h-2.5 w-2.5">
-                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500 border-2 border-card" />
+              <span className="absolute -bottom-0.5 -right-0.5 flex h-2 w-2">
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500 border border-card" />
               </span>
             </div>
             <div className="min-w-0 flex-1">
-              <div className="text-[13px] font-semibold text-foreground truncate leading-tight">
+              <div className="text-xs font-semibold text-foreground truncate leading-tight">
                 {user.name}
               </div>
-              <div className="text-xs text-muted-foreground truncate mt-0.5">
-                {[user.teamName, user.position].filter(Boolean).join(' · ') || 'Member'}
+              <div className="text-[11px] text-muted-foreground truncate leading-tight mt-0.5">
+                {[user.teamName, user.position].filter(Boolean).join(' · ') || user.role}
               </div>
             </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={logout}
+              className="h-7 w-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10 shrink-0"
+              title="Sign out"
+              aria-label="Sign out"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+            </Button>
           </div>
-        </div>
+        </SidebarFooter>
       )}
-    </aside>
+    </ShadcnSidebar>
   );
 };

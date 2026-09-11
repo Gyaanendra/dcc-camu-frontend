@@ -43,9 +43,9 @@ export default function AdminMembersPage() {
     <ProtectedRoute requireAdmin>
       <div className="min-h-screen flex flex-col bg-background text-foreground transition-colors">
         <Navbar crumbs={[{ label: 'Admin' }, { label: 'Members' }]} />
-        <div className="flex flex-1">
+        <div className="flex flex-1 items-start">
           <Sidebar />
-          <main className="flex-1 p-6 sm:p-8 max-w-7xl mx-auto w-full space-y-6">
+          <main className="flex-1 min-w-0 p-6 sm:p-8 max-w-7xl mx-auto w-full space-y-6">
             <Card className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6">
               <div>
                 <div className="text-xs font-medium text-muted-foreground mb-1">

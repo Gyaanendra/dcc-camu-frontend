@@ -31,34 +31,9 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 const USER_STORAGE_KEY = 'dcc_user';
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const stored = window.localStorage.getItem(USER_STORAGE_KEY);
-        if (stored) return JSON.parse(stored);
-      } catch (_) {}
-    }
-    return null;
-  });
-
-  const [token, setToken] = useState<string | null>(() => {
-    if (typeof window !== 'undefined') {
-      return api.getToken();
-    }
-    return null;
-  });
-
-  // If already authenticated in localStorage, don't block the UI with a full-page loading spinner
-  const [isLoading, setIsLoading] = useState<boolean>(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const storedUser = window.localStorage.getItem(USER_STORAGE_KEY);
-        const storedToken = api.getToken();
-        if (storedUser && storedToken) return false;
-      } catch (_) {}
-    }
-    return true;
-  });
+  const [user, setUser] = useState<User | null>(null);
+  const [token, setToken] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
   const refreshProfile = async () => {
     try {
@@ -84,6 +59,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   useEffect(() => {
+    try {
+      const storedUser = window.localStorage.getItem(USER_STORAGE_KEY);
+      const storedToken = api.getToken();
+      if (storedUser && storedToken) {
+        setUser(JSON.parse(storedUser));
+        setToken(storedToken);
+        setIsLoading(false);
+      }
+    } catch (_) {}
     refreshProfile();
   }, []);
 

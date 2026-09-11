@@ -105,7 +105,7 @@ export const Navbar: React.FC<{ crumbs?: Crumb[] }> = ({ crumbs }) => {
           {/* Date — desktop only, mono */}
           <div className="hidden lg:flex items-center gap-1.5 px-2.5 h-8 rounded-md font-mono text-xs text-muted-foreground tabular-nums">
             <Calendar className="w-3.5 h-3.5" />
-            <span>{today}</span>
+            <span suppressHydrationWarning>{today}</span>
           </div>
 
           {/* Theme toggle */}

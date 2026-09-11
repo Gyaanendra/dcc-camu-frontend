@@ -163,9 +163,9 @@ export default function AttendanceSheetPage() {
     <ProtectedRoute requireAdmin>
       <div className="min-h-screen flex flex-col bg-background text-foreground transition-colors">
         <Navbar crumbs={[{ label: 'Admin' }, { label: 'Attendance' }]} />
-        <div className="flex flex-1">
+        <div className="flex flex-1 items-start">
           <Sidebar />
-          <main className="flex-1 p-6 sm:p-8 max-w-7xl mx-auto w-full space-y-6">
+          <main className="flex-1 min-w-0 p-6 sm:p-8 max-w-7xl mx-auto w-full space-y-6">
             <PageHeader
               icon={Table2}
               crumbs={[{ label: 'Admin' }, { label: 'Attendance' }]}
