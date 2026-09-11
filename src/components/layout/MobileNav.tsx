@@ -18,14 +18,14 @@ import {
   Sun,
   Moon,
   ShieldCheck,
-  Menu,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { MemberAvatar } from '@/components/ui/member-avatar';
 
 // ─── Mobile Sidebar Drawer ─────────────────────────────────────────────────
-// Visible only on <lg screens. Triggered by a hamburger in the Navbar.
-// The drawer slides in from the left and is identical in structure to the
-// desktop Sidebar, plus theme toggle + sign-out at the bottom.
+// Visible only on <lg screens. Triggered by the hamburger in the Navbar.
+// Same vocabulary as the desktop Sidebar: neutral gray section labels in
+// sentence case, icon+label rows, neutral gray active pill.
 
 export const MobileNav: React.FC = () => {
   const pathname = usePathname();
@@ -46,23 +46,33 @@ export const MobileNav: React.FC = () => {
     ...(user?.role === 'advisor'
       ? []
       : [
-          { name: 'QR Scanner', href: '/scan', icon: QrCode },
-          { name: 'My Attendance', href: '/my-attendance', icon: Award },
+          { name: 'Scan QR', href: '/scan', icon: QrCode },
+          { name: 'My attendance', href: '/my-attendance', icon: Award },
         ]),
   ];
 
   const adminNav = [
-    { name: 'Team Analytics', href: '/admin/analytics', icon: BarChart3 },
-    { name: 'Sessions & QR', href: '/admin/sessions', icon: CalendarCheck },
-    { name: 'Member Directory', href: '/admin/members', icon: Users },
-    { name: 'Attendance Sheet', href: '/admin/attendance-sheet', icon: Table2 },
+    { name: 'Team analytics', href: '/admin/analytics', icon: BarChart3 },
+    { name: 'Sessions', href: '/admin/sessions', icon: CalendarCheck },
+    { name: 'Members', href: '/admin/members', icon: Users },
+    { name: 'Attendance sheet', href: '/admin/attendance-sheet', icon: Table2 },
   ];
+
+  const rowClass = (active: boolean) =>
+    cn(
+      'flex items-center gap-2.5 px-2.5 py-2.5 rounded-md text-[13px] transition-colors duration-150',
+      active
+        ? 'bg-accent/10 text-accent font-semibold'
+        : 'text-muted-foreground hover:text-foreground hover:bg-secondary/60 font-medium'
+    );
+
+  const iconClass = (active: boolean) =>
+    cn('w-3.5 h-3.5 shrink-0', active && 'text-accent');
 
   return (
     <>
-      {/* Hamburger trigger — rendered inside Navbar via portal-less slot.
-          We expose a global open trigger through a custom DOM event so the
-          Navbar button can open this drawer without prop-drilling. */}
+      {/* Hamburger trigger — Navbar opens this drawer via a global event,
+          avoiding prop-drilling without a global store. */}
       <MobileNavTrigger onOpen={() => setIsOpen(true)} />
 
       {/* Drawer */}
@@ -71,58 +81,41 @@ export const MobileNav: React.FC = () => {
           {/* Backdrop */}
           <div
             onClick={close}
-            className="fixed inset-0 bg-foreground/20 backdrop-blur-sm anim-fade-in"
+            className="fixed inset-0 bg-foreground/30 backdrop-blur-sm anim-fade-in"
             aria-hidden
           />
 
           {/* Panel — slides from left */}
-          <aside className="relative z-10 flex flex-col w-72 max-w-[85vw] h-full bg-card border-r border-border anim-slide-left">
+          <aside className="relative z-10 flex flex-col w-72 max-w-[85vw] h-full bg-sidebar border-r border-border anim-slide-left pb-[env(safe-area-inset-bottom)]">
 
             {/* Header */}
-            <div className="flex items-center justify-between px-4 py-3.5 border-b border-border">
-              <Link href="/dashboard" onClick={close} className="flex items-center gap-2.5">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-foreground font-bold text-background text-[11px]">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+              <Link href="/dashboard" onClick={close} className="flex items-center gap-2">
+                <div className="flex h-7 w-7 items-center justify-center rounded-md bg-foreground font-bold text-background text-xs">
                   DCC
                 </div>
                 <div>
-                  <div className="text-sm font-bold text-foreground">Club DCC Camu</div>
-                  <div className="text-[10px] text-muted-foreground">Bennett University</div>
+                  <div className="text-[13px] font-semibold text-foreground">Club DCC Camu</div>
+                  <div className="text-xs text-muted-foreground">Bennett University</div>
                 </div>
               </Link>
               <button
                 onClick={close}
                 id="mobile-nav-close"
-                className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+                className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors duration-150"
+                aria-label="Close navigation"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            {/* User card */}
-            <div className="px-3 py-3 border-b border-border anim-fade-up anim-delay-1">
-              <div className="p-3 rounded-xl bg-secondary border border-border text-sm">
-                <div className="font-semibold text-foreground truncate">{user.name}</div>
-                <div className="text-[11px] text-muted-foreground font-mono mt-0.5 flex items-center gap-1 flex-wrap">
-                  <span>{user.rollNumber}</span>
-                  <span>·</span>
-                  <span className="text-accent font-semibold capitalize">{user.role}</span>
-                </div>
-                {user.teamName && (
-                  <div className="text-[10px] text-muted-foreground mt-1.5 pt-1.5 border-t border-border">
-                    Wing: <span className="font-medium text-foreground">{user.teamName}</span>
-                  </div>
-                )}
-              </div>
-            </div>
-
             {/* Navigation */}
-            <nav className="flex-1 overflow-y-auto px-3 py-3 space-y-5 anim-fade-up anim-delay-2">
-              {/* User section */}
+            <nav className="flex-1 overflow-y-auto px-3 py-3 space-y-5">
               <div>
-                <p className="px-3 mb-1.5 text-[10px] font-semibold tracking-widest text-muted-foreground uppercase">
+                <p className="px-2.5 mb-1 text-xs font-medium text-muted-foreground">
                   Overview
                 </p>
-                <div className="space-y-0.5">
+                <div className="space-y-px">
                   {userNav.map(item => {
                     const Icon = item.icon;
                     const active = isActive(item.href);
@@ -133,14 +126,9 @@ export const MobileNav: React.FC = () => {
                         onClick={close}
                         id={`mobile-nav-${item.name.toLowerCase().replace(/\s+/g, '-')}`}
                         aria-current={active ? 'page' : undefined}
-                        className={cn(
-                          'flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium transition-all anim-btn-press active:scale-[0.97]',
-                          active
-                            ? 'bg-accent/10 text-accent relative before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-5 before:w-[3px] before:rounded-full before:bg-accent'
-                            : 'text-muted-foreground hover:text-foreground hover:bg-secondary'
-                        )}
+                        className={rowClass(active)}
                       >
-                        <Icon className={cn('w-4 h-4 shrink-0', active ? 'text-accent' : 'text-muted-foreground')} />
+                        <Icon className={iconClass(active)} />
                         <span>{item.name}</span>
                       </Link>
                     );
@@ -151,11 +139,11 @@ export const MobileNav: React.FC = () => {
               {/* Admin section (advisors: view-only) */}
               {isViewer && (
                 <div>
-                  <p className="px-3 mb-1.5 flex items-center gap-1.5 text-[10px] font-semibold tracking-widest text-accent uppercase">
+                  <p className="px-2.5 mb-1 flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
                     <ShieldCheck className="w-3 h-3" />
-                    Admin Tools
+                    {isAdmin ? 'Admin' : 'View only'}
                   </p>
-                  <div className="space-y-0.5">
+                  <div className="space-y-px">
                     {adminNav.map(item => {
                       const Icon = item.icon;
                       const active = isActive(item.href);
@@ -166,14 +154,9 @@ export const MobileNav: React.FC = () => {
                           onClick={close}
                           id={`mobile-nav-admin-${item.name.toLowerCase().replace(/\s+/g, '-')}`}
                           aria-current={active ? 'page' : undefined}
-                          className={cn(
-                            'flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium transition-all',
-                            active
-                              ? 'bg-accent/10 text-accent relative before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-5 before:w-[3px] before:rounded-full before:bg-accent'
-                              : 'text-muted-foreground hover:text-foreground hover:bg-secondary'
-                          )}
+                          className={rowClass(active)}
                         >
-                          <Icon className={cn('w-4 h-4 shrink-0', active ? 'text-accent' : 'text-muted-foreground')} />
+                          <Icon className={iconClass(active)} />
                           <span>{item.name}</span>
                         </Link>
                       );
@@ -183,32 +166,54 @@ export const MobileNav: React.FC = () => {
               )}
             </nav>
 
+            {/* User card */}
+            <div className="px-3 py-2 border-t border-border">
+              <div className="flex items-center gap-3 px-2.5 py-2 rounded-lg bg-secondary/30">
+                <div className="relative shrink-0">
+                  <MemberAvatar
+                    src={user.avatarUrl}
+                    name={user.name}
+                    className="h-10 w-10 rounded-xl border-2 border-border shadow-sm ring-1 ring-border/60"
+                  />
+                  <span className="absolute -bottom-0.5 -right-0.5 flex h-2.5 w-2.5">
+                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500 border-2 border-card" />
+                  </span>
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="text-[13px] font-semibold text-foreground truncate leading-tight">{user.name}</div>
+                  <div className="text-xs text-muted-foreground truncate mt-0.5">
+                    {[user.teamName, user.position].filter(Boolean).join(' · ') || 'Member'}
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* Bottom actions */}
-            <div className="px-3 py-3 border-t border-border space-y-2 anim-fade-up anim-delay-3">
+            <div className="px-3 pb-3 pt-1 space-y-2">
               {/* Theme toggle */}
               <button
                 onClick={toggleTheme}
                 id="mobile-nav-theme-toggle"
-                className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg bg-secondary border border-border text-foreground text-sm font-medium hover:bg-muted transition-colors"
+                className="w-full flex items-center justify-between px-2.5 py-2 rounded-md bg-secondary border border-border text-foreground text-[13px] font-medium hover:bg-muted transition-colors duration-150"
               >
-                <div className="flex items-center gap-2">
+                <span className="flex items-center gap-2">
                   {theme === 'dark'
-                    ? <Sun className="w-4 h-4 text-amber-400" />
-                    : <Moon className="w-4 h-4 text-muted-foreground" />
+                    ? <Sun className="w-3.5 h-3.5 text-amber-400" />
+                    : <Moon className="w-3.5 h-3.5 text-muted-foreground" />
                   }
-                  <span>{theme === 'dark' ? 'Light Mode' : 'Dark Mode'}</span>
-                </div>
-                <span className="text-[10px] font-mono text-muted-foreground capitalize">{theme}</span>
+                  {theme === 'dark' ? 'Light mode' : 'Dark mode'}
+                </span>
+                <span className="text-xs font-mono text-muted-foreground capitalize">{theme}</span>
               </button>
 
               {/* Sign out */}
               <button
                 onClick={() => { close(); logout(); }}
                 id="mobile-nav-logout"
-                className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-sm font-semibold hover:bg-destructive/20 transition-colors"
+                className="w-full flex items-center justify-center gap-2 px-2.5 py-2 rounded-md bg-destructive/10 border border-destructive/20 text-destructive text-[13px] font-semibold hover:bg-destructive/20 transition-colors duration-150"
               >
-                <LogOut className="w-4 h-4" />
-                <span>Sign Out</span>
+                <LogOut className="w-3.5 h-3.5" />
+                <span>Sign out</span>
               </button>
             </div>
           </aside>

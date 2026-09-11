@@ -1,33 +1,34 @@
 ---
 name: Club DCC Camu — Attendance & Analytics Portal
-description: A warmly-editorial product UI — cream canvas, warm ink, one scarce orange accent, hairline-only depth, Inter + JetBrains Mono — adapted from the Cursor brand register to a product register with a warm-dark counterpart.
+description: A Notion-style professional product UI — neutral canvas, one scarce orange accent, hairline-only depth, Inter + JetBrains Mono — with light and dark ramps.
 
 colors:
   primary: "#f54e00"
   primary-active: "#d04200"
   on-primary: "#ffffff"
-  ink: "#26251e"
-  body: "#5a5852"
-  muted: "#807d72"
-  muted-soft: "#a09c92"
-  canvas: "#f7f7f4"
-  canvas-soft: "#fafaf7"
+  ink: "#37352F"
+  body: "#37352F"
+  muted: "#787774"
+  muted-soft: "#9B9A97"
+  canvas: "#FFFFFF"
+  canvas-soft: "#F7F7F5"
   surface-card: "#ffffff"
-  surface-strong: "#e6e5e0"
-  hairline: "#e6e5e0"
-  hairline-soft: "#efeee8"
-  hairline-strong: "#cfcdc4"
+  surface-strong: "#EFEFEF"
+  hairline: "#ededed"
+  hairline-soft: "#f1f1ef"
+  hairline-strong: "#dcdcdc"
   semantic-success: "#1f8a65"
   semantic-error: "#cf2d56"
   semantic-warning: "#b45309"
   semantic-live: "#1f8a65"
-  dark-canvas: "#191813"
-  dark-card: "#201f19"
-  dark-ink: "#f5f4ee"
-  dark-body: "#c9c6bc"
-  dark-muted: "#a8a49a"
-  dark-secondary: "#28271f"
-  dark-hairline: "#34332a"
+  dark-canvas: "#191919"
+  dark-card: "#191919"
+  dark-sidebar: "#202020"
+  dark-ink: "#D4D4D4"
+  dark-body: "#D4D4D4"
+  dark-muted: "#9B9B9B"
+  dark-secondary: "#2F2F2F"
+  dark-hairline: "#2e2e2e"
 
 typography:
   page-title:
@@ -161,14 +162,14 @@ components:
 
 ## Overview
 
-Club DCC Camu adopts the Cursor editorial identity — **warm cream canvas, warm near-black ink, one scarce orange accent, hairline-only depth** — translated from a marketing register to a **product register**. What that means concretely:
+Club DCC Camu adopts a Notion-neutral identity — **neutral canvas, neutral text ramp, one scarce orange accent, hairline-only depth** — translated into a **product register**. What that means concretely:
 
-- The page floor is cream `{colors.canvas}`, never pure white; cards are pure white `{colors.surface-card}` so content floats on the canvas by contrast, not shadow.
-- Ink `{colors.ink}` is warm (#26251e), not pure black, and carries headings at weight 600 (product tables and dense UI need the hierarchy; the "display stays at 400" rule is a marketing luxury we consciously drop).
+- The page floor is white `{colors.canvas}`; the sidebar is `{colors.canvas-soft}` and hover fills are `{colors.surface-strong}`. Cards share the page white so separation comes from 1px hairlines, not tints or shadows.
+- Text is the Notion ramp: primary `{colors.ink}`, secondary `{colors.muted}`, faint `{colors.muted-soft}` — never tinted warm or cool.
 - **DCC Orange `{colors.primary}` is the single brand voltage**: primary CTAs, active/selected states, focus rings, and the interactive accent. Never decoration, never a second action color.
 - **Hairline-only depth.** No drop shadows anywhere. Cards are 1px `{colors.hairline}` outlines.
 - Every code-like surface — roll numbers, QR tokens, emails, timestamps — renders in JetBrains Mono (`--font-mono`).
-- The app ships a **warm-dark counterpart** (`{colors.dark-canvas}` … `{colors.dark-hairline}`) instead of Cursor's light-only site, because members use it in dim lecture halls. Same ink/orange logic, warm-dark surfaces.
+- The app ships a **neutral-dark counterpart** (`{colors.dark-canvas}` page, `{colors.dark-sidebar}` sidebar, `{colors.dark-secondary}` hover) instead of a tinted dark theme, because members use it in dim lecture halls. Same text/accent logic, neutral-dark surfaces.
 
 ## Colors
 
@@ -177,13 +178,13 @@ Club DCC Camu adopts the Cursor editorial identity — **warm cream canvas, warm
 - **Orange Active** `{colors.primary-active}` (#d04200): press/hover state.
 
 ### Surfaces
-- **Canvas** `{colors.canvas}` (#f7f7f4): page floor (light). **Canvas Soft** `{colors.canvas-soft}`: subtle inset fills.
+- **Canvas** `{colors.canvas}` (#FFFFFF): page floor (light). **Canvas Soft** `{colors.canvas-soft}`: sidebar bg and subtle inset fills.
 - **Card** `{colors.surface-card}` (#ffffff): all cards, inputs, modals.
 - **Surface Strong** `{colors.surface-strong}` (#e6e5e0): badges, secondary buttons tint, table headers.
 - Dark equivalents: canvas `{colors.dark-canvas}`, card `{colors.dark-card}`, secondary `{colors.dark-secondary}`.
 
 ### Hairlines
-1px only: `{colors.hairline}` (default), `{colors.hairline-soft}` (subtle dividers), `{colors.hairline-strong}` (inputs, hovered card outlines). Dark: `{colors.dark-hairline}`.
+1px only: `{colors.hairline}` (default, opaque equiv. of rgba(0,0,0,0.07) on white), `{colors.hairline-soft}` (subtle dividers), `{colors.hairline-strong}` (inputs, hovered card outlines). Dark: `{colors.dark-hairline}` (opaque equiv. of rgba(255,255,255,0.09) on dark canvas).
 
 ### Text
 - **Ink** `{colors.ink}`: headings, emphasized values.
@@ -237,4 +238,4 @@ Success/Live `{colors.semantic-success}`, Error/Destructive `{colors.semantic-er
 - Don't use drop shadows, gradients, or glass effects.
 - Don't ship content text below 14px (metadata 12px, kickers 11px are the floor).
 - Don't uppercase anything except the single kicker and status pills.
-- Don't tint neutrals cool — warmth lives in the neutrals (hue ~50) as much as in the orange.
+- Don't tint neutrals warm or cool — neutrals are pure gray; warmth lives ONLY in the orange accent.

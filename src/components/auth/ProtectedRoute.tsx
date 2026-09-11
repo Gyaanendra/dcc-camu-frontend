@@ -28,7 +28,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requir
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-background text-foreground">
         <div className="flex flex-col items-center space-y-4">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-foreground text-background font-extrabold text-base animate-pulse">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-foreground text-background font-extrabold text-base motion-safe:animate-pulse">
             DCC
           </div>
           <div className="flex items-center gap-2 text-sm font-mono text-muted-foreground">
@@ -58,7 +58,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requir
           </h2>
           <p className="text-sm text-muted-foreground">
             This module is restricted to Club DCC Admins and Executives. Your current role is{' '}
-            <strong className="text-foreground uppercase font-mono">{user.role}</strong>.
+            <strong className="text-foreground capitalize font-mono">{user.role}</strong>.
           </p>
           <div className="pt-2">
             <Button asChild>

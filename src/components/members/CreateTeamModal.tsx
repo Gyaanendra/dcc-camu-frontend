@@ -102,7 +102,7 @@ export const CreateTeamModal: React.FC<CreateTeamModalProps> = ({ onCreated }) =
               className="font-mono uppercase"
               required
             />
-            <p className="text-[11px] text-muted-foreground">Stored in uppercase. Must be unique across all wings.</p>
+            <p className="text-xs text-muted-foreground">Stored in uppercase. Must be unique across all wings.</p>
           </div>
 
           <div className="space-y-1.5">

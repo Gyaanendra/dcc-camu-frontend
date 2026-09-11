@@ -7,11 +7,12 @@ import { Navbar } from '@/components/layout/Navbar';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { CreateSessionModal } from '@/components/sessions/CreateSessionModal';
 import { QRDisplayCard } from '@/components/qr/QRDisplayCard';
-import { PageLoader } from '@/components/layout/PageLoader';
 import { PageHeader } from '@/components/layout/PageHeader';
+import { EmptyState } from '@/components/ui/empty-state';
+import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { api } from '@/lib/api';
-import { Calendar, MapPin, PowerOff, Play, RefreshCw } from 'lucide-react';
+import { Calendar, MapPin, PowerOff, Play, RefreshCw, CalendarCheck, Users } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -82,13 +83,14 @@ export default function AdminSessionsPage() {
   return (
     <ProtectedRoute requireAdmin>
       <div className="min-h-screen flex flex-col bg-background text-foreground transition-colors">
-        <Navbar />
+        <Navbar crumbs={[{ label: 'Admin' }, { label: 'Sessions' }]} />
         <div className="flex flex-1">
           <Sidebar />
           <main className="flex-1 p-6 sm:p-8 max-w-7xl mx-auto w-full space-y-6">
             <PageHeader
-              kicker="Event Management"
-              title="Sessions & Live QR"
+              icon={CalendarCheck}
+              crumbs={[{ label: 'Admin' }, { label: 'Sessions' }]}
+              title="Sessions & live QR"
               description={isReadOnly ? 'View-only access — session controls are disabled for advisors' : 'Schedule sessions, project dynamic QR codes, and monitor live check-ins'}
               actions={
                 <>
@@ -107,65 +109,72 @@ export default function AdminSessionsPage() {
             />
 
             {isLoading ? (
-              <PageLoader message="Loading session records..." />
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="space-y-2">
+                  {[1, 2, 3].map((i) => (
+                    <Skeleton key={i} className="h-[76px] rounded-lg" />
+                  ))}
+                </div>
+                <div className="lg:col-span-2 space-y-6">
+                  <Skeleton className="h-[72px] rounded-lg" />
+                  <Skeleton className="h-64 rounded-lg" />
+                </div>
+              </div>
             ) : (
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Sessions List */}
                 <div className="space-y-3">
                   <div className="flex items-center justify-between gap-2 pb-3 border-b border-border">
-                    <h2 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">
-                      Sessions Directory
+                    <h2 className="text-xs font-medium text-muted-foreground">
+                      Sessions
                     </h2>
                     <span className="font-mono text-[12px] text-muted-foreground tabular-nums">
                       {sessions.length} of {sessions.length}
                     </span>
                   </div>
                   <div className="space-y-2 max-h-[600px] overflow-y-auto pr-1">
-                    {isLoading ? (
-                      [1, 2, 3].map((i) => (
-                        <Skeleton key={i} className="h-[52px] rounded-lg" />
-                      ))
-                    ) : sessions.length > 0 ? (
+                    {sessions.length > 0 ? (
                       sessions.map((s) => (
                         <button
                           key={s.id}
                           onClick={() => handleSelectSession(s)}
-                          className={`w-full text-left p-4 rounded-xl border transition-all focus-orange ${
+                          className={`w-full text-left p-4 rounded-lg border transition-colors focus-orange ${
                             selectedSession?.id === s.id
                               ? 'bg-accent/10 border-accent/40 text-foreground'
                               : 'bg-card border-border hover:bg-secondary/60 text-foreground'
                           }`}
                         >
                           <div className="flex items-center justify-between">
-                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider bg-secondary text-muted-foreground border border-border">
+                            <Badge variant="secondary">
                               {s.type}
-                            </span>
-                            <span
-                              className={`text-[10px] font-bold ${
-                                s.isActive === 'true' ? 'text-emerald-600 dark:text-emerald-400' : 'text-muted-foreground'
-                              }`}
-                            >
-                              {s.isActive === 'true' ? '● LIVE' : 'ENDED'}
-                            </span>
+                            </Badge>
+                            {s.isActive === 'true' ? (
+                              <Badge variant="success" className="gap-1.5">
+                                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 motion-safe:animate-pulse" />
+                                Live
+                                <span className="font-mono tabular-nums">{s.attendeeCount}</span>
+                              </Badge>
+                            ) : (
+                              <Badge variant="secondary">Ended</Badge>
+                            )}
                           </div>
 
-                          <div className="font-bold text-sm mt-2">{s.title}</div>
-                          <div className="text-[11px] mt-1 flex items-center gap-1 text-muted-foreground">
+                          <div className="font-medium text-sm mt-2">{s.title}</div>
+                          <div className="text-xs mt-1 flex items-center gap-1 text-muted-foreground">
                             <MapPin className="w-3 h-3" /> {s.location}
                           </div>
 
-                          <div className="flex items-center justify-between font-mono text-[13px] mt-3 pt-2 border-t border-border text-muted-foreground">
-                            <span>{s?.startTime ? new Date(s.startTime).toLocaleDateString() : 'N/A'}</span>
-                            <span className="text-foreground font-bold tabular-nums">
-                              {s.attendeeCount} attended
-                            </span>
+                          <div className="mt-3 pt-2 border-t border-border font-mono text-[13px] text-muted-foreground">
+                            {s?.startTime ? new Date(s.startTime).toLocaleDateString() : 'N/A'}
                           </div>
                         </button>
                       ))
                     ) : (
-                      <div className="p-8 text-center text-sm text-muted-foreground bg-card rounded-xl border border-border">
-                        No sessions created yet. Click "Create New Session" above to get started.
-                      </div>
+                      <EmptyState
+                        icon={CalendarCheck}
+                        title="No sessions yet"
+                        description='No sessions created yet. Click "Create New Session" above to get started.'
+                      />
                     )}
                   </div>
                 </div>
@@ -174,14 +183,14 @@ export default function AdminSessionsPage() {
             <div className="lg:col-span-2 space-y-6">
               {selectedSession ? (
                 <>
-                  <Card className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4">
+                  <Card className={`flex flex-col sm:flex-row items-center justify-between gap-3 p-4 ${selectedSession.isActive === 'true' ? 'border-emerald-500/40 dark:border-emerald-500/30' : ''}`}>
                     <div className="flex items-center gap-3">
-                      <div className={`p-2 rounded-xl ${selectedSession.isActive === 'true' ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'bg-secondary text-muted-foreground'}`}>
+                      <div className={`p-2 rounded-lg ${selectedSession.isActive === 'true' ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'bg-secondary text-muted-foreground'}`}>
                         <Calendar className="w-5 h-5" />
                       </div>
                       <div>
-                        <div className="text-sm font-bold text-foreground">{selectedSession.title}</div>
-                        <div className="text-[11px] text-muted-foreground">Status: <strong className={selectedSession.isActive === 'true' ? 'text-emerald-600 dark:text-emerald-400' : 'text-muted-foreground'}>{selectedSession.isActive === 'true' ? 'Active Live QR' : 'Session Ended / QR Closed'}</strong></div>
+                        <div className="text-[15px] font-semibold text-foreground">{selectedSession.title}</div>
+                        <div className="text-xs text-muted-foreground">Status: <strong className={selectedSession.isActive === 'true' ? 'text-emerald-600 dark:text-emerald-400' : 'text-muted-foreground'}>{selectedSession.isActive === 'true' ? 'Active Live QR' : 'Session Ended / QR Closed'}</strong></div>
                       </div>
                     </div>
 
@@ -222,9 +231,9 @@ export default function AdminSessionsPage() {
                   <Card className="p-6 space-y-4">
                     <div className="flex items-center justify-between pb-3 border-b border-border">
                       <h3 className="text-sm font-bold text-foreground">Real-time Attendance Feed</h3>
-                      <span className="px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-sm font-bold tabular-nums">
-                        {sessionDetail?.attendeeCount || 0} Checked In
-                      </span>
+                      <Badge variant="success" className="tabular-nums">
+                        <span className="font-mono">{sessionDetail?.attendeeCount || 0} checked in</span>
+                      </Badge>
                     </div>
 
                     <div className="space-y-2">
@@ -232,7 +241,7 @@ export default function AdminSessionsPage() {
                         sessionDetail.attendees.map((a: any) => (
                           <div
                             key={a.id}
-                            className="flex items-center justify-between p-3 rounded-xl bg-secondary border border-border text-sm"
+                            className="flex items-center justify-between p-3 rounded-lg bg-secondary border border-border text-sm"
                           >
                             <div className="flex items-center gap-3">
                               <div className="h-8 w-8 rounded-full bg-card border border-border flex items-center justify-center font-bold text-foreground text-sm">
@@ -245,15 +254,9 @@ export default function AdminSessionsPage() {
                             </div>
 
                             <div className="text-right">
-                              <span
-                                className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                                  a.status === 'late'
-                                    ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20'
-                                    : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
-                                }`}
-                              >
-                                {a.status}
-                              </span>
+                              <Badge variant={a.status === 'late' ? 'warning' : 'success'}>
+                                {a.status.charAt(0).toUpperCase() + a.status.slice(1)}
+                              </Badge>
                               <div className="font-mono text-[13px] text-muted-foreground mt-1">
                                 {new Date(a.scannedAt).toLocaleTimeString()}
                               </div>
@@ -261,9 +264,11 @@ export default function AdminSessionsPage() {
                           </div>
                         ))
                       ) : (
-                        <div className="text-center py-10 text-muted-foreground text-sm">
-                          No members have checked in for this session yet.
-                        </div>
+                        <EmptyState
+                          icon={Users}
+                          title="No check-ins yet"
+                          description="No members have checked in for this session yet."
+                        />
                       )}
                     </div>
                   </Card>

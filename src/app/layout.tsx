@@ -4,6 +4,7 @@ import './globals.css';
 import { AuthProvider } from '@/context/AuthContext';
 import { ThemeProvider } from '@/context/ThemeContext';
 import { MobileNav } from '@/components/layout/MobileNav';
+import { CommandPalette } from '@/components/layout/CommandPalette';
 import { Toaster } from 'sonner';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
@@ -34,6 +35,7 @@ export default function RootLayout({
               {children}
             </div>
             <MobileNav />
+            <CommandPalette />
             <Toaster position="top-right" richColors />
           </AuthProvider>
         </ThemeProvider>

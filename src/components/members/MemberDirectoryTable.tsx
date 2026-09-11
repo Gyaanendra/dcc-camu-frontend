@@ -5,7 +5,6 @@ import { api } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from 'sonner';
 import {
-  Search,
   Shield,
   User,
   Edit2,
@@ -19,14 +18,13 @@ import {
   ArrowDown,
   RotateCcw,
   SlidersHorizontal,
-  X,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { MemberAvatar } from '@/components/ui/member-avatar';
 import {
   TableHeader,
   TableBody,
@@ -49,6 +47,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { DatabaseToolbar } from '@/components/ui/database-toolbar';
+import { EmptyState } from '@/components/ui/empty-state';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface MemberDirectoryProps {
   members: Array<{
@@ -66,12 +67,13 @@ interface MemberDirectoryProps {
   }>;
   teams: Array<{ id: string; name: string }>;
   onRefresh?: () => void;
+  isLoading?: boolean;
 }
 
 type SortField = 'name' | 'rollNumber' | 'position' | 'teamName' | 'role' | 'totalAttended';
 type SortDirection = 'asc' | 'desc';
 
-export const MemberDirectoryTable: React.FC<MemberDirectoryProps> = ({ members, teams, onRefresh }) => {
+export const MemberDirectoryTable: React.FC<MemberDirectoryProps> = ({ members, teams, onRefresh, isLoading = false }) => {
   const { user: currentUser } = useAuth();
   const isReadOnly = currentUser?.role === 'advisor';
 
@@ -263,109 +265,80 @@ export const MemberDirectoryTable: React.FC<MemberDirectoryProps> = ({ members, 
         {/* Total Roster Card */}
         <Card
           onClick={() => setSelectedRoleFilter('ALL')}
-          className={`p-4 cursor-pointer transition-all duration-150 hover:border-primary/50 ${
-            selectedRoleFilter === 'ALL'
-              ? 'border-primary ring-2 ring-primary/20 bg-primary/5'
-              : 'bg-card'
+          className={`p-4 cursor-pointer transition-colors duration-150 hover:bg-secondary/60 ${
+            selectedRoleFilter === 'ALL' ? 'border-foreground/20 bg-secondary' : 'bg-card'
           }`}
         >
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-              Total Roster
-            </span>
+            <span className="text-xs font-medium text-muted-foreground">Total roster</span>
             <Users className="w-4 h-4 text-muted-foreground" />
           </div>
           <div className="mt-2 text-2xl font-bold tracking-tight text-foreground tabular-nums">
             {totalCount}
           </div>
-          <p className="text-[11px] text-muted-foreground mt-0.5">All registered users</p>
+          <p className="text-xs text-muted-foreground mt-0.5">All registered users</p>
         </Card>
 
         {/* Club Members Card */}
         <Card
           onClick={() => setSelectedRoleFilter('user')}
-          className={`p-4 cursor-pointer transition-all duration-150 hover:border-accent/50 ${
-            selectedRoleFilter === 'user'
-              ? 'border-accent ring-2 ring-accent/20 bg-accent/5'
-              : 'bg-card'
+          className={`p-4 cursor-pointer transition-colors duration-150 hover:bg-secondary/60 ${
+            selectedRoleFilter === 'user' ? 'border-foreground/20 bg-secondary' : 'bg-card'
           }`}
         >
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-              Members
-            </span>
-            <User className="w-4 h-4 text-accent" />
+            <span className="text-xs font-medium text-muted-foreground">Members</span>
+            <User className="w-4 h-4 text-muted-foreground" />
           </div>
           <div className="mt-2 text-2xl font-bold tracking-tight text-foreground tabular-nums">
             {userCount}
           </div>
-          <p className="text-[11px] text-muted-foreground mt-0.5">Club executives & leads</p>
+          <p className="text-xs text-muted-foreground mt-0.5">Club executives & leads</p>
         </Card>
 
         {/* Admins Card */}
         <Card
           onClick={() => setSelectedRoleFilter('admin')}
-          className={`p-4 cursor-pointer transition-all duration-150 hover:border-accent/50 ${
-            selectedRoleFilter === 'admin'
-              ? 'border-accent ring-2 ring-accent/20 bg-accent/5'
-              : 'bg-card'
+          className={`p-4 cursor-pointer transition-colors duration-150 hover:bg-secondary/60 ${
+            selectedRoleFilter === 'admin' ? 'border-foreground/20 bg-secondary' : 'bg-card'
           }`}
         >
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-              Admins
-            </span>
-            <Shield className="w-4 h-4 text-accent" />
+            <span className="text-xs font-medium text-muted-foreground">Admins</span>
+            <Shield className="w-4 h-4 text-muted-foreground" />
           </div>
           <div className="mt-2 text-2xl font-bold tracking-tight text-foreground tabular-nums">
             {adminCount}
           </div>
-          <p className="text-[11px] text-muted-foreground mt-0.5">System administrators</p>
+          <p className="text-xs text-muted-foreground mt-0.5">System administrators</p>
         </Card>
 
         {/* Advisors Card */}
         <Card
           onClick={() => setSelectedRoleFilter('advisor')}
-          className={`p-4 cursor-pointer transition-all duration-150 hover:border-amber-500/50 ${
-            selectedRoleFilter === 'advisor'
-              ? 'border-amber-500 ring-2 ring-amber-500/20 bg-amber-500/5'
-              : 'bg-card'
+          className={`p-4 cursor-pointer transition-colors duration-150 hover:bg-secondary/60 ${
+            selectedRoleFilter === 'advisor' ? 'border-foreground/20 bg-secondary' : 'bg-card'
           }`}
         >
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-              Advisors
-            </span>
-            <Eye className="w-4 h-4 text-amber-500" />
+            <span className="text-xs font-medium text-muted-foreground">Advisors</span>
+            <Eye className="w-4 h-4 text-muted-foreground" />
           </div>
           <div className="mt-2 text-2xl font-bold tracking-tight text-foreground tabular-nums">
             {advisorCount}
           </div>
-          <p className="text-[11px] text-muted-foreground mt-0.5">Faculty / view-only advisors</p>
+          <p className="text-xs text-muted-foreground mt-0.5">Faculty / view-only advisors</p>
         </Card>
       </div>
 
-      {/* ── 2. Comprehensive Controls & Filters Bar ───────────────── */}
-      <div className="flex flex-wrap items-center gap-2 pb-3 border-b border-border">
-        {/* Search Input */}
-        <div className="relative flex-1 min-w-[200px] max-w-md">
-          <Search className="w-4 h-4 absolute left-3 top-3 text-muted-foreground pointer-events-none" />
-          <Input
-            type="text"
-            placeholder="Search by name, roll number, position..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-9 pr-8 font-mono text-sm"
-          />
-          {searchTerm && (
-            <button
-              onClick={() => setSearchTerm('')}
-              className="absolute right-2.5 top-3 text-muted-foreground hover:text-foreground focus-orange rounded"
-            >
-              <X className="w-3.5 h-3.5" />
-            </button>
-          )}
-        </div>
+      {/* ── 2. Database toolbar: search + filters + count ──────── */}
+      <DatabaseToolbar
+        search={searchTerm}
+        onSearchChange={setSearchTerm}
+        placeholder="Search by name, roll number, position..."
+        count={<>{sortedAndFilteredMembers.length} of {totalCount}</>}
+        className="pb-3 border-b border-border"
+      >
 
         {/* Dropdown Filters & Sorting */}
           {/* Role Filter */}
@@ -451,10 +424,10 @@ export const MemberDirectoryTable: React.FC<MemberDirectoryProps> = ({ members, 
               <span className="hidden sm:inline">Randomize Avatars</span>
             </Button>
           )}
-          <span className="ml-auto font-mono text-[12px] text-muted-foreground tabular-nums">
+          <span className="font-mono text-xs text-muted-foreground tabular-nums">
             {sortedAndFilteredMembers.length} of {totalCount}
           </span>
-      </div>
+      </DatabaseToolbar>
 
       {/* Filter Status & Reset Action */}
       {hasActiveFilters && (
@@ -484,7 +457,7 @@ export const MemberDirectoryTable: React.FC<MemberDirectoryProps> = ({ members, 
               {/* Member Name */}
               <TableHead
                 onClick={() => handleSort('name')}
-                className="text-[11px] font-semibold uppercase tracking-wider cursor-pointer select-none group"
+                className="cursor-pointer select-none group"
               >
                 <div className="flex items-center gap-1.5">
                   <span>Member</span>
@@ -503,7 +476,7 @@ export const MemberDirectoryTable: React.FC<MemberDirectoryProps> = ({ members, 
               {/* Bennett Email & Roll */}
               <TableHead
                 onClick={() => handleSort('rollNumber')}
-                className="text-[11px] font-semibold uppercase tracking-wider cursor-pointer select-none group"
+                className="cursor-pointer select-none group"
               >
                 <div className="flex items-center gap-1.5">
                   <span>Bennett Email & Roll</span>
@@ -522,7 +495,7 @@ export const MemberDirectoryTable: React.FC<MemberDirectoryProps> = ({ members, 
               {/* Position / Title */}
               <TableHead
                 onClick={() => handleSort('position')}
-                className="text-[11px] font-semibold uppercase tracking-wider cursor-pointer select-none group"
+                className="cursor-pointer select-none group"
               >
                 <div className="flex items-center gap-1.5">
                   <span>Position / Title</span>
@@ -541,7 +514,7 @@ export const MemberDirectoryTable: React.FC<MemberDirectoryProps> = ({ members, 
               {/* Wing */}
               <TableHead
                 onClick={() => handleSort('teamName')}
-                className="text-[11px] font-semibold uppercase tracking-wider cursor-pointer select-none group"
+                className="cursor-pointer select-none group"
               >
                 <div className="flex items-center gap-1.5">
                   <span>Wing</span>
@@ -560,7 +533,7 @@ export const MemberDirectoryTable: React.FC<MemberDirectoryProps> = ({ members, 
               {/* Role */}
               <TableHead
                 onClick={() => handleSort('role')}
-                className="text-[11px] font-semibold uppercase tracking-wider cursor-pointer select-none group"
+                className="cursor-pointer select-none group"
               >
                 <div className="flex items-center gap-1.5">
                   <span>Role</span>
@@ -579,7 +552,7 @@ export const MemberDirectoryTable: React.FC<MemberDirectoryProps> = ({ members, 
               {/* Attended */}
               <TableHead
                 onClick={() => handleSort('totalAttended')}
-                className="text-[11px] font-semibold uppercase tracking-wider cursor-pointer select-none group"
+                className="cursor-pointer select-none group"
               >
                 <div className="flex items-center gap-1.5">
                   <span>Attended</span>
@@ -596,47 +569,63 @@ export const MemberDirectoryTable: React.FC<MemberDirectoryProps> = ({ members, 
               </TableHead>
 
               {!isReadOnly && (
-                <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-right">
+                <TableHead className="text-right">
                   Actions
                 </TableHead>
               )}
             </TableRow>
           </TableHeader>
           <TableBody>
-            {sortedAndFilteredMembers.length === 0 ? (
-              <TableRow>
+            {isLoading ? (
+              [1, 2, 3, 4, 5, 6].map((i) => (
+                <TableRow key={`skel-${i}`} className="hover:bg-transparent">
+                  <TableCell>
+                    <div className="flex items-center gap-3">
+                      <Skeleton className="h-9 w-9 rounded-full shrink-0" />
+                      <Skeleton className="h-4 w-32" />
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton className="h-4 w-24" />
+                    <Skeleton className="h-3 w-40 mt-1.5" />
+                  </TableCell>
+                  <TableCell><Skeleton className="h-5 w-16 rounded-full" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+                  <TableCell><Skeleton className="h-5 w-16 rounded-full" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                  {!isReadOnly && (
+                    <TableCell className="text-right"><Skeleton className="h-8 w-16 ml-auto" /></TableCell>
+                  )}
+                </TableRow>
+              ))
+            ) : sortedAndFilteredMembers.length === 0 ? (
+              <TableRow className="hover:bg-transparent">
                 <TableCell
                   colSpan={isReadOnly ? 6 : 7}
-                  className="h-32 text-center text-muted-foreground"
                 >
-                  <div className="flex flex-col items-center justify-center gap-2">
-                    <Users className="w-6 h-6 text-muted-foreground/50" />
-                    <p className="text-sm font-medium">No people found matching your criteria.</p>
-                    {hasActiveFilters && (
+                  <EmptyState
+                    icon={Users}
+                    title="No people found"
+                    description={hasActiveFilters ? 'No members match the current search or filters.' : 'No members in the directory yet.'}
+                    action={hasActiveFilters ? (
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={handleResetFilters}
-                        className="text-xs mt-1 focus-orange"
                       >
                         Reset filters
                       </Button>
-                    )}
-                  </div>
+                    ) : undefined}
+                  />
                 </TableCell>
               </TableRow>
             ) : (
               sortedAndFilteredMembers.map((member) => (
-                <TableRow key={member.id} className="hover:bg-muted/40 transition-colors">
+                <TableRow key={member.id} className="group">
                   <TableCell>
                     <div className="flex items-center gap-3">
-                      <Avatar className="h-9 w-9 border border-border hover:scale-110 transition-transform duration-200 shrink-0">
-                        {member.avatarUrl && <AvatarImage src={member.avatarUrl} alt={member.name} />}
-                        <AvatarFallback className="bg-secondary text-foreground text-sm font-bold">
-                          {member.name.charAt(0)}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="font-semibold text-foreground">{member.name}</div>
+                      <MemberAvatar src={member.avatarUrl} name={member.name} className="h-9 w-9 border border-border hover:scale-110 transition-transform duration-200 shrink-0" />
+                      <div className="font-medium text-foreground truncate max-w-[160px]" title={member.name}>{member.name}</div>
                     </div>
                   </TableCell>
                   <TableCell>
@@ -651,14 +640,8 @@ export const MemberDirectoryTable: React.FC<MemberDirectoryProps> = ({ members, 
                   <TableCell className="font-medium text-foreground">{member.teamName}</TableCell>
                   <TableCell>
                     <Badge
-                      variant="secondary"
-                      className={
-                        member.role === 'admin'
-                          ? 'bg-accent/10 text-accent border-accent/20 font-mono text-[10px] font-bold uppercase tracking-wider'
-                          : member.role === 'advisor'
-                          ? 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20 font-mono text-[10px] font-bold uppercase tracking-wider'
-                          : 'font-mono text-[10px] font-bold uppercase tracking-wider'
-                      }
+                      variant={member.role === 'advisor' ? 'warning' : member.role === 'admin' ? 'default' : 'secondary'}
+                      className="capitalize"
                     >
                       {member.role === 'admin' ? (
                         <Shield className="w-3 h-3 mr-1" />
@@ -675,7 +658,7 @@ export const MemberDirectoryTable: React.FC<MemberDirectoryProps> = ({ members, 
                   </TableCell>
                   {!isReadOnly && (
                     <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-1.5">
+                      <div className="flex items-center justify-end gap-1.5 opacity-100 transition-opacity lg:opacity-0 lg:group-hover:opacity-100 lg:group-focus-within:opacity-100">
                         <Button
                           variant="ghost"
                           size="icon"
@@ -721,12 +704,7 @@ export const MemberDirectoryTable: React.FC<MemberDirectoryProps> = ({ members, 
           {/* Member Avatar with Re-roll & Gender Switch */}
           {editingUser && (
             <div className="flex items-center gap-3 p-3 bg-secondary/40 border border-border rounded-lg">
-              <Avatar className="h-14 w-14 border border-border shrink-0">
-                {editingUser.avatarUrl && <AvatarImage src={editingUser.avatarUrl} alt={editingUser.name} />}
-                <AvatarFallback className="bg-secondary text-foreground text-sm font-bold">
-                  {editingUser.name.charAt(0)}
-                </AvatarFallback>
-              </Avatar>
+              <MemberAvatar src={editingUser.avatarUrl} name={editingUser.name} className="h-14 w-14 border border-border shrink-0" />
               <div className="flex-1 min-w-0">
                 <div className="text-xs font-semibold text-foreground">Funky Notionist Avatar</div>
                 <div className="flex items-center gap-1.5 mt-1.5">
@@ -734,17 +712,17 @@ export const MemberDirectoryTable: React.FC<MemberDirectoryProps> = ({ members, 
                     type="button"
                     onClick={() => handleRerollAvatar(editingUser.id, editingUser.name, 'male')}
                     disabled={rerollingId === editingUser.id}
-                    className="px-2 py-0.5 rounded text-[11px] font-medium border bg-background text-muted-foreground border-border hover:text-foreground hover:border-primary transition-colors cursor-pointer"
+                    className="px-2 py-0.5 rounded text-xs font-medium border bg-background text-muted-foreground border-border hover:text-foreground hover:border-primary transition-colors cursor-pointer"
                   >
-                    👦 Male
+                    Male
                   </button>
                   <button
                     type="button"
                     onClick={() => handleRerollAvatar(editingUser.id, editingUser.name, 'female')}
                     disabled={rerollingId === editingUser.id}
-                    className="px-2 py-0.5 rounded text-[11px] font-medium border bg-background text-muted-foreground border-border hover:text-foreground hover:border-primary transition-colors cursor-pointer"
+                    className="px-2 py-0.5 rounded text-xs font-medium border bg-background text-muted-foreground border-border hover:text-foreground hover:border-primary transition-colors cursor-pointer"
                   >
-                    👧 Female
+                    Female
                   </button>
                 </div>
               </div>

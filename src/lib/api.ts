@@ -12,6 +12,9 @@ class ApiClient {
   // (sent via `credentials: include`) remains a parallel credential.
   private token: string | null = null;
   private hydrated = false;
+  private getCache = new Map<string, { data: any; expiry: number }>();
+  private inflight = new Map<string, Promise<any>>();
+  private static GET_TTL_MS = 30_000;
 
   constructor() {}
 
@@ -44,6 +47,10 @@ class ApiClient {
   }
 
   private async request(endpoint: string, options: RequestInit = {}) {
+    if (options.method !== undefined && options.method !== 'GET') {
+      this.getCache.clear();
+      this.inflight.clear();
+    }
     const token = this.getToken();
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
@@ -76,7 +83,26 @@ class ApiClient {
     }
   }
 
-  // Auth Endpoints
+  private cachedGet(endpoint: string) {
+    const key = `GET ${endpoint}`;
+    const now = Date.now();
+    const cached = this.getCache.get(key);
+    if (cached && now < cached.expiry) return Promise.resolve(cached.data);
+    const ongoing = this.inflight.get(key);
+    if (ongoing) return ongoing;
+    const promise = this.request(endpoint).then((data) => {
+      this.getCache.set(key, { data, expiry: Date.now() + ApiClient.GET_TTL_MS });
+      this.inflight.delete(key);
+      return data;
+    }).catch((err) => {
+      this.inflight.delete(key);
+      throw err;
+    });
+    this.inflight.set(key, promise);
+    return promise;
+  }
+
+  // Auth Endpoints (cached GETs: 30s TTL + in-flight dedup; writes clear cache in request())
   async login(email: string, password: string) {
     const normalizedEmail = email.trim().toLowerCase();
     const data = await this.request('/auth/login', {
@@ -108,7 +134,7 @@ class ApiClient {
   }
 
   async getMe() {
-    return this.request('/auth/me');
+    return this.cachedGet('/auth/me');
   }
 
   async logout() {
@@ -140,7 +166,7 @@ class ApiClient {
   }
 
   async getMyStats() {
-    return this.request('/attendance/my-stats');
+    return this.cachedGet('/attendance/my-stats');
   }
 
   // Admin: Manually mark a member present/absent for a session
@@ -152,21 +178,21 @@ class ApiClient {
   }
 
   async getAdminAnalytics() {
-    return this.request('/attendance/admin-analytics');
+    return this.cachedGet('/attendance/admin-analytics');
   }
 
   // Admin: Full attendance matrix (members × sessions)
   async getAttendanceSheet() {
-    return this.request('/attendance/sheet');
+    return this.cachedGet('/attendance/sheet');
   }
 
   // Sessions Endpoints
   async getSessions() {
-    return this.request('/sessions');
+    return this.cachedGet('/sessions');
   }
 
   async getSession(id: string) {
-    return this.request(`/sessions/${id}`);
+    return this.cachedGet(`/sessions/${id}`);
   }
 
   async createSession(sessionData: {
@@ -193,7 +219,7 @@ class ApiClient {
 
   // Teams & Users
   async getTeams() {
-    return this.request('/teams');
+    return this.cachedGet('/teams');
   }
 
   async createTeam(teamData: { name: string; code: string; description?: string; color?: string }) {
@@ -217,7 +243,7 @@ class ApiClient {
   }
 
   async getUsers() {
-    return this.request('/users');
+    return this.cachedGet('/users');
   }
 
   // Admin: Create a new member directly

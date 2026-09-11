@@ -4,15 +4,17 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { Navbar } from '@/components/layout/Navbar';
 import { Sidebar } from '@/components/layout/Sidebar';
-import { PageLoader } from '@/components/layout/PageLoader';
 import { PageHeader } from '@/components/layout/PageHeader';
+import { DatabaseToolbar } from '@/components/ui/database-toolbar';
+import { EmptyState } from '@/components/ui/empty-state';
+import { Skeleton } from '@/components/ui/skeleton';
 import { api } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from 'sonner';
-import { Table2, RefreshCw, Check, Clock, Minus, Loader2, MousePointerClick } from 'lucide-react';
+import { Table2, RefreshCw, Check, Clock, Minus, Loader2, MousePointerClick, Users } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { MemberAvatar } from '@/components/ui/member-avatar';
 import {
   TableHeader,
   TableBody,
@@ -62,6 +64,7 @@ export default function AttendanceSheetPage() {
   const [sessions, setSessions] = useState<SheetSession[]>([]);
   const [members, setMembers] = useState<SheetMember[]>([]);
   const [teamFilter, setTeamFilter] = useState('ALL');
+  const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   // `${memberId}:${sessionId}` of the cell with an in-flight toggle, if any.
   const [updatingCell, setUpdatingCell] = useState<string | null>(null);
@@ -129,10 +132,17 @@ export default function AttendanceSheetPage() {
     return Array.from(seen, ([id, name]) => ({ id, name }));
   }, [members]);
 
-  const visibleMembers = useMemo(
-    () => teamFilter === 'ALL' ? members : members.filter(m => (m.teamId || 'none') === teamFilter),
-    [members, teamFilter]
-  );
+  const visibleMembers = useMemo(() => {
+    const q = searchTerm.toLowerCase().trim();
+    return members.filter(m => {
+      const matchesTeam = teamFilter === 'ALL' || (m.teamId || 'none') === teamFilter;
+      const matchesSearch =
+        !q ||
+        m.name.toLowerCase().includes(q) ||
+        m.rollNumber.toLowerCase().includes(q);
+      return matchesTeam && matchesSearch;
+    });
+  }, [members, teamFilter, searchTerm]);
 
   // Insert team separator rows when viewing all teams
   const rows = useMemo(() => {
@@ -152,13 +162,14 @@ export default function AttendanceSheetPage() {
   return (
     <ProtectedRoute requireAdmin>
       <div className="min-h-screen flex flex-col bg-background text-foreground transition-colors">
-        <Navbar />
+        <Navbar crumbs={[{ label: 'Admin' }, { label: 'Attendance' }]} />
         <div className="flex flex-1">
           <Sidebar />
           <main className="flex-1 p-6 sm:p-8 max-w-7xl mx-auto w-full space-y-6">
             <PageHeader
-              kicker="Club Records"
-              title="Attendance Sheet"
+              icon={Table2}
+              crumbs={[{ label: 'Admin' }, { label: 'Attendance' }]}
+              title="Attendance sheet"
               description={`Full member × session matrix — ${members.length} people (${members.filter(m => m.role === 'user').length} members, ${members.filter(m => m.role === 'admin').length} admins, ${members.filter(m => m.role === 'advisor').length} advisors) across ${sessions.length} sessions`}
               actions={
                 <Button
@@ -173,8 +184,13 @@ export default function AttendanceSheetPage() {
               }
             />
 
-            {/* Filter bar */}
-            <div className="flex flex-wrap items-center gap-2 pb-3 border-b border-border">
+            <DatabaseToolbar
+              search={searchTerm}
+              onSearchChange={setSearchTerm}
+              placeholder="Search members by name or roll number"
+              count={<>{visibleMembers.length} of {members.length}</>}
+              className="pb-3 border-b border-border"
+            >
               <Select value={teamFilter} onValueChange={setTeamFilter}>
                 <SelectTrigger className="w-40">
                   <SelectValue placeholder="All Wings" />
@@ -186,19 +202,64 @@ export default function AttendanceSheetPage() {
                   ))}
                 </SelectContent>
               </Select>
-              <span className="ml-auto font-mono text-[12px] text-muted-foreground tabular-nums">
-                {visibleMembers.length} of {members.length}
-              </span>
-            </div>
+            </DatabaseToolbar>
 
             {isLoading ? (
-              <PageLoader message="Building attendance matrix..." />
-            ) : sessions.length === 0 ? (
-              <Card className="p-12 text-center">
-                <Table2 className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
-                <p className="text-sm font-semibold text-foreground">No sessions recorded yet</p>
-                <p className="text-sm text-muted-foreground mt-0.5">Create a session to start building the sheet.</p>
+              <Card className="overflow-hidden p-0">
+                <div className="overflow-auto table-sticky-head">
+                  <table className="w-full caption-bottom text-sm">
+                    <TableHeader>
+                      <TableRow className="hover:bg-transparent">
+                        <TableHead className="min-w-[220px]">Member / wing</TableHead>
+                        <TableHead>Session 1</TableHead>
+                        <TableHead>Session 2</TableHead>
+                        <TableHead>Session 3</TableHead>
+                        <TableHead className="text-right">Rate</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+                        <TableRow key={`skel-${i}`} className="hover:bg-transparent">
+                          <TableCell>
+                            <div className="flex items-center gap-2.5">
+                              <Skeleton className="h-8 w-8 rounded-full shrink-0" />
+                              <div className="flex-1">
+                                <Skeleton className="h-4 w-32" />
+                                <Skeleton className="h-3 w-20 mt-1.5" />
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell><Skeleton className="h-4 w-4 rounded-full mx-auto" /></TableCell>
+                          <TableCell><Skeleton className="h-4 w-4 rounded-full mx-auto" /></TableCell>
+                          <TableCell><Skeleton className="h-4 w-4 rounded-full mx-auto" /></TableCell>
+                          <TableCell className="text-right"><Skeleton className="h-4 w-10 ml-auto" /></TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </table>
+                </div>
               </Card>
+            ) : sessions.length === 0 ? (
+              <EmptyState
+                icon={Table2}
+                title="No sessions recorded yet"
+                description="Create a session to start building the sheet."
+              />
+            ) : rows.length === 0 ? (
+              <EmptyState
+                icon={Users}
+                title="No members match the current filters"
+                description="Try a different search term or wing filter."
+                action={
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => { setTeamFilter('ALL'); setSearchTerm(''); }}
+                  >
+                    Reset filters
+                  </Button>
+                }
+              />
             ) : (
               <>
                 {/* Legend */}
@@ -221,7 +282,7 @@ export default function AttendanceSheetPage() {
                     <TableHeader>
                       <TableRow className="hover:bg-transparent">
                         <TableHead className="sticky left-0 z-20 bg-secondary/60 backdrop-blur p-3 min-w-[220px] border-b border-r border-border">
-                          <span className="text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">Member / Wing</span>
+                          <span className="text-xs font-medium text-muted-foreground">Member / wing</span>
                         </TableHead>
                         {sessions.map(s => (
                           <TableHead
@@ -232,7 +293,7 @@ export default function AttendanceSheetPage() {
                             <div className="flex items-center gap-1.5">
                               <span className="text-xs font-semibold text-foreground truncate">{s.title}</span>
                               {s.isActive === 'true' && (
-                                <span className="shrink-0 h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" title="Live now" />
+                                <span className="shrink-0 h-1.5 w-1.5 rounded-full bg-emerald-500 motion-safe:animate-pulse" title="Live now" />
                               )}
                             </div>
                             <div className="font-mono text-[13px] text-muted-foreground font-normal mt-0.5">
@@ -241,7 +302,7 @@ export default function AttendanceSheetPage() {
                           </TableHead>
                         ))}
                         <TableHead className="p-3 min-w-[80px] border-b border-l border-border text-right">
-                          <span className="text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">Rate</span>
+                          <span className="text-xs font-medium text-muted-foreground">Rate</span>
                         </TableHead>
                       </TableRow>
                     </TableHeader>
@@ -250,21 +311,16 @@ export default function AttendanceSheetPage() {
                         row.kind === 'team' ? (
                           <TableRow key={`team-${row.teamName}`} className="hover:bg-transparent">
                             <TableCell colSpan={sessions.length + 2} className="sticky left-0 bg-secondary/40 p-2 px-3 border-b border-border">
-                              <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                              <span className="text-xs font-medium text-muted-foreground">
                                 {row.teamName} · {row.count} members
                               </span>
                             </TableCell>
                           </TableRow>
                         ) : (
-                          <TableRow key={row.member!.id}>
-                            <TableCell className="sticky left-0 z-10 bg-card p-2.5 sm:p-3 border-b border-r border-border">
+                          <TableRow key={row.member!.id} className="group">
+                            <TableCell className="sticky left-0 z-10 bg-card group-hover:bg-secondary transition-colors p-2.5 sm:p-3 border-b border-r border-border">
                               <div className="flex items-center gap-2.5">
-                                <Avatar className="h-8 w-8 border border-border hover:scale-110 transition-transform duration-150 shrink-0">
-                                  {row.member!.avatarUrl && <AvatarImage src={row.member!.avatarUrl} alt={row.member!.name} />}
-                                  <AvatarFallback className="bg-secondary text-foreground text-xs font-bold">
-                                    {row.member!.name.charAt(0)}
-                                  </AvatarFallback>
-                                </Avatar>
+                                <MemberAvatar src={row.member!.avatarUrl} name={row.member!.name} className="h-8 w-8 border border-border hover:scale-110 transition-transform duration-150 shrink-0" />
                                 <div className="min-w-0">
                                   <div className="font-semibold text-foreground truncate">{row.member!.name}</div>
                                   <div className="font-mono text-[13px] text-muted-foreground truncate" title={row.member!.rollNumber}>{row.member!.rollNumber}</div>

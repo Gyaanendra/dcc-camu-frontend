@@ -8,7 +8,6 @@ import { Sidebar } from '@/components/layout/Sidebar';
 import { MemberDirectoryTable } from '@/components/members/MemberDirectoryTable';
 import { AddMemberModal } from '@/components/members/AddMemberModal';
 import { CreateTeamModal } from '@/components/members/CreateTeamModal';
-import { PageLoader } from '@/components/layout/PageLoader';
 import { api } from '@/lib/api';
 import { RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
@@ -43,14 +42,14 @@ export default function AdminMembersPage() {
   return (
     <ProtectedRoute requireAdmin>
       <div className="min-h-screen flex flex-col bg-background text-foreground transition-colors">
-        <Navbar />
+        <Navbar crumbs={[{ label: 'Admin' }, { label: 'Members' }]} />
         <div className="flex flex-1">
           <Sidebar />
           <main className="flex-1 p-6 sm:p-8 max-w-7xl mx-auto w-full space-y-6">
             <Card className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6">
               <div>
-                <div className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
-                  Club Membership
+                <div className="text-xs font-medium text-muted-foreground mb-1">
+                  Club membership
                 </div>
                 <h1 className="text-2xl font-semibold text-foreground tracking-tight">
                   Member Directory
@@ -90,11 +89,7 @@ export default function AdminMembersPage() {
               </div>
             </Card>
 
-            {isLoading ? (
-              <PageLoader message="Loading member directory..." />
-            ) : (
-              <MemberDirectoryTable members={users} teams={teams} onRefresh={loadData} />
-            )}
+            <MemberDirectoryTable members={users} teams={teams} onRefresh={loadData} isLoading={isLoading} />
           </main>
         </div>
       </div>

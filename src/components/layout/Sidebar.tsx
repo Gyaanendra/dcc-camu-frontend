@@ -15,6 +15,7 @@ import {
   ShieldCheck,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { MemberAvatar } from '@/components/ui/member-avatar';
 
 export const Sidebar: React.FC = () => {
   const pathname = usePathname();
@@ -28,30 +29,40 @@ export const Sidebar: React.FC = () => {
     ...(user?.role === 'advisor'
       ? []
       : [
-          { name: 'QR Scanner', href: '/scan', icon: QrCode },
-          { name: 'My Attendance', href: '/my-attendance', icon: Award },
+          { name: 'Scan QR', href: '/scan', icon: QrCode },
+          { name: 'My attendance', href: '/my-attendance', icon: Award },
         ]),
   ];
 
   const adminNav = [
-    { name: 'Team Analytics', href: '/admin/analytics', icon: BarChart3 },
-    { name: 'Sessions & QR', href: '/admin/sessions', icon: CalendarCheck },
-    { name: 'Member Directory', href: '/admin/members', icon: Users },
-    { name: 'Attendance Sheet', href: '/admin/attendance-sheet', icon: Table2 },
+    { name: 'Team analytics', href: '/admin/analytics', icon: BarChart3 },
+    { name: 'Sessions', href: '/admin/sessions', icon: CalendarCheck },
+    { name: 'Members', href: '/admin/members', icon: Users },
+    { name: 'Attendance sheet', href: '/admin/attendance-sheet', icon: Table2 },
   ];
 
   const isActive = (path: string) => pathname === path;
 
-  return (
-    <aside className="w-60 shrink-0 hidden lg:flex flex-col border-r border-border bg-card min-h-[calc(100vh-3.5rem)] transition-colors">
-      <div className="flex-1 p-3 space-y-5 overflow-y-auto">
+  const rowClass = (active: boolean) =>
+    cn(
+      'flex items-center gap-2.5 px-2.5 py-[7px] rounded-md text-[13px] transition-colors duration-150',
+      active
+        ? 'bg-accent/10 text-accent font-semibold'
+        : 'text-muted-foreground hover:text-foreground hover:bg-secondary/60 font-medium'
+    );
 
-        {/* User Navigation */}
+  const iconClass = (active: boolean) =>
+    cn('w-3.5 h-3.5 shrink-0', active && 'text-accent');
+
+  return (
+    <aside className="w-60 shrink-0 hidden lg:flex flex-col border-r border-border bg-sidebar min-h-[calc(100vh-3rem)] transition-colors">
+      <div className="flex-1 p-3 space-y-5 overflow-y-auto">
+        {/* User navigation */}
         <div>
-          <p className="px-3 mb-1.5 text-[10px] font-semibold tracking-widest text-muted-foreground uppercase">
+          <p className="px-2.5 mb-1 text-xs font-medium text-muted-foreground">
             Overview
           </p>
-          <nav className="space-y-0.5">
+          <nav className="space-y-px">
             {userNav.map(item => {
               const Icon = item.icon;
               const active = isActive(item.href);
@@ -61,29 +72,24 @@ export const Sidebar: React.FC = () => {
                   href={item.href}
                   id={`sidebar-${item.name.toLowerCase().replace(/\s+/g, '-')}`}
                   aria-current={active ? 'page' : undefined}
-                  className={cn(
-                    'flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-all',
-                    active
-                      ? 'bg-accent/10 text-accent relative before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-5 before:w-[3px] before:rounded-full before:bg-accent'
-                      : 'text-muted-foreground hover:text-foreground hover:bg-secondary'
-                  )}
+                  className={rowClass(active)}
                 >
-                  <Icon className={cn('w-4 h-4 shrink-0', active ? 'text-accent' : 'text-muted-foreground')} />
-                  <span>{item.name}</span>
+                  <Icon className={iconClass(active)} />
+                  <span className="truncate">{item.name}</span>
                 </Link>
               );
             })}
           </nav>
         </div>
 
-        {/* Admin Navigation (advisors: view-only) */}
+        {/* Admin navigation (advisors: view-only) */}
         {isViewer && (
           <div>
-            <p className="px-3 mb-1.5 flex items-center gap-1.5 text-[10px] font-semibold tracking-widest text-accent uppercase">
+            <p className="px-2.5 mb-1 flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
               <ShieldCheck className="w-3 h-3" />
-              {isAdmin ? 'Admin Tools' : 'View Only'}
+              {isAdmin ? 'Admin' : 'View only'}
             </p>
-            <nav className="space-y-0.5">
+            <nav className="space-y-px">
               {adminNav.map(item => {
                 const Icon = item.icon;
                 const active = isActive(item.href);
@@ -93,15 +99,10 @@ export const Sidebar: React.FC = () => {
                     href={item.href}
                     id={`sidebar-admin-${item.name.toLowerCase().replace(/\s+/g, '-')}`}
                     aria-current={active ? 'page' : undefined}
-                    className={cn(
-                      'flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-all',
-                      active
-                        ? 'bg-accent/10 text-accent relative before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-5 before:w-[3px] before:rounded-full before:bg-accent'
-                        : 'text-muted-foreground hover:text-foreground hover:bg-secondary'
-                    )}
+                    className={rowClass(active)}
                   >
-                    <Icon className={cn('w-4 h-4 shrink-0', active ? 'text-accent' : 'text-muted-foreground')} />
-                    <span>{item.name}</span>
+                    <Icon className={iconClass(active)} />
+                    <span className="truncate">{item.name}</span>
                   </Link>
                 );
               })}
@@ -110,18 +111,27 @@ export const Sidebar: React.FC = () => {
         )}
       </div>
 
-      {/* Club Assignment Card — pinned at bottom */}
+      {/* User card — pinned at bottom */}
       {user && (
         <div className="p-3 border-t border-border">
-          <div className="p-3 rounded-xl bg-secondary border border-border text-sm">
-            <div className="text-[10px] font-semibold tracking-widest text-muted-foreground uppercase mb-1">
-              Club Assignment
+          <div className="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-secondary/70 transition-all duration-150 group">
+            <div className="relative shrink-0">
+              <MemberAvatar
+                src={user.avatarUrl}
+                name={user.name}
+                className="h-10 w-10 rounded-xl border-2 border-border shadow-sm ring-1 ring-border/60 group-hover:ring-accent/40 group-hover:scale-105 transition-all"
+              />
+              <span className="absolute -bottom-0.5 -right-0.5 flex h-2.5 w-2.5">
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500 border-2 border-card" />
+              </span>
             </div>
-            <div className="font-semibold text-foreground truncate">
-              {user.teamName || 'All Club Members'}
-            </div>
-            <div className="text-[11px] text-muted-foreground mt-0.5 font-medium">
-              {user.position || 'Member'}
+            <div className="min-w-0 flex-1">
+              <div className="text-[13px] font-semibold text-foreground truncate leading-tight">
+                {user.name}
+              </div>
+              <div className="text-xs text-muted-foreground truncate mt-0.5">
+                {[user.teamName, user.position].filter(Boolean).join(' · ') || 'Member'}
+              </div>
             </div>
           </div>
         </div>

@@ -13,15 +13,13 @@ import {
 } from 'recharts';
 import {
   Trophy,
-  TrendingUp,
-  Users,
-  Clock,
-  Award,
   PieChart as PieIcon,
   BarChart3,
 } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Skeleton } from '@/components/ui/skeleton';
+import { EmptyState } from '@/components/ui/empty-state';
 import {
   ChartContainer,
   ChartTooltip,
@@ -51,28 +49,8 @@ interface TeamAnalyticsProps {
     onTimeCount: number;
     lateCount: number;
   };
+  isLoading?: boolean;
 }
-
-// KPI card — shadcn Card, hairline-only depth, tabular metrics
-const StatCard: React.FC<{
-  label: string;
-  value: string | number;
-  sub: string;
-  icon: React.ReactNode;
-}> = ({ label, value, sub, icon }) => (
-  <Card className="p-5">
-    <div className="flex items-center justify-between">
-      <span className="text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">
-        {label}
-      </span>
-      <span className="text-accent">{icon}</span>
-    </div>
-    <div className="text-2xl font-semibold mt-2 tabular-nums tracking-tight text-foreground">
-      {value}
-    </div>
-    <div className="text-xs text-muted-foreground mt-1.5">{sub}</div>
-  </Card>
-);
 
 const barConfig = {
   attendanceRate: {
@@ -92,10 +70,11 @@ const pieConfig = {
   },
 } satisfies ChartConfig;
 
-export const TeamAnalyticsCharts: React.FC<TeamAnalyticsProps> = ({ teamAnalytics = [], summary }) => {
-  const [chartView, setChartView] = useState<'bar' | 'pie'>('bar');
+export const TeamAnalyticsCharts: React.FC<TeamAnalyticsProps> = ({ teamAnalytics = [], summary, isLoading = false }) => {
+  const [chartView, setChartView] = useState<'overview' | 'wings' | 'punctuality'>('overview');
 
   const sortedTeams = [...teamAnalytics].sort((a, b) => b.attendanceRate - a.attendanceRate);
+  const topTeamId = sortedTeams[0]?.teamId;
 
   const onTime = summary?.onTimeCount || 0;
   const late = summary?.lateCount || 0;
@@ -107,53 +86,167 @@ export const TeamAnalyticsCharts: React.FC<TeamAnalyticsProps> = ({ teamAnalytic
     { name: 'Late Arrivals', key: 'late', value: late, fill: 'var(--color-late)' },
   ];
 
-  return (
-    <div className="space-y-6">
-      {/* Stat Cards Querying Real Data */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard
-          label="Total Club Roster"
-          value={summary?.totalUsers ?? summary?.totalMembers ?? 0}
-          sub={`${summary?.totalMembers ?? 0} Members · ${summary?.totalAdmins ?? 0} Admins · ${summary?.totalAdvisors ?? 0} Advisors`}
-          icon={<Users className="w-4 h-4" />}
-        />
-        <StatCard
-          label="Attendance Rate"
-          value={`${summary?.overallAttendanceRate || 0}%`}
-          sub="Across all sessions"
-          icon={<TrendingUp className="w-4 h-4" />}
-        />
-        <StatCard
-          label="Sessions Held"
-          value={summary?.totalSessions || 0}
-          sub="Recorded meetings"
-          icon={<Clock className="w-4 h-4" />}
-        />
-        <StatCard
-          label="Punctuality"
-          value={`${punctualityPercent}%`}
-          sub="On-time arrival ratio"
-          icon={<Award className="w-4 h-4" />}
-        />
+  if (isLoading) {
+    return (
+      <div className="space-y-4" aria-label="Loading analytics">
+        <Card className="px-5 py-4 flex gap-6">
+          <Skeleton className="h-12 flex-1" />
+          <Skeleton className="h-12 flex-1" />
+          <Skeleton className="h-12 flex-1" />
+          <Skeleton className="h-12 flex-1" />
+        </Card>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <Skeleton className="h-72 lg:col-span-2" />
+          <Skeleton className="h-72" />
+        </div>
       </div>
+    );
+  }
 
-      {/* Main Charts Section with Real Data */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Main Chart Container */}
-        <Card className="lg:col-span-2">
+  const barData = chartView === 'wings' ? sortedTeams : teamAnalytics;
+
+  const barChart = barData.length > 0 ? (
+    <ChartContainer config={barConfig} className="h-full w-full">
+      <BarChart data={barData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+        <CartesianGrid vertical={false} stroke="hsl(var(--border))" />
+        <XAxis dataKey="code" tickLine={false} axisLine={false} fontSize={11} tick={{ fill: 'hsl(var(--muted-foreground))' }} />
+        <YAxis domain={[0, 100]} unit="%" tickLine={false} axisLine={false} fontSize={11} tick={{ fill: 'hsl(var(--muted-foreground))' }} />
+        <ChartTooltip
+          content={
+            <ChartTooltipContent
+              labelClassName="font-mono text-xs"
+              formatter={(value) => (
+                <div className="flex w-full items-center justify-between gap-4">
+                  <span className="text-muted-foreground">Attendance %</span>
+                  <span className="font-mono font-medium tabular-nums text-foreground">{value}%</span>
+                </div>
+              )}
+            />
+          }
+        />
+        <Bar dataKey="attendanceRate" name="Attendance %" radius={[6, 6, 0, 0]} maxBarSize={36}>
+          {barData.map((entry, index) => (
+            <Cell
+              key={`cell-${index}`}
+              fill={entry.teamId === topTeamId ? 'hsl(var(--primary))' : (entry.color || 'var(--color-attendanceRate)')}
+            />
+          ))}
+        </Bar>
+      </BarChart>
+    </ChartContainer>
+  ) : (
+    <EmptyState
+      icon={BarChart3}
+      title="No wing data yet"
+      description="Create club wings and record member attendance to visualize live performance."
+      className="h-full border-0"
+    />
+  );
+
+  const donutChart = totalLogs > 0 ? (
+    <div className="flex h-full w-full flex-col">
+      <div className="relative min-h-0 flex-1">
+        <ChartContainer config={pieConfig} className="h-full w-full">
+          <PieChart>
+            <Pie
+              data={pieData}
+              cx="50%"
+              cy="50%"
+              innerRadius={65}
+              outerRadius={95}
+              paddingAngle={5}
+              dataKey="value"
+              nameKey="name"
+            >
+              {pieData.map((entry) => (
+                <Cell key={entry.key} fill={entry.fill} />
+              ))}
+            </Pie>
+            <ChartTooltip content={<ChartTooltipContent labelClassName="font-mono text-xs" />} />
+          </PieChart>
+        </ChartContainer>
+        <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
+          <span className="text-[20px] font-semibold tabular-nums text-foreground">{totalLogs}</span>
+          <span className="text-xs text-muted-foreground">check-ins</span>
+        </div>
+      </div>
+      <div className="flex items-center justify-center gap-2 pt-2">
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-secondary px-2.5 py-1 text-xs text-muted-foreground">
+          <span className="h-2 w-2 rounded-full" style={{ backgroundColor: '#1f8a65' }} />
+          On-time
+          <span className="font-mono tabular-nums text-foreground">{onTime}</span>
+        </span>
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-secondary px-2.5 py-1 text-xs text-muted-foreground">
+          <span className="h-2 w-2 rounded-full" style={{ backgroundColor: '#b45309' }} />
+          Late
+          <span className="font-mono tabular-nums text-foreground">{late}</span>
+        </span>
+      </div>
+    </div>
+  ) : (
+    <EmptyState
+      icon={PieIcon}
+      title="No check-ins yet"
+      description="On-time vs late distribution will display once members scan session QR codes."
+      className="h-full border-0"
+    />
+  );
+
+  return (
+    <div className="space-y-4">
+      {/* Quiet stat list */}
+      <Card className="px-5 py-4 grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-0 lg:divide-x lg:divide-border">
+        <div className="lg:pr-6">
+          <div className="text-xs text-muted-foreground">Total roster</div>
+          <div className="text-[20px] font-semibold tabular-nums text-foreground mt-0.5">
+            {summary?.totalUsers ?? summary?.totalMembers ?? 0}
+          </div>
+          <div className="text-xs text-muted-foreground mt-0.5 tabular-nums">
+            {summary?.totalMembers ?? 0} members · {summary?.totalAdmins ?? 0} admins · {summary?.totalAdvisors ?? 0} advisors
+          </div>
+        </div>
+        <div className="lg:px-6">
+          <div className="text-xs text-muted-foreground">Attendance rate</div>
+          <div className="text-[20px] font-semibold tabular-nums text-foreground mt-0.5">
+            {summary?.overallAttendanceRate || 0}%
+          </div>
+          <div className="text-xs text-muted-foreground mt-0.5">across all sessions</div>
+        </div>
+        <div className="lg:px-6">
+          <div className="text-xs text-muted-foreground">Sessions held</div>
+          <div className="text-[20px] font-semibold tabular-nums text-foreground mt-0.5">
+            {summary?.totalSessions || 0}
+          </div>
+          <div className="text-xs text-muted-foreground mt-0.5">recorded meetings</div>
+        </div>
+        <div className="lg:pl-6">
+          <div className="text-xs text-muted-foreground">Punctuality</div>
+          <div className="text-[20px] font-semibold tabular-nums text-foreground mt-0.5">
+            {punctualityPercent}%
+          </div>
+          <div className="text-xs text-muted-foreground mt-0.5">on-time arrival ratio</div>
+        </div>
+      </Card>
+
+      {/* Charts with view tabs */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <Card className={chartView === 'overview' ? 'lg:col-span-2' : 'lg:col-span-3'}>
           <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-border space-y-0">
             <div>
-              <CardTitle className="text-base">Wing Attendance Performance</CardTitle>
-              <CardDescription>Attendance percentage grouped by assigned wing</CardDescription>
+              <CardTitle className="text-sm">Wing attendance performance</CardTitle>
+              <CardDescription className="text-xs">Attendance percentage grouped by assigned wing</CardDescription>
             </div>
 
-            <Tabs value={chartView} onValueChange={(v) => setChartView(v as 'bar' | 'pie')}>
+            <Tabs value={chartView} onValueChange={(v) => setChartView(v as typeof chartView)}>
               <TabsList>
-                <TabsTrigger value="bar">
-                  <BarChart3 className="w-3.5 h-3.5" /> Wing Bars
+                <TabsTrigger value="overview">
+                  <BarChart3 className="w-3.5 h-3.5" /> Overview
                 </TabsTrigger>
-                <TabsTrigger value="pie">
-                  <PieIcon className="w-3.5 h-3.5" /> Punctuality Donut
+                <TabsTrigger value="wings">
+                  <Trophy className="w-3.5 h-3.5" /> Wings
+                </TabsTrigger>
+                <TabsTrigger value="punctuality">
+                  <PieIcon className="w-3.5 h-3.5" /> Punctuality
                 </TabsTrigger>
               </TabsList>
             </Tabs>
@@ -161,150 +254,60 @@ export const TeamAnalyticsCharts: React.FC<TeamAnalyticsProps> = ({ teamAnalytic
 
           <CardContent className="pt-3">
             <div className="h-72 w-full">
-              {chartView === 'bar' ? (
-                teamAnalytics.length > 0 ? (
-                  <ChartContainer config={barConfig} className="h-full w-full">
-                    <BarChart data={teamAnalytics} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                      <CartesianGrid vertical={false} stroke="hsl(var(--border))" />
-                      <XAxis dataKey="code" tickLine={false} axisLine={false} fontSize={11} tick={{ fill: 'hsl(var(--muted-foreground))' }} />
-                      <YAxis domain={[0, 100]} unit="%" tickLine={false} axisLine={false} fontSize={11} tick={{ fill: 'hsl(var(--muted-foreground))' }} />
-                      <ChartTooltip
-                        content={
-                          <ChartTooltipContent
-                            labelClassName="font-mono text-[12px]"
-                            formatter={(value) => (
-                              <div className="flex w-full items-center justify-between gap-4">
-                                <span className="text-muted-foreground">Attendance %</span>
-                                <span className="font-mono font-medium tabular-nums text-foreground">{value}%</span>
-                              </div>
-                            )}
-                          />
-                        }
-                      />
-                      <Bar dataKey="attendanceRate" name="Attendance %" radius={[6, 6, 0, 0]} maxBarSize={36}>
-                        {teamAnalytics.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.color || 'var(--color-attendanceRate)'} />
-                        ))}
-                      </Bar>
-                    </BarChart>
-                  </ChartContainer>
-                ) : (
-                  <div className="h-full flex flex-col items-center justify-center text-center p-6">
-                    <BarChart3 className="w-8 h-8 text-muted-foreground mb-2" />
-                    <p className="text-sm font-semibold text-foreground">No Wing Data Recorded Yet</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      Create club wings and record member attendance to visualize live performance.
-                    </p>
-                  </div>
-                )
-              ) : totalLogs > 0 ? (
-                <div className="flex h-full w-full flex-col">
-                  <div className="relative min-h-0 flex-1">
-                    <ChartContainer config={pieConfig} className="h-full w-full">
-                      <PieChart>
-                        <Pie
-                          data={pieData}
-                          cx="50%"
-                          cy="50%"
-                          innerRadius={65}
-                          outerRadius={95}
-                          paddingAngle={5}
-                          dataKey="value"
-                          nameKey="name"
-                        >
-                          {pieData.map((entry) => (
-                            <Cell key={entry.key} fill={entry.fill} />
-                          ))}
-                        </Pie>
-                        <ChartTooltip content={<ChartTooltipContent labelClassName="font-mono text-[12px]" />} />
-                      </PieChart>
-                    </ChartContainer>
-                    <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-                      <span className="text-2xl font-semibold tabular-nums text-foreground">{totalLogs}</span>
-                      <span className="text-xs text-muted-foreground">check-ins</span>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-center gap-2 pt-2">
-                    <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-secondary px-2.5 py-1 text-xs text-muted-foreground">
-                      <span className="h-2 w-2 rounded-full" style={{ backgroundColor: '#1f8a65' }} />
-                      On-time
-                      <span className="font-mono tabular-nums text-foreground">{onTime}</span>
-                    </span>
-                    <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-secondary px-2.5 py-1 text-xs text-muted-foreground">
-                      <span className="h-2 w-2 rounded-full" style={{ backgroundColor: '#b45309' }} />
-                      Late
-                      <span className="font-mono tabular-nums text-foreground">{late}</span>
-                    </span>
-                  </div>
-                </div>
-              ) : (
-                <div className="h-full flex flex-col items-center justify-center text-center p-6">
-                  <PieIcon className="w-8 h-8 text-muted-foreground mb-2" />
-                  <p className="text-sm font-semibold text-foreground">No Attendance Check-ins Yet</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    Check-in distributions (On-time vs Late) will display once members scan session QR codes.
-                  </p>
-                </div>
-              )}
+              {chartView === 'punctuality' ? donutChart : barChart}
             </div>
           </CardContent>
         </Card>
 
-        {/* Real Wing Standings Leaderboard */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2 border-b border-border space-y-0">
-            <CardTitle className="text-sm flex items-center gap-2">
-              <Trophy className="w-4 h-4 text-amber-600 dark:text-amber-400" /> Wing Standings
-            </CardTitle>
-            <span className="text-sm text-muted-foreground font-medium">Rankings</span>
-          </CardHeader>
-          <CardContent className="pt-4">
-            <div className="space-y-2.5">
+        {/* Wing standings ranked list */}
+        {chartView === 'overview' && (
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-2 border-b border-border space-y-0">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <Trophy className="w-4 h-4 text-muted-foreground" /> Wing standings
+              </CardTitle>
+              <span className="font-mono text-xs tabular-nums text-muted-foreground">
+                {sortedTeams.length} wings
+              </span>
+            </CardHeader>
+            <CardContent className="pt-3">
               {sortedTeams.length > 0 ? (
-                sortedTeams.map((team, idx) => (
-                  <div
-                    key={team.teamId}
-                    style={{ animationDelay: `${Math.min(idx, 4) * 40}ms` }}
-                    className={`flex items-center justify-between p-3 rounded-lg border anim-fade-up ${
-                      idx === 0
-                        ? 'bg-amber-500/5 border-amber-500/20'
-                        : 'bg-secondary border-border'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div
-                        className={`flex h-6 w-6 items-center justify-center rounded-md text-sm font-bold tabular-nums ${
-                          idx === 0
-                            ? 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20'
-                            : idx === 1
-                            ? 'bg-card text-foreground border border-border'
-                            : 'bg-transparent text-muted-foreground'
-                        }`}
-                      >
-                        {idx + 1}
+                <div>
+                  {sortedTeams.map((team, idx) => (
+                    <div
+                      key={team.teamId}
+                      className="flex items-center justify-between py-2.5 border-b border-border last:border-0"
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-5 text-center text-[13px] font-semibold tabular-nums text-muted-foreground shrink-0">
+                          {idx + 1}
+                        </div>
+                        <div className="min-w-0">
+                          <div className="text-sm font-medium text-foreground truncate">{team.teamName}</div>
+                          <div className="text-xs text-muted-foreground tabular-nums">{team.memberCount} members</div>
+                        </div>
                       </div>
-                      <div>
-                        <div className="text-sm font-semibold text-foreground">{team.teamName}</div>
-                        <div className="text-xs text-muted-foreground">{team.memberCount} members</div>
-                      </div>
-                    </div>
 
-                    <div className="text-right">
-                      <div className="text-sm font-bold text-foreground tabular-nums">{team.attendanceRate}%</div>
-                      <div className="text-[11px] text-muted-foreground tabular-nums">
-                        {team.totalAttendanceCount ?? (team.totalPresent + team.totalLate)} logs
+                      <div className="text-right shrink-0">
+                        <div className="text-sm font-semibold text-foreground tabular-nums">{team.attendanceRate}%</div>
+                        <div className="text-xs text-muted-foreground tabular-nums">
+                          {team.totalAttendanceCount ?? (team.totalPresent + team.totalLate)} logs
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))
-              ) : (
-                <div className="text-center py-12 text-muted-foreground text-sm">
-                  No club wings registered yet.
+                  ))}
                 </div>
+              ) : (
+                <EmptyState
+                  icon={Trophy}
+                  title="No wings yet"
+                  description="Register club wings to see ranked standings."
+                  className="border-0"
+                />
               )}
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   );

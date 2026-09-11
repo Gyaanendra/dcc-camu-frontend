@@ -55,23 +55,22 @@ export function detectClientGender(nameOrIdentifier?: string): 'female' | 'male'
 }
 
 export function generateCoolTechGuyAvatar(seed = 'Gyanendra-Head-Of-Tech'): string {
-  const randomSuffix = Math.random().toString(36).substring(2, 7);
-  return `https://api.dicebear.com/9.x/notionists/svg?seed=${encodeURIComponent(seed)}-${randomSuffix}&hair=variant59,variant14,variant37&glasses=variant01,variant02&glassesProbability=100&gesture=ok,handPhone&gestureProbability=100&bodyIcon=electric,saturn&bodyIconProbability=100&beardProbability=0&backgroundColor=b6e3f4`;
+  const safeSeed = seed ? seed.trim() : 'Gyanendra-Head-Of-Tech';
+  return `https://api.dicebear.com/9.x/notionists/svg?seed=${encodeURIComponent(safeSeed)}&hair=variant59,variant14,variant37&glasses=variant01,variant02&glassesProbability=100&gesture=ok,handPhone&gestureProbability=100&bodyIcon=electric,saturn&bodyIconProbability=100&beardProbability=0&backgroundColor=b6e3f4`;
 }
 
 export function generateClientNotionistAvatar(
   seed?: string,
   explicitGender?: 'male' | 'female'
 ): string {
-  const cleanSeed = seed ? seed.trim() : '';
+  const cleanSeed = seed ? seed.trim() : 'member';
 
   if (cleanSeed.toLowerCase().includes('gyanendra') || cleanSeed.toLowerCase().includes('s24cseu0771')) {
     return generateCoolTechGuyAvatar(cleanSeed || 'Gyanendra-Head-Of-Tech');
   }
 
   const gender = explicitGender || detectClientGender(cleanSeed);
-  const randomSuffix = Math.random().toString(36).substring(2, 8);
-  const fullSeed = cleanSeed ? `${encodeURIComponent(cleanSeed.replace(/\s+/g, '-'))}-${randomSuffix}` : randomSuffix;
+  const fullSeed = encodeURIComponent(cleanSeed.replace(/\s+/g, '-'));
   const bgParam = PASTEL_BACKGROUNDS.join(',');
 
   if (gender === 'female') {

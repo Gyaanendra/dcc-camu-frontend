@@ -65,6 +65,17 @@
   to { transform: rotate(360deg); }
 }
 
+@keyframes laser-sweep {
+  0% { top: 4%; opacity: 0; }
+  15% { opacity: 1; }
+  85% { opacity: 1; }
+  100% { top: 96%; opacity: 0; }
+}
+
+.anim-laser-sweep {
+  animation: laser-sweep 2.2s ease-in-out infinite alternate;
+}
+
 /* ─── Utility classes ───────────────────────────────────────────────────── */
 
 /* Card / panel entrance — fade up 10px, standard 280ms */
@@ -157,29 +168,29 @@
 
 @layer base {
   :root {
-    /* Surfaces — warm cream canvas (DESIGN.md: canvas #f7f7f4) */
-    --background:         60 20% 96%;     /* #f7f7f4 — page floor */
-    --foreground:         52 12% 13%;     /* #26251e — warm ink */
+    /* Surfaces — Notion-neutral ramp (DESIGN.md): page #FFFFFF, sidebar #F7F7F5 */
+    --background:         0 0% 100%;      /* #FFFFFF — page floor */
+    --foreground:         45 8% 20%;      /* #37352F — Notion primary text */
 
-    /* Cards / Panels — pure white floats on cream by contrast, not shadow */
+    /* Cards / Panels — same white as page; hairlines (not tint) carry depth */
     --card:               0 0% 100%;
-    --card-foreground:    52 12% 13%;
+    --card-foreground:    45 8% 20%;
 
     /* Popovers / Dropdowns */
     --popover:            0 0% 100%;
-    --popover-foreground: 52 12% 13%;
+    --popover-foreground: 45 8% 20%;
 
     /* Primary — DCC Orange, the single brand voltage (#f54e00) */
     --primary:            19 100% 48%;
     --primary-foreground: 0 0% 100%;
 
-    /* Secondary fills — surface-strong / hairline (#e6e5e0) */
-    --secondary:          50 11% 89%;
-    --secondary-foreground: 52 12% 13%;
+    /* Secondary fills — neutral hover #EFEFEF */
+    --secondary:          0 0% 94%;
+    --secondary-foreground: 45 8% 20%;
 
-    /* Muted */
-    --muted:              50 18% 92%;     /* #efeee8 — hairline-soft */
-    --muted-foreground:   47 6% 47%;      /* #807d72 — warm gray */
+    /* Muted — sidebar tone #F7F7F5 + secondary text #737373 (darkened one step for 4.5:1) */
+    --muted:              60 5% 96%;
+    --muted-foreground:   0 0% 45%;
 
     /* Accent — same orange; interactive/current states only */
     --accent:             19 100% 48%;
@@ -189,49 +200,55 @@
     --destructive:        345 64% 49%;    /* #cf2d56 */
     --destructive-foreground: 0 0% 100%;
 
-    /* Chrome — hairline borders; inputs use hairline-strong (#cfcdc4) */
-    --border:             50 11% 89%;     /* #e6e5e0 */
-    --input:              49 10% 79%;     /* #cfcdc4 */
+    /* Chrome — opaque equiv of rgba(0,0,0,0.07) hairline on white (#EDEDED);
+       inputs one step stronger for visibility */
+    --border:             0 0% 93%;
+    --input:              0 0% 85%;
     --ring:               19 100% 48%;    /* orange focus ring */
 
-    /* Shape — 8px control radius (12px cards come from rounded-lg) */
-    --radius:             0.5rem;
+    /* Shape — 6px controls; cards resolve to 8px via .dash-card below */
+    --radius:             0.375rem;
 
-    /* Sidebar tokens — warm surfaces, orange active states (DESIGN.md) */
-    --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 52 12% 13%;
+    /* Density — small-button height in dense zones (page-level primary stays 40px) */
+    --btn-h:              2rem;
+
+    /* Sidebar tokens — #F7F7F5 bg, neutral #EFEFEF active pill (Notion rule:
+       nav-active is gray + semibold, never orange) */
+    --sidebar:            60 5% 96%;
+    --sidebar-background: 60 5% 96%;
+    --sidebar-foreground: 45 8% 20%;
     --sidebar-primary: 19 100% 48%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 19 100% 93%;
-    --sidebar-accent-foreground: 19 100% 32%;
-    --sidebar-border: 50 11% 89%;
+    --sidebar-accent: 0 0% 94%;
+    --sidebar-accent-foreground: 45 8% 20%;
+    --sidebar-border: 0 0% 93%;
     --sidebar-ring: 19 100% 48%;
   }
 
   .dark {
-    /* Warm-dark counterpart of the cream canvas (#191813) */
-    --background:         50 14% 9%;
-    --foreground:         51 26% 95%;     /* #f5f4ee — cream ink */
+    /* Notion-dark ramp: page #191919, sidebar #202020, hover #2F2F2F */
+    --background:         0 0% 10%;
+    --foreground:         0 0% 83%;       /* #D4D4D4 */
 
-    /* Cards — one step lighter than canvas (#201f19) */
-    --card:               50 12% 11%;
-    --card-foreground:    51 26% 95%;
+    /* Cards — flat on page (Notion dark has no lifted cards); popovers float one step up */
+    --card:               0 0% 10%;
+    --card-foreground:    0 0% 83%;
 
     /* Popovers */
-    --popover:            50 12% 11%;
-    --popover-foreground: 51 26% 95%;
+    --popover:            0 0% 13%;       /* #202020 */
+    --popover-foreground: 0 0% 83%;
 
     /* Primary — same orange in both modes */
     --primary:            19 100% 48%;
     --primary-foreground: 0 0% 100%;
 
-    /* Secondary fills (#28271f) */
-    --secondary:          50 13% 14%;
-    --secondary-foreground: 51 26% 95%;
+    /* Secondary fills — neutral hover #2F2F2F */
+    --secondary:          0 0% 18%;
+    --secondary-foreground: 0 0% 83%;
 
-    /* Muted */
-    --muted:              50 10% 16%;
-    --muted-foreground:   45 8% 63%;      /* #a8a49a */
+    /* Muted — sidebar tone + #9B9B9B secondary text */
+    --muted:              0 0% 13%;
+    --muted-foreground:   0 0% 61%;
 
     /* Accent — unchanged across modes */
     --accent:             19 100% 48%;
@@ -241,19 +258,20 @@
     --destructive:        345 70% 58%;
     --destructive-foreground: 0 0% 100%;
 
-    /* Chrome (#34332a hairlines) */
-    --border:             49 11% 18%;
-    --input:              49 11% 18%;
+    /* Chrome — opaque equiv of rgba(255,255,255,0.09) hairline on #191919 (#2E2E2E) */
+    --border:             0 0% 18%;
+    --input:              0 0% 24%;
     --ring:               19 100% 48%;    /* keep orange ring in dark too */
 
-    /* Sidebar tokens — warm-dark counterpart */
-    --sidebar-background: 50 12% 11%;
-    --sidebar-foreground: 51 26% 95%;
+    /* Sidebar tokens — #202020 bg, #2F2F2F active pill */
+    --sidebar:            0 0% 13%;
+    --sidebar-background: 0 0% 13%;
+    --sidebar-foreground: 0 0% 83%;
     --sidebar-primary: 19 100% 48%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 50 13% 14%;
-    --sidebar-accent-foreground: 51 26% 95%;
-    --sidebar-border: 49 11% 18%;
+    --sidebar-accent: 0 0% 18%;
+    --sidebar-accent-foreground: 0 0% 83%;
+    --sidebar-border: 0 0% 18%;
     --sidebar-ring: 19 100% 48%;
   }
 }
@@ -270,11 +288,11 @@
   }
 }
 
-/* ─── Dashboard Card — hairline-only depth, never a shadow ── */
+/* ─── Dashboard Card — hairline-only depth, never a shadow (8px radius) ── */
 .dash-card {
   background-color: hsl(var(--card));
   border: 1px solid hsl(var(--border));
-  border-radius: calc(var(--radius) + 4px);
+  border-radius: calc(var(--radius) + 2px);
   transition: border-color 150ms ease;
 }
 .dash-card-hover:hover {

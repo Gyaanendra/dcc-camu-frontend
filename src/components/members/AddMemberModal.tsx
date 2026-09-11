@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { api } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
 import { generateClientNotionistAvatar } from '@/lib/avatar';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { MemberAvatar } from '@/components/ui/member-avatar';
 import { toast } from 'sonner';
 import { UserPlus, Dices } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -116,16 +116,11 @@ export const AddMemberModal: React.FC<AddMemberModalProps> = ({ teams, onCreated
 
         {/* Funky Notionist Avatar Preview Card with Gender Switch */}
         <div className="flex items-center gap-3 p-3 bg-secondary/40 border border-border rounded-lg">
-          <Avatar className="h-14 w-14 border border-border shrink-0">
-            <AvatarImage src={avatarUrl} alt="Notionist Avatar Preview" />
-            <AvatarFallback className="bg-secondary text-foreground text-sm font-bold">
-              {name ? name.charAt(0).toUpperCase() : 'N'}
-            </AvatarFallback>
-          </Avatar>
+          <MemberAvatar src={avatarUrl} name={name || 'Notionist Avatar Preview'} className="h-14 w-14 border border-border shrink-0" />
           <div className="flex-1 min-w-0">
             <div className="text-xs font-semibold text-foreground flex items-center gap-1.5">
               Funky Notionist Avatar
-              <span className="text-[10px] px-1.5 py-0.5 rounded bg-primary/10 text-primary font-mono font-medium">gender-matched</span>
+              <span className="text-xs px-1.5 py-0.5 rounded bg-primary/10 text-primary font-mono font-medium">gender-matched</span>
             </div>
             <div className="flex items-center gap-1.5 mt-1.5">
               <button
@@ -134,13 +129,13 @@ export const AddMemberModal: React.FC<AddMemberModalProps> = ({ teams, onCreated
                   setGender('male');
                   setAvatarUrl(generateClientNotionistAvatar(rollNumber || name, 'male'));
                 }}
-                className={`px-2 py-0.5 rounded text-[11px] font-medium border transition-colors ${
+                className={`px-2 py-0.5 rounded text-xs font-medium border transition-colors ${
                   gender === 'male'
                     ? 'bg-primary text-primary-foreground border-primary focus-orange'
                     : 'bg-background text-muted-foreground border-border hover:text-foreground'
                 }`}
               >
-                👦 Male
+                Male
               </button>
               <button
                 type="button"
@@ -148,13 +143,13 @@ export const AddMemberModal: React.FC<AddMemberModalProps> = ({ teams, onCreated
                   setGender('female');
                   setAvatarUrl(generateClientNotionistAvatar(rollNumber || name, 'female'));
                 }}
-                className={`px-2 py-0.5 rounded text-[11px] font-medium border transition-colors ${
+                className={`px-2 py-0.5 rounded text-xs font-medium border transition-colors ${
                   gender === 'female'
                     ? 'bg-primary text-primary-foreground border-primary focus-orange'
                     : 'bg-background text-muted-foreground border-border hover:text-foreground'
                 }`}
               >
-                👧 Female
+                Female
               </button>
             </div>
           </div>

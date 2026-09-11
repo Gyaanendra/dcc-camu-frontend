@@ -3,13 +3,19 @@
 import React from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
-import { LogOut, QrCode, Calendar, Sun, Moon, Menu } from 'lucide-react';
+import { LogOut, Search, Calendar, Sun, Moon, Menu, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import { openMobileNav } from '@/components/layout/MobileNav';
+import { openCommandPalette } from '@/components/layout/CommandPalette';
 import { Button } from '@/components/ui/button';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { MemberAvatar } from '@/components/ui/member-avatar';
 
-export const Navbar: React.FC = () => {
+export interface Crumb {
+  label: string;
+  href?: string;
+}
+
+export const Navbar: React.FC<{ crumbs?: Crumb[] }> = ({ crumbs }) => {
   const { user, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
 
@@ -21,59 +27,94 @@ export const Navbar: React.FC = () => {
   });
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-border bg-card/95 backdrop-blur-sm transition-colors">
-      <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+    <header className="sticky top-0 z-40 w-full border-b border-border bg-background transition-colors">
+      <div className="mx-auto flex h-12 max-w-7xl items-center justify-between gap-2 px-4 sm:px-6 lg:px-8">
 
-        {/* Left: Hamburger (mobile) + Brand */}
-        <div className="flex items-center gap-2">
-          {/* Hamburger — only visible on <lg */}
+        {/* Left: hamburger (mobile) + brand + breadcrumbs */}
+        <div className="flex min-w-0 items-center gap-2">
           {user && (
             <button
               onClick={openMobileNav}
               id="mobile-nav-open"
-              className="lg:hidden p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+              className="lg:hidden p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors duration-150"
               aria-label="Open navigation"
             >
-              <Menu className="w-5 h-5" />
+              <Menu className="w-4 h-4" />
             </button>
           )}
 
-          {/* Brand */}
-          <Link href="/dashboard" className="flex items-center gap-2.5 group">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-foreground font-bold text-background text-[11px] tracking-tight transition-transform group-hover:scale-105">
+          <Link href="/dashboard" className="flex shrink-0 items-center gap-2 group">
+            <div className="flex h-7 w-7 items-center justify-center rounded-md bg-foreground font-bold text-background text-xs tracking-tight transition-colors duration-150 group-hover:bg-accent group-hover:text-white">
               DCC
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="font-bold text-foreground text-sm tracking-tight leading-none">
-                  Club DCC
-                </span>
-                <span className="px-1.5 py-0.5 rounded-full bg-secondary border border-border text-[10px] font-medium text-muted-foreground leading-none">
-                  Camu
-                </span>
-              </div>
-              <span className="text-[11px] text-muted-foreground font-medium hidden sm:block mt-0.5 leading-none">
-                Bennett University
-              </span>
-            </div>
+            <span className="font-semibold text-foreground text-[13px] tracking-tight leading-none">
+              Club DCC
+            </span>
           </Link>
+
+          {/* Breadcrumb slot (page provides crumbs) */}
+          {crumbs && crumbs.length > 0 && (
+            <nav aria-label="Breadcrumb" className="hidden md:flex min-w-0 items-center gap-1 text-[13px]">
+              <ChevronRight className="w-3.5 h-3.5 shrink-0 text-muted-foreground" />
+              {crumbs.map((crumb, i) => {
+                const last = i === crumbs.length - 1;
+                return (
+                  <span key={crumb.label} className="flex min-w-0 items-center gap-1">
+                    {i > 0 && <span className="text-muted-foreground">/</span>}
+                    {crumb.href && !last ? (
+                      <Link href={crumb.href} className="text-muted-foreground hover:text-foreground transition-colors duration-150 truncate">
+                        {crumb.label}
+                      </Link>
+                    ) : (
+                      <span aria-current={last ? 'page' : undefined} className={last ? 'text-foreground font-medium truncate' : 'text-muted-foreground truncate'}>
+                        {crumb.label}
+                      </span>
+                    )}
+                  </span>
+                );
+              })}
+            </nav>
+          )}
         </div>
 
         {/* Right side */}
-        <div className="flex items-center gap-2">
-          {/* Date Badge — desktop only */}
-          <div className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-secondary border border-border font-mono text-[12px] font-medium text-muted-foreground">
+        <div className="flex shrink-0 items-center gap-1.5">
+          {/* Search trigger — opens command palette */}
+          {user && (
+            <>
+              <button
+                onClick={openCommandPalette}
+                id="navbar-search"
+                className="hidden sm:flex items-center gap-2 h-8 px-2.5 rounded-md border border-border bg-secondary/50 text-muted-foreground hover:text-foreground hover:bg-secondary text-[13px] transition-colors duration-150"
+                title="Search or jump to… (Ctrl+K)"
+              >
+                <Search className="w-3.5 h-3.5" />
+                <span>Search…</span>
+                <kbd className="font-mono text-xs px-1 rounded border border-border bg-background">⌘K</kbd>
+              </button>
+              <button
+                onClick={openCommandPalette}
+                className="sm:hidden p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors duration-150"
+                aria-label="Search (Ctrl+K)"
+              >
+                <Search className="w-4 h-4" />
+              </button>
+            </>
+          )}
+
+          {/* Date — desktop only, mono */}
+          <div className="hidden lg:flex items-center gap-1.5 px-2.5 h-8 rounded-md font-mono text-xs text-muted-foreground tabular-nums">
             <Calendar className="w-3.5 h-3.5" />
             <span>{today}</span>
           </div>
 
-          {/* Theme Toggle */}
+          {/* Theme toggle */}
           <Button
-            variant="outline"
+            variant="ghost"
             size="icon"
             onClick={toggleTheme}
             id="theme-toggle"
-            className="focus-orange"
+            className="h-8 w-8 focus-orange"
             title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
           >
             {theme === 'dark'
@@ -83,50 +124,25 @@ export const Navbar: React.FC = () => {
           </Button>
 
           {user ? (
-            <>
-              {/* Scan QR CTA — hidden on mobile + hidden for view-only advisors */}
-              {user.role !== 'advisor' && (
-                <Button asChild id="navbar-scan-qr" className="hidden sm:inline-flex focus-orange">
-                  <Link href="/scan">
-                    <QrCode className="w-3.5 h-3.5" />
-                    <span>Scan QR</span>
-                  </Link>
-                </Button>
-              )}
-
-              {/* Profile + Logout */}
-              <div className="flex items-center gap-2 pl-2 border-l border-border">
-                <div className="flex items-center gap-2">
-                  <Avatar className="h-8 w-8 border border-border hover:scale-105 transition-transform shrink-0">
-                    {user.avatarUrl && <AvatarImage src={user.avatarUrl} alt={user.name} />}
-                    <AvatarFallback className="bg-secondary text-foreground text-xs font-semibold">
-                      {user.name.charAt(0).toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="hidden lg:block text-left">
-                    <div className="text-sm font-semibold text-foreground leading-tight max-w-[140px] truncate">{user.name}</div>
-                    <div className="text-[11px] text-muted-foreground font-mono flex items-center gap-1">
-                      <span>{user.rollNumber}</span>
-                      <span>·</span>
-                      <span className="font-semibold text-accent capitalize">{user.role}</span>
-                    </div>
-                  </div>
-                </div>
-
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={logout}
-                  id="navbar-logout"
-                  className="hidden lg:inline-flex h-8 w-8 focus-orange"
-                  title="Sign Out"
-                >
-                  <LogOut className="w-3.5 h-3.5" />
-                </Button>
+            <div className="flex items-center gap-1.5 pl-1.5 border-l border-border">
+              <MemberAvatar src={user.avatarUrl} name={user.name} className="h-7 w-7 border border-border shrink-0" />
+              <div className="hidden lg:block text-left">
+                <div className="text-[13px] font-medium text-foreground leading-tight max-w-[140px] truncate">{user.name}</div>
+                <div className="text-xs text-muted-foreground capitalize leading-tight">{user.role}</div>
               </div>
-            </>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={logout}
+                id="navbar-logout"
+                className="hidden lg:inline-flex h-8 w-8 focus-orange"
+                title="Sign Out"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+              </Button>
+            </div>
           ) : (
-            <Button asChild>
+            <Button asChild className="h-8">
               <Link href="/">Sign In</Link>
             </Button>
           )}
