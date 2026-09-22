@@ -28,7 +28,7 @@ export const Navbar: React.FC<{ crumbs?: Crumb[] }> = ({ crumbs }) => {
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border bg-background transition-colors">
-      <div className="mx-auto flex h-12 max-w-7xl items-center justify-between gap-2 px-4 sm:px-6 lg:px-8">
+      <div className="w-full flex h-12 items-center justify-between gap-2 px-4 sm:px-6 lg:px-8">
 
         {/* Left: hamburger (mobile) + brand + breadcrumbs */}
         <div className="flex min-w-0 items-center gap-2">

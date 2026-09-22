@@ -494,9 +494,9 @@ export const MemberDirectoryTable: React.FC<MemberDirectoryProps> = ({ members, 
 
       {/* ── 3. Directory Table with Clickable Sort Headers ────────── */}
       <Card className="overflow-hidden p-0">
-        <div className="overflow-auto max-h-[60vh] table-sticky-head">
+        <div className="overflow-auto max-h-[calc(100vh-250px)] min-h-[500px] table-sticky-head">
           <table className="w-full caption-bottom text-sm">
-          <TableHeader className="bg-secondary/60">
+          <TableHeader className="sticky top-0 z-10 bg-secondary/95 backdrop-blur-md shadow-sm border-b border-border">
             <TableRow className="hover:bg-transparent">
               {/* Member Name */}
               <TableHead
@@ -689,12 +689,12 @@ export const MemberDirectoryTable: React.FC<MemberDirectoryProps> = ({ members, 
                   <TableCell>
                     <div className="flex items-center gap-3">
                       <MemberAvatar src={member.avatarUrl} name={member.name} className="h-9 w-9 border border-border hover:scale-110 transition-transform duration-200 shrink-0" />
-                      <div className="font-medium text-foreground truncate max-w-[160px]" title={member.name}>{member.name}</div>
+                      <div className="font-medium text-foreground truncate max-w-[200px] xl:max-w-none" title={member.name}>{member.name}</div>
                     </div>
                   </TableCell>
                   <TableCell>
                     <div className="font-mono text-[13px] text-foreground font-medium">{member.rollNumber}</div>
-                    <div className="font-mono text-[13px] text-muted-foreground max-w-[180px] truncate" title={member.email}>{member.email}</div>
+                    <div className="font-mono text-[13px] text-muted-foreground max-w-[220px] xl:max-w-none truncate" title={member.email}>{member.email}</div>
                   </TableCell>
                   <TableCell>
                     {(() => {

@@ -70,10 +70,54 @@ export default function DashboardPage() {
   const [isClosingSession, setIsClosingSession] = useState(false);
   const [qrOpen, setQrOpen] = useState(false);
 
+  const loadDashboardData = async () => {
+    setIsLoading(true);
+    try {
+      if (user?.role === 'admin' || user?.role === 'advisor') {
+        const [data, sessionsRes] = await Promise.all([api.getAdminAnalytics(), api.getSessions()]);
+        setAdminAnalytics(data);
+        setActiveSessions(sessionsRes.sessions || []);
+      } else {
+        const [data, sessionsRes] = await Promise.all([api.getMyStats(), api.getSessions()]);
+        setUserStats(data);
+        setActiveSessions(sessionsRes.sessions || []);
+      }
+    } catch (error) {
+      // Dashboard shows empty states when data fails to load.
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (user) {
+      loadDashboardData();
+    }
+  }, [user]);
+
+  const handleCloseActiveSession = async (sessionId: string) => {
+    setIsClosingSession(true);
+    try {
+      await api.updateSessionStatus(sessionId, { isActive: false });
+      toast.success('Live Session QR closed and attendance ended.');
+      await loadDashboardData();
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to close session');
+    } finally {
+      setIsClosingSession(false);
+    }
+  };
+
   const isPrivileged = user?.role === 'admin' || user?.role === 'advisor';
   const activeLiveSession = activeSessions.find(
     s => s.isActive === 'true' && (isPrivileged || isSessionApplicableToUser(s, user))
   );
+
+  const hour = new Date().getHours();
+  const daypart = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+  const firstName = user?.name?.split(' ')[0] || 'Member';
+  const animatedAttendance = useCountUp(userStats?.stats?.attendancePercentage || 0);
+  const dateLine = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
 
   return (
     <ProtectedRoute>
