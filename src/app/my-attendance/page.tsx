@@ -105,13 +105,28 @@ export default function MyAttendancePage() {
                   {/* Streak summary head */}
                   <Card className="px-5 py-4 flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-0 sm:divide-x sm:divide-border">
                     <div className="flex-1 sm:pr-6">
-                      <div className="text-xs text-muted-foreground">Attendance rate</div>
-                      <div className="text-[20px] font-semibold text-foreground mt-0.5 tabular-nums">
-                        {myStats?.stats?.attendancePercentage || 0}%
+                      <div className="text-xs text-muted-foreground">
+                        {myStats?.stats?.isExempt || user?.role === 'advisor' ? 'Attendance status' : 'Attendance rate'}
                       </div>
-                      <div className="text-xs text-muted-foreground mt-0.5 tabular-nums">
-                        {myStats?.stats?.attendedCount || 0} of {myStats?.stats?.totalSessions || 0} sessions
-                      </div>
+                      {myStats?.stats?.isExempt || user?.role === 'advisor' ? (
+                        <>
+                          <div className="text-[18px] font-semibold text-amber-600 dark:text-amber-400 mt-0.5">
+                            Exempt
+                          </div>
+                          <div className="text-xs text-muted-foreground mt-0.5">
+                            Faculty / Club Advisor
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <div className="text-[20px] font-semibold text-foreground mt-0.5 tabular-nums">
+                            {myStats?.stats?.attendancePercentage ?? 100}%
+                          </div>
+                          <div className="text-xs text-muted-foreground mt-0.5 tabular-nums">
+                            {myStats?.stats?.attendedCount || 0} of {myStats?.stats?.totalSessions || 0} eligible sessions
+                          </div>
+                        </>
+                      )}
                     </div>
                     <div className="flex-1 sm:px-6">
                       <div className="text-xs text-muted-foreground">Active streak</div>

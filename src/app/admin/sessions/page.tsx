@@ -144,18 +144,29 @@ export default function AdminSessionsPage() {
                               : 'bg-card border-border hover:bg-secondary/60 text-foreground'
                           }`}
                         >
-                          <div className="flex items-center justify-between">
-                            <Badge variant="secondary">
-                              {s.type}
-                            </Badge>
+                          <div className="flex items-center justify-between gap-1.5">
+                            <div className="flex items-center gap-1 flex-wrap">
+                              <Badge variant="secondary">
+                                {s.type}
+                              </Badge>
+                              {s.targetAudience === 'heads_only' ? (
+                                <Badge variant="outline" className="bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30 text-[10px] px-1.5 py-0">
+                                  👑 Heads Only
+                                </Badge>
+                              ) : s.targetAudience === 'teams_only' ? (
+                                <Badge variant="outline" className="bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/30 text-[10px] px-1.5 py-0 truncate max-w-[130px]">
+                                  👥 {s.audienceLabel || 'Wings'}
+                                </Badge>
+                              ) : null}
+                            </div>
                             {s.isActive === 'true' ? (
-                              <Badge variant="success" className="gap-1.5">
+                              <Badge variant="success" className="gap-1.5 shrink-0">
                                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 motion-safe:animate-pulse" />
                                 Live
                                 <span className="font-mono tabular-nums">{s.attendeeCount}</span>
                               </Badge>
                             ) : (
-                              <Badge variant="secondary">Ended</Badge>
+                              <Badge variant="secondary" className="shrink-0">Ended</Badge>
                             )}
                           </div>
 
@@ -164,8 +175,9 @@ export default function AdminSessionsPage() {
                             <MapPin className="w-3 h-3" /> {s.location}
                           </div>
 
-                          <div className="mt-3 pt-2 border-t border-border font-mono text-[13px] text-muted-foreground">
-                            {s?.startTime ? new Date(s.startTime).toLocaleDateString() : 'N/A'}
+                          <div className="mt-3 pt-2 border-t border-border flex items-center justify-between text-[12px] text-muted-foreground">
+                            <span className="font-mono">{s?.startTime ? new Date(s.startTime).toLocaleDateString() : 'N/A'}</span>
+                            <span className="text-[11px] truncate max-w-[140px]">{s.audienceLabel || 'Open Session'}</span>
                           </div>
                         </button>
                       ))
@@ -189,8 +201,24 @@ export default function AdminSessionsPage() {
                         <Calendar className="w-5 h-5" />
                       </div>
                       <div>
-                        <div className="text-[15px] font-semibold text-foreground">{selectedSession.title}</div>
-                        <div className="text-xs text-muted-foreground">Status: <strong className={selectedSession.isActive === 'true' ? 'text-emerald-600 dark:text-emerald-400' : 'text-muted-foreground'}>{selectedSession.isActive === 'true' ? 'Active Live QR' : 'Session Ended / QR Closed'}</strong></div>
+                        <div className="text-[15px] font-semibold text-foreground flex items-center gap-2 flex-wrap">
+                          {selectedSession.title}
+                          {selectedSession.targetAudience === 'heads_only' && (
+                            <Badge variant="outline" className="bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30 text-[11px]">
+                              👑 Heads Only
+                            </Badge>
+                          )}
+                          {selectedSession.targetAudience === 'teams_only' && (
+                            <Badge variant="outline" className="bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/30 text-[11px]">
+                              👥 {selectedSession.audienceLabel || 'Wings Restricted'}
+                            </Badge>
+                          )}
+                        </div>
+                        <div className="text-xs text-muted-foreground mt-0.5">
+                          Status: <strong className={selectedSession.isActive === 'true' ? 'text-emerald-600 dark:text-emerald-400' : 'text-muted-foreground'}>{selectedSession.isActive === 'true' ? 'Active Live QR' : 'Session Ended / QR Closed'}</strong>
+                          <span className="mx-1.5">·</span>
+                          Audience: <strong className="text-foreground">{selectedSession.audienceLabel || 'Open to All Members'}</strong>
+                        </div>
                       </div>
                     </div>
 

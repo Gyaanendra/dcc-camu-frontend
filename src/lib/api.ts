@@ -234,8 +234,12 @@ class ApiClient {
     return this.cachedGet('/attendance/my-stats');
   }
 
-  // Admin: Manually mark a member present/absent for a session
-  async manualAttendance(payload: { sessionId: string; userId: string; action: 'mark_present' | 'mark_absent' }) {
+  // Admin: Manually mark a member present/late/absent/not in club for a session
+  async manualAttendance(payload: {
+    sessionId: string;
+    userId: string;
+    action: 'mark_present' | 'mark_late' | 'mark_absent' | 'mark_not_in_club';
+  }) {
     return this.request('/attendance/manual', {
       method: 'POST',
       body: JSON.stringify(payload),
@@ -265,6 +269,8 @@ class ApiClient {
     type?: string;
     description?: string;
     teamId?: string | null;
+    targetAudience?: 'all' | 'heads_only' | 'teams_only';
+    targetTeamIds?: string[];
     location?: string;
     durationMinutes?: string;
   }) {

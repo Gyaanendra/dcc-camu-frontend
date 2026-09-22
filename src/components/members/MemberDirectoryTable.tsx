@@ -50,6 +50,12 @@ import {
 import { DatabaseToolbar } from '@/components/ui/database-toolbar';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Skeleton } from '@/components/ui/skeleton';
+import {
+  getAcademicYear,
+  getYearBadgeColor,
+  ACADEMIC_YEAR_OPTIONS,
+  AcademicYear,
+} from '@/lib/academic-year';
 
 interface MemberDirectoryProps {
   members: Array<{
@@ -57,6 +63,7 @@ interface MemberDirectoryProps {
     name: string;
     email: string;
     rollNumber: string;
+    academicYear?: string;
     position: string;
     role: 'admin' | 'advisor' | 'user';
     teamId: string | null;
@@ -70,7 +77,7 @@ interface MemberDirectoryProps {
   isLoading?: boolean;
 }
 
-type SortField = 'name' | 'rollNumber' | 'position' | 'teamName' | 'role' | 'totalAttended';
+type SortField = 'name' | 'rollNumber' | 'position' | 'teamName' | 'role' | 'totalAttended' | 'year';
 type SortDirection = 'asc' | 'desc';
 
 export const MemberDirectoryTable: React.FC<MemberDirectoryProps> = ({ members, teams, onRefresh, isLoading = false }) => {
@@ -81,6 +88,7 @@ export const MemberDirectoryTable: React.FC<MemberDirectoryProps> = ({ members, 
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedRoleFilter, setSelectedRoleFilter] = useState<'ALL' | 'admin' | 'advisor' | 'user'>('ALL');
   const [selectedTeamFilter, setSelectedTeamFilter] = useState('ALL');
+  const [selectedYearFilter, setSelectedYearFilter] = useState<'ALL' | AcademicYear>('ALL');
   const [attendanceFilter, setAttendanceFilter] = useState<'ALL' | 'ACTIVE' | 'ZERO'>('ALL');
 
   // Sorting
@@ -117,6 +125,8 @@ export const MemberDirectoryTable: React.FC<MemberDirectoryProps> = ({ members, 
 
       const matchesRole = selectedRoleFilter === 'ALL' || m.role === selectedRoleFilter;
       const matchesTeam = selectedTeamFilter === 'ALL' || m.teamId === selectedTeamFilter;
+      const memberYear = m.academicYear || getAcademicYear(m.rollNumber);
+      const matchesYear = selectedYearFilter === 'ALL' || memberYear === selectedYearFilter;
       const matchesAttendance =
         attendanceFilter === 'ALL'
           ? true
@@ -124,7 +134,7 @@ export const MemberDirectoryTable: React.FC<MemberDirectoryProps> = ({ members, 
           ? m.totalAttended > 0
           : m.totalAttended === 0;
 
-      return matchesSearch && matchesRole && matchesTeam && matchesAttendance;
+      return matchesSearch && matchesRole && matchesTeam && matchesYear && matchesAttendance;
     });
 
     // Sort
@@ -134,6 +144,10 @@ export const MemberDirectoryTable: React.FC<MemberDirectoryProps> = ({ members, 
         comparison = a.name.localeCompare(b.name);
       } else if (sortField === 'rollNumber') {
         comparison = a.rollNumber.localeCompare(b.rollNumber);
+      } else if (sortField === 'year') {
+        const yearA = a.academicYear || getAcademicYear(a.rollNumber);
+        const yearB = b.academicYear || getAcademicYear(b.rollNumber);
+        comparison = yearA.localeCompare(yearB);
       } else if (sortField === 'position') {
         comparison = (a.position || 'Member').localeCompare(b.position || 'Member');
       } else if (sortField === 'teamName') {
@@ -147,7 +161,7 @@ export const MemberDirectoryTable: React.FC<MemberDirectoryProps> = ({ members, 
 
       return sortDirection === 'asc' ? comparison : -comparison;
     });
-  }, [members, searchTerm, selectedRoleFilter, selectedTeamFilter, attendanceFilter, sortField, sortDirection]);
+  }, [members, searchTerm, selectedRoleFilter, selectedTeamFilter, selectedYearFilter, attendanceFilter, sortField, sortDirection]);
 
   // Handle header column click for sorting
   const handleSort = (field: SortField) => {
@@ -160,11 +174,18 @@ export const MemberDirectoryTable: React.FC<MemberDirectoryProps> = ({ members, 
   };
 
   // Reset all filters
-  const hasActiveFilters = searchTerm !== '' || selectedRoleFilter !== 'ALL' || selectedTeamFilter !== 'ALL' || attendanceFilter !== 'ALL';
+  const hasActiveFilters =
+    searchTerm !== '' ||
+    selectedRoleFilter !== 'ALL' ||
+    selectedTeamFilter !== 'ALL' ||
+    selectedYearFilter !== 'ALL' ||
+    attendanceFilter !== 'ALL';
+
   const handleResetFilters = () => {
     setSearchTerm('');
     setSelectedRoleFilter('ALL');
     setSelectedTeamFilter('ALL');
+    setSelectedYearFilter('ALL');
     setAttendanceFilter('ALL');
     setSortField('name');
     setSortDirection('asc');
@@ -375,6 +396,29 @@ export const MemberDirectoryTable: React.FC<MemberDirectoryProps> = ({ members, 
             </SelectContent>
           </Select>
 
+          {/* Academic Year Filter */}
+          <Select
+            value={selectedYearFilter}
+            onValueChange={(val) => setSelectedYearFilter(val as any)}
+          >
+            <SelectTrigger className="w-[130px] text-xs h-9">
+              <SelectValue placeholder="All Years" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="ALL">All Years</SelectItem>
+              {ACADEMIC_YEAR_OPTIONS.map((year) => {
+                const count = members.filter(
+                  (m) => (m.academicYear || getAcademicYear(m.rollNumber)) === year
+                ).length;
+                return (
+                  <SelectItem key={year} value={year}>
+                    {year} ({count})
+                  </SelectItem>
+                );
+              })}
+            </SelectContent>
+          </Select>
+
           {/* Attendance Activity Filter */}
           <Select
             value={attendanceFilter}
@@ -492,6 +536,25 @@ export const MemberDirectoryTable: React.FC<MemberDirectoryProps> = ({ members, 
                 </div>
               </TableHead>
 
+              {/* Academic Year */}
+              <TableHead
+                onClick={() => handleSort('year')}
+                className="cursor-pointer select-none group"
+              >
+                <div className="flex items-center gap-1.5">
+                  <span>Year</span>
+                  {sortField === 'year' ? (
+                    sortDirection === 'asc' ? (
+                      <ArrowUp className="w-3.5 h-3.5 text-primary" />
+                    ) : (
+                      <ArrowDown className="w-3.5 h-3.5 text-primary" />
+                    )
+                  ) : (
+                    <ArrowUpDown className="w-3 h-3 text-muted-foreground/40 group-hover:text-foreground transition-colors" />
+                  )}
+                </div>
+              </TableHead>
+
               {/* Position / Title */}
               <TableHead
                 onClick={() => handleSort('position')}
@@ -590,6 +653,7 @@ export const MemberDirectoryTable: React.FC<MemberDirectoryProps> = ({ members, 
                     <Skeleton className="h-3 w-40 mt-1.5" />
                   </TableCell>
                   <TableCell><Skeleton className="h-5 w-16 rounded-full" /></TableCell>
+                  <TableCell><Skeleton className="h-5 w-16 rounded-full" /></TableCell>
                   <TableCell><Skeleton className="h-4 w-20" /></TableCell>
                   <TableCell><Skeleton className="h-5 w-16 rounded-full" /></TableCell>
                   <TableCell><Skeleton className="h-4 w-24" /></TableCell>
@@ -601,7 +665,7 @@ export const MemberDirectoryTable: React.FC<MemberDirectoryProps> = ({ members, 
             ) : sortedAndFilteredMembers.length === 0 ? (
               <TableRow className="hover:bg-transparent">
                 <TableCell
-                  colSpan={isReadOnly ? 6 : 7}
+                  colSpan={isReadOnly ? 7 : 8}
                 >
                   <EmptyState
                     icon={Users}
@@ -633,6 +697,16 @@ export const MemberDirectoryTable: React.FC<MemberDirectoryProps> = ({ members, 
                     <div className="font-mono text-[13px] text-muted-foreground max-w-[180px] truncate" title={member.email}>{member.email}</div>
                   </TableCell>
                   <TableCell>
+                    {(() => {
+                      const yr = member.academicYear || getAcademicYear(member.rollNumber);
+                      return (
+                        <span className={`text-xs px-2 py-0.5 rounded-full border font-mono font-medium ${getYearBadgeColor(yr as any)}`}>
+                          {yr}
+                        </span>
+                      );
+                    })()}
+                  </TableCell>
+                  <TableCell>
                     <Badge variant="secondary" className="font-medium">
                       {member.position || 'Member'}
                     </Badge>
@@ -654,7 +728,13 @@ export const MemberDirectoryTable: React.FC<MemberDirectoryProps> = ({ members, 
                     </Badge>
                   </TableCell>
                   <TableCell className="font-bold text-foreground tabular-nums">
-                    {member.totalAttended} check-ins
+                    {member.role === 'advisor' ? (
+                      <Badge variant="outline" className="bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20 text-xs">
+                        Exempt
+                      </Badge>
+                    ) : (
+                      <>{member.totalAttended} check-ins</>
+                    )}
                   </TableCell>
                   {!isReadOnly && (
                     <TableCell className="text-right">

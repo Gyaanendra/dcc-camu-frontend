@@ -35,7 +35,8 @@ export const CreateSessionModal: React.FC<CreateSessionModalProps> = ({ teams, o
   const [title, setTitle] = useState('');
   const [type, setType] = useState<'regular' | 'workshop' | 'hackathon' | 'standup'>('workshop');
   const [description, setDescription] = useState('');
-  const [teamId, setTeamId] = useState('');
+  const [targetAudience, setTargetAudience] = useState<'all' | 'heads_only' | 'teams_only'>('all');
+  const [selectedTeamIds, setSelectedTeamIds] = useState<string[]>([]);
   const [location, setLocation] = useState('Bennett CS Auditorium (Room 301)');
   const [durationMinutes, setDurationMinutes] = useState('120');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -43,10 +44,21 @@ export const CreateSessionModal: React.FC<CreateSessionModalProps> = ({ teams, o
   // Advisors are view-only.
   if (user?.role === 'advisor') return null;
 
+  const toggleTeamSelection = (id: string) => {
+    setSelectedTeamIds((prev) =>
+      prev.includes(id) ? prev.filter((t) => t !== id) : [...prev, id]
+    );
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title) {
       toast.error('Please enter a session title');
+      return;
+    }
+
+    if (targetAudience === 'teams_only' && selectedTeamIds.length === 0) {
+      toast.error('Please select at least one required wing for this meeting');
       return;
     }
 
@@ -56,15 +68,25 @@ export const CreateSessionModal: React.FC<CreateSessionModalProps> = ({ teams, o
         title,
         type,
         description,
-        teamId: teamId || null,
+        targetAudience,
+        targetTeamIds: targetAudience === 'teams_only' ? selectedTeamIds : [],
+        teamId: targetAudience === 'teams_only' ? selectedTeamIds[0] || null : null,
         location,
         durationMinutes,
       });
 
-      toast.success('Session created with dynamic QR token');
+      toast.success(
+        targetAudience === 'heads_only'
+          ? 'Heads-only session created with dynamic QR token'
+          : targetAudience === 'teams_only'
+          ? 'Wing-restricted session created with dynamic QR token'
+          : 'Club session created with dynamic QR token'
+      );
       setIsOpen(false);
       setTitle('');
       setDescription('');
+      setTargetAudience('all');
+      setSelectedTeamIds([]);
       if (onCreated) onCreated();
     } catch (error: any) {
       toast.error(error.message || 'Failed to create session');
@@ -115,22 +137,58 @@ export const CreateSessionModal: React.FC<CreateSessionModalProps> = ({ teams, o
             </div>
 
             <div className="space-y-1.5">
-              <Label>Wing Restriction</Label>
-              <Select value={teamId || '__all'} onValueChange={(v) => setTeamId(v === '__all' ? '' : v)}>
+              <Label>Target Audience</Label>
+              <Select
+                value={targetAudience}
+                onValueChange={(v) => {
+                  setTargetAudience(v as any);
+                  if (v !== 'teams_only') setSelectedTeamIds([]);
+                }}
+              >
                 <SelectTrigger>
-                  <SelectValue placeholder="All Wings (Open Session)" />
+                  <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="__all">All Wings (Open Session)</SelectItem>
-                  {teams.map((t) => (
-                    <SelectItem key={t.id} value={t.id}>
-                      {t.name}
-                    </SelectItem>
-                  ))}
+                  <SelectItem value="all">🌐 All Club Members</SelectItem>
+                  <SelectItem value="heads_only">👑 Heads & Leads Only</SelectItem>
+                  <SelectItem value="teams_only">👥 Specific Wing(s) Only</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
+
+          {targetAudience === 'teams_only' && (
+            <div className="space-y-2 p-3 bg-secondary/30 rounded-lg border border-border">
+              <div className="flex items-center justify-between">
+                <Label className="text-xs font-semibold text-foreground">
+                  Select Required Wings
+                </Label>
+                <span className="text-[11px] text-muted-foreground font-mono">
+                  {selectedTeamIds.length} selected
+                </span>
+              </div>
+              <div className="flex flex-wrap gap-1.5 pt-1">
+                {teams.map((t) => {
+                  const isSelected = selectedTeamIds.includes(t.id);
+                  return (
+                    <button
+                      key={t.id}
+                      type="button"
+                      onClick={() => toggleTeamSelection(t.id)}
+                      className={`text-xs px-2.5 py-1 rounded-full border transition-all cursor-pointer ${
+                        isSelected
+                          ? 'bg-primary text-primary-foreground border-primary font-medium shadow-xs'
+                          : 'bg-background hover:bg-secondary text-foreground border-border'
+                      }`}
+                    >
+                      {isSelected && '✓ '}
+                      {t.name}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
