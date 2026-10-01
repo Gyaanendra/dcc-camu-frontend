@@ -271,6 +271,7 @@ class ApiClient {
     teamId?: string | null;
     targetAudience?: 'all' | 'heads_only' | 'teams_only';
     targetTeamIds?: string[];
+    targetYears?: string[];
     location?: string;
     durationMinutes?: string;
   }) {

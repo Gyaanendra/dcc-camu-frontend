@@ -45,13 +45,62 @@ function useCountUp(target: number, ms = 700) {
   return v;
 }
 
+function getAcademicYear(rollNumber?: string | null): string {
+  if (!rollNumber) return 'Other';
+  const clean = rollNumber.trim().toLowerCase();
+  const match = clean.match(/^[a-z]*(\d{2})/i);
+  if (!match) return 'Other';
+  switch (match[1]) {
+    case '26': return '1st Year';
+    case '25': return '2nd Year';
+    case '24': return '3rd Year';
+    case '23': return '4th Year';
+    default: return 'Other';
+  }
+}
+
 function isSessionApplicableToUser(session: any, user: any): boolean {
   if (!session || !user) return false;
   if (user.role === 'admin') return true;
+  if (user.role === 'advisor') return false;
+
+  // 1. Academic year filter
+  const targetYears: string[] = Array.isArray(session.targetYears)
+    ? session.targetYears
+    : typeof session.targetYears === 'string' && session.targetYears.trim()
+    ? (() => {
+        try {
+          return JSON.parse(session.targetYears);
+        } catch {
+          return session.targetYears.split(',').map((s: string) => s.trim());
+        }
+      })()
+    : [];
+
+  if (targetYears.length > 0) {
+    const userYear = getAcademicYear(user.rollNumber);
+    if (!targetYears.includes(userYear)) {
+      return false;
+    }
+  }
+
+  // 2. Heads & Sub-Heads filter
   if (session.targetAudience === 'heads_only') {
-    const isHead = /\b(head|lead|president|vp|vice[\s-]?president|convenor|convener|coordinator|director|executive|exec)\b/i.test(user.position || '');
+    const pos = (user.position || '').trim().toLowerCase();
+    if (
+      pos === 'senior executive' ||
+      pos === 'junior executive' ||
+      pos === 'executive' ||
+      pos === 'member' ||
+      pos === 'advisor'
+    ) {
+      return false;
+    }
+    const isHead = /\b(head|sub[\s-]?head|lead|co[\s-]?lead|president|vp|vice[\s-]?president|secretary|treasurer|coordinator|convener|convenor|director)\b/i.test(pos);
     return isHead;
   }
+
+  // 3. Wings filter
   if (session.targetAudience === 'teams_only') {
     const targetTeams = Array.isArray(session.targetTeamIds)
       ? session.targetTeamIds

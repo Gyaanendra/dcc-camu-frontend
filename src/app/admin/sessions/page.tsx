@@ -151,13 +151,18 @@ export default function AdminSessionsPage() {
                               </Badge>
                               {s.targetAudience === 'heads_only' ? (
                                 <Badge variant="outline" className="bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30 text-[10px] px-1.5 py-0">
-                                  👑 Heads Only
+                                  👑 Heads & Sub-Heads
                                 </Badge>
                               ) : s.targetAudience === 'teams_only' ? (
                                 <Badge variant="outline" className="bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/30 text-[10px] px-1.5 py-0 truncate max-w-[130px]">
                                   👥 {s.audienceLabel || 'Wings'}
                                 </Badge>
                               ) : null}
+                              {s.targetYears && s.targetYears.length > 0 && (
+                                <Badge variant="outline" className="bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/30 text-[10px] px-1.5 py-0">
+                                  🎓 {s.targetYears.join(', ')}
+                                </Badge>
+                              )}
                             </div>
                             {s.isActive === 'true' ? (
                               <Badge variant="success" className="gap-1.5 shrink-0">
@@ -205,7 +210,7 @@ export default function AdminSessionsPage() {
                           {selectedSession.title}
                           {selectedSession.targetAudience === 'heads_only' && (
                             <Badge variant="outline" className="bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30 text-[11px]">
-                              👑 Heads Only
+                              👑 Heads & Sub-Heads
                             </Badge>
                           )}
                           {selectedSession.targetAudience === 'teams_only' && (
@@ -213,11 +218,22 @@ export default function AdminSessionsPage() {
                               👥 {selectedSession.audienceLabel || 'Wings Restricted'}
                             </Badge>
                           )}
+                          {selectedSession.targetYears && selectedSession.targetYears.length > 0 && (
+                            <Badge variant="outline" className="bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/30 text-[11px]">
+                              🎓 {selectedSession.targetYears.join(', ')}
+                            </Badge>
+                          )}
                         </div>
                         <div className="text-xs text-muted-foreground mt-0.5">
                           Status: <strong className={selectedSession.isActive === 'true' ? 'text-emerald-600 dark:text-emerald-400' : 'text-muted-foreground'}>{selectedSession.isActive === 'true' ? 'Active Live QR' : 'Session Ended / QR Closed'}</strong>
                           <span className="mx-1.5">·</span>
                           Audience: <strong className="text-foreground">{selectedSession.audienceLabel || 'Open to All Members'}</strong>
+                          {selectedSession.targetYears && selectedSession.targetYears.length > 0 && (
+                            <>
+                              <span className="mx-1.5">·</span>
+                              Years: <strong className="text-foreground">{selectedSession.targetYears.join(', ')}</strong>
+                            </>
+                          )}
                         </div>
                       </div>
                     </div>

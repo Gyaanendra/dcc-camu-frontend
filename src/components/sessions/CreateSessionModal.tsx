@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { api } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from 'sonner';
-import { Plus } from 'lucide-react';
+import { Plus, GraduationCap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -29,6 +29,13 @@ interface CreateSessionModalProps {
   onCreated?: () => void;
 }
 
+const AVAILABLE_YEARS = [
+  { id: '1st Year', label: '1st Year', sub: 'S26' },
+  { id: '2nd Year', label: '2nd Year', sub: 'S25' },
+  { id: '3rd Year', label: '3rd Year', sub: 'S24' },
+  { id: '4th Year', label: '4th Year', sub: 'S23/E23' },
+];
+
 export const CreateSessionModal: React.FC<CreateSessionModalProps> = ({ teams, onCreated }) => {
   const { user } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
@@ -37,6 +44,7 @@ export const CreateSessionModal: React.FC<CreateSessionModalProps> = ({ teams, o
   const [description, setDescription] = useState('');
   const [targetAudience, setTargetAudience] = useState<'all' | 'heads_only' | 'teams_only'>('all');
   const [selectedTeamIds, setSelectedTeamIds] = useState<string[]>([]);
+  const [selectedYears, setSelectedYears] = useState<string[]>([]); // Empty = All Years
   const [location, setLocation] = useState('Bennett CS Auditorium (Room 301)');
   const [durationMinutes, setDurationMinutes] = useState('120');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -50,9 +58,23 @@ export const CreateSessionModal: React.FC<CreateSessionModalProps> = ({ teams, o
     );
   };
 
+  const toggleYearSelection = (year: string) => {
+    setSelectedYears((prev) => {
+      if (prev.includes(year)) {
+        return prev.filter((y) => y !== year);
+      } else {
+        return [...prev, year];
+      }
+    });
+  };
+
+  const selectAllYears = () => {
+    setSelectedYears([]);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title) {
+    if (!title.trim()) {
       toast.error('Please enter a session title');
       return;
     }
@@ -64,29 +86,35 @@ export const CreateSessionModal: React.FC<CreateSessionModalProps> = ({ teams, o
 
     setIsSubmitting(true);
     try {
+      const yearPayload = selectedYears.length === 0 || selectedYears.length === 4 ? [] : selectedYears;
+
       await api.createSession({
-        title,
+        title: title.trim(),
         type,
-        description,
+        description: description.trim(),
         targetAudience,
         targetTeamIds: targetAudience === 'teams_only' ? selectedTeamIds : [],
         teamId: targetAudience === 'teams_only' ? selectedTeamIds[0] || null : null,
-        location,
+        targetYears: yearPayload,
+        location: location.trim(),
         durationMinutes,
       });
 
-      toast.success(
+      const yearText = yearPayload.length > 0 ? ` (${yearPayload.join(', ')})` : '';
+      const audienceText =
         targetAudience === 'heads_only'
-          ? 'Heads-only session created with dynamic QR token'
+          ? 'Heads & Sub-Heads only'
           : targetAudience === 'teams_only'
-          ? 'Wing-restricted session created with dynamic QR token'
-          : 'Club session created with dynamic QR token'
-      );
+          ? 'Wing-restricted'
+          : 'Club session';
+
+      toast.success(`${audienceText}${yearText} created with dynamic QR token`);
       setIsOpen(false);
       setTitle('');
       setDescription('');
       setTargetAudience('all');
       setSelectedTeamIds([]);
+      setSelectedYears([]);
       if (onCreated) onCreated();
     } catch (error: any) {
       toast.error(error.message || 'Failed to create session');
@@ -113,7 +141,7 @@ export const CreateSessionModal: React.FC<CreateSessionModalProps> = ({ teams, o
             <Input
               id="session-title"
               type="text"
-              placeholder="e.g. Next.js 14 Fullstack Masterclass"
+              placeholder="e.g. 3rd Year Core Sync / Fullstack Masterclass"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               required
@@ -150,13 +178,63 @@ export const CreateSessionModal: React.FC<CreateSessionModalProps> = ({ teams, o
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">🌐 All Club Members</SelectItem>
-                  <SelectItem value="heads_only">👑 Heads & Leads Only</SelectItem>
+                  <SelectItem value="heads_only">👑 Heads & Sub-Heads Only</SelectItem>
                   <SelectItem value="teams_only">👥 Specific Wing(s) Only</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
 
+          {/* Academic Year Selection */}
+          <div className="space-y-2 p-3 bg-secondary/30 rounded-lg border border-border">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1.5 text-xs font-semibold text-foreground">
+                <GraduationCap className="w-3.5 h-3.5 text-primary" />
+                <span>Target Academic Year(s)</span>
+              </div>
+              <span className="text-[11px] text-muted-foreground font-mono">
+                {selectedYears.length === 0 || selectedYears.length === 4
+                  ? 'All Years Eligible'
+                  : `${selectedYears.length} selected`}
+              </span>
+            </div>
+
+            <div className="flex flex-wrap gap-1.5 pt-1">
+              <button
+                type="button"
+                onClick={selectAllYears}
+                className={`text-xs px-2.5 py-1 rounded-full border transition-all cursor-pointer ${
+                  selectedYears.length === 0 || selectedYears.length === 4
+                    ? 'bg-primary text-primary-foreground border-primary font-medium shadow-xs'
+                    : 'bg-background hover:bg-secondary text-foreground border-border'
+                }`}
+              >
+                {(selectedYears.length === 0 || selectedYears.length === 4) && '✓ '}
+                All Years
+              </button>
+
+              {AVAILABLE_YEARS.map((y) => {
+                const isSelected = selectedYears.includes(y.id);
+                return (
+                  <button
+                    key={y.id}
+                    type="button"
+                    onClick={() => toggleYearSelection(y.id)}
+                    className={`text-xs px-2.5 py-1 rounded-full border transition-all cursor-pointer ${
+                      isSelected
+                        ? 'bg-primary text-primary-foreground border-primary font-medium shadow-xs'
+                        : 'bg-background hover:bg-secondary text-foreground border-border'
+                    }`}
+                  >
+                    {isSelected && '✓ '}
+                    {y.label} <span className="opacity-70 text-[10px]">({y.sub})</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Wings Selection */}
           {targetAudience === 'teams_only' && (
             <div className="space-y-2 p-3 bg-secondary/30 rounded-lg border border-border">
               <div className="flex items-center justify-between">

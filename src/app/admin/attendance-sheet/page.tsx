@@ -17,6 +17,7 @@ import {
   Check,
   Clock,
   Minus,
+  X,
   Loader2,
   MousePointerClick,
   Users,
@@ -72,6 +73,8 @@ interface SheetSession {
   isActive: string;
   targetAudience?: 'all' | 'heads_only' | 'teams_only';
   targetTeamIds?: string[];
+  targetYears?: string[];
+  yearsLabel?: string;
 }
 
 interface SheetMember {
@@ -178,7 +181,7 @@ export default function AttendanceSheetPage() {
       const st = updatedRecords[s.id];
       if (member.isExempt) {
         if (st === 'present' || st === 'late') newAttended++;
-      } else if (st === 'not_in_club' || st === 'joined_later' || st === 'not_in_team' || st === 'not_a_head') {
+      } else if (st === 'not_in_club' || st === 'joined_later' || st === 'not_in_team' || st === 'not_a_head' || st === 'not_in_year') {
         // Excluded from denominator
       } else if (st === 'present' || st === 'late') {
         newAttended++;
@@ -506,18 +509,24 @@ export default function AttendanceSheetPage() {
                     Late
                   </span>
                   <span className="flex items-center gap-1.5">
-                    <Minus className="w-3.5 h-3.5 text-muted-foreground/60" />
+                    <X className="w-3.5 h-3.5 text-rose-500 font-bold stroke-[2.5]" />
                     Absent
                   </span>
                   <span className="flex items-center gap-1.5">
                     <Ban className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
-                    Not in Club (Exempt)
+                    Excused
                   </span>
                   <span className="flex items-center gap-1.5">
-                    <span className="px-1.5 py-0.5 rounded bg-secondary text-[10px] text-muted-foreground font-mono">
+                    <span className="px-1.5 py-0.5 rounded bg-muted/60 text-[10px] text-muted-foreground font-mono">
                       Joined Later
                     </span>
                     Prorated
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <span className="px-1.5 py-0.5 rounded bg-secondary text-[10px] text-muted-foreground font-mono">
+                      Not Required
+                    </span>
+                    Other Wing / Year / Non-Head
                   </span>
                   {!isReadOnly && (
                     <span className="hidden lg:flex items-center gap-1.5 ml-auto text-xs font-medium text-muted-foreground bg-secondary/70 border border-border rounded-full px-3 py-0.5">
@@ -557,15 +566,22 @@ export default function AttendanceSheetPage() {
                               <div className="font-mono text-[11px] text-muted-foreground font-normal mt-0.5">
                                 {fmtDate(s.startTime)}
                               </div>
-                              {s.targetAudience === 'heads_only' ? (
-                                <span className="inline-block text-[9px] px-1 rounded bg-amber-500/10 text-amber-600 dark:text-amber-400 font-mono mt-0.5">
-                                  Heads
-                                </span>
-                              ) : s.targetAudience === 'teams_only' ? (
-                                <span className="inline-block text-[9px] px-1 rounded bg-blue-500/10 text-blue-600 dark:text-blue-400 font-mono mt-0.5">
-                                  Wings
-                                </span>
-                              ) : null}
+                              <div className="flex flex-wrap items-center justify-center gap-0.5 mt-0.5">
+                                {s.targetAudience === 'heads_only' ? (
+                                  <span className="inline-block text-[9px] px-1 rounded bg-amber-500/10 text-amber-600 dark:text-amber-400 font-mono">
+                                    Heads
+                                  </span>
+                                ) : s.targetAudience === 'teams_only' ? (
+                                  <span className="inline-block text-[9px] px-1 rounded bg-blue-500/10 text-blue-600 dark:text-blue-400 font-mono">
+                                    Wings
+                                  </span>
+                                ) : null}
+                                {s.targetYears && s.targetYears.length > 0 && (
+                                  <span className="inline-block text-[9px] px-1 rounded bg-sky-500/10 text-sky-600 dark:text-sky-400 font-mono">
+                                    {s.targetYears.join(', ')}
+                                  </span>
+                                )}
+                              </div>
                             </TableHead>
                           ))}
 
@@ -629,16 +645,16 @@ export default function AttendanceSheetPage() {
                                 const cellKey = `${member.id}:${s.id}`;
                                 const isUpdating = updatingCell === cellKey;
 
-                                // If member is an advisor -> Exempt
+                                // If member is an advisor -> Advisor
                                 if (member.isExempt) {
                                   return (
                                     <TableCell
                                       key={s.id}
                                       className="p-2 border-b border-r border-border text-center text-muted-foreground/60"
-                                      title="Advisor: Exempt from attendance"
+                                      title="Advisor: Attendance not required"
                                     >
                                       <span className="text-[10px] px-1 py-0.5 rounded bg-amber-500/10 text-amber-600 dark:text-amber-400 font-mono">
-                                        Exempt
+                                        Advisor
                                       </span>
                                     </TableCell>
                                   );
@@ -659,19 +675,43 @@ export default function AttendanceSheetPage() {
                                   );
                                 }
 
-                                if (status === 'not_in_team' || status === 'not_a_head') {
+                                if (status === 'not_in_year') {
                                   return (
                                     <TableCell
                                       key={s.id}
                                       className="p-2 border-b border-r border-border text-center"
-                                      title={
-                                        status === 'not_a_head'
-                                          ? 'Meeting was for Heads & Leads only'
-                                          : 'Meeting was restricted to other wings'
-                                      }
+                                      title={`Session was restricted to ${s.yearsLabel || 'other academic years'}`}
                                     >
-                                      <span className="text-[10px] px-1 py-0.5 rounded bg-secondary text-muted-foreground/70 font-mono">
-                                        Exempt
+                                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-sky-500/10 text-sky-600 dark:text-sky-400 font-mono">
+                                        Other Year
+                                      </span>
+                                    </TableCell>
+                                  );
+                                }
+
+                                if (status === 'not_in_team') {
+                                  return (
+                                    <TableCell
+                                      key={s.id}
+                                      className="p-2 border-b border-r border-border text-center"
+                                      title="Meeting was restricted to other wings"
+                                    >
+                                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-mono">
+                                        Other Wing
+                                      </span>
+                                    </TableCell>
+                                  );
+                                }
+
+                                if (status === 'not_a_head') {
+                                  return (
+                                    <TableCell
+                                      key={s.id}
+                                      className="p-2 border-b border-r border-border text-center"
+                                      title="Meeting was for Heads & Sub-Heads only"
+                                    >
+                                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-600 dark:text-amber-400 font-mono">
+                                        Heads Only
                                       </span>
                                     </TableCell>
                                   );
@@ -690,13 +730,17 @@ export default function AttendanceSheetPage() {
                                   }
                                   if (status === 'not_in_club') {
                                     return (
-                                      <div className="flex items-center justify-center gap-0.5" title="Not in club at this time">
+                                      <div className="flex items-center justify-center gap-0.5" title="Excused (Not in club at this time)">
                                         <Ban className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
                                       </div>
                                     );
                                   }
                                   // Absent / unexcused
-                                  return <Minus className="w-3.5 h-3.5 text-muted-foreground/40 mx-auto" />;
+                                  return (
+                                    <div className="flex items-center justify-center" title="Absent (Unexcused)">
+                                      <X className="w-4 h-4 text-rose-500 dark:text-rose-400 mx-auto stroke-[2.5]" />
+                                    </div>
+                                  );
                                 };
 
                                 if (isReadOnly) {
@@ -741,9 +785,9 @@ export default function AttendanceSheetPage() {
                                         </DropdownMenuItem>
                                         <DropdownMenuItem
                                           onClick={() => handleSetStatus(member, s, 'absent')}
-                                          className="cursor-pointer gap-2"
+                                          className="cursor-pointer gap-2 text-rose-600 dark:text-rose-400"
                                         >
-                                          <Minus className="w-3.5 h-3.5 text-muted-foreground" />
+                                          <X className="w-3.5 h-3.5 stroke-[2.5]" />
                                           <span>Mark Absent</span>
                                         </DropdownMenuItem>
                                         <DropdownMenuSeparator />
@@ -752,7 +796,7 @@ export default function AttendanceSheetPage() {
                                           className="cursor-pointer gap-2 text-purple-600 dark:text-purple-400"
                                         >
                                           <Ban className="w-3.5 h-3.5" />
-                                          <span>Not in club (Exempt)</span>
+                                          <span>Excused (Not in club)</span>
                                         </DropdownMenuItem>
                                       </DropdownMenuContent>
                                     </DropdownMenu>
@@ -953,11 +997,23 @@ export default function AttendanceSheetPage() {
                             </div>
                           ) : member.isExempt ? (
                             <Badge variant="outline" className="bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20">
-                              Advisor (Exempt)
+                              Advisor
                             </Badge>
                           ) : status === 'joined_later' ? (
                             <Badge variant="secondary" className="text-xs">
                               Joined Later (Prorated)
+                            </Badge>
+                          ) : status === 'not_in_year' ? (
+                            <Badge variant="outline" className="bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/20 text-xs">
+                              Other Year
+                            </Badge>
+                          ) : status === 'not_in_team' ? (
+                            <Badge variant="outline" className="bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20 text-xs">
+                              Other Wing
+                            </Badge>
+                          ) : status === 'not_a_head' ? (
+                            <Badge variant="outline" className="bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20 text-xs">
+                              Heads Only
                             </Badge>
                           ) : isReadOnly ? (
                             <Badge variant={status === 'present' ? 'success' : status === 'late' ? 'secondary' : 'outline'}>
@@ -1001,12 +1057,12 @@ export default function AttendanceSheetPage() {
                                 onClick={() => handleSetStatus(member, selectedSession, 'absent')}
                                 className={`px-2.5 py-1 text-xs font-medium rounded-md transition-all cursor-pointer flex items-center gap-1 ${
                                   !status
-                                    ? 'bg-background text-destructive font-semibold shadow-xs border border-border'
+                                    ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400 font-semibold shadow-xs border border-rose-500/30'
                                     : 'text-muted-foreground hover:text-foreground hover:bg-secondary'
                                 }`}
                                 title="Mark Absent"
                               >
-                                <Minus className="w-3.5 h-3.5" />
+                                <X className="w-3.5 h-3.5 stroke-[2.5]" />
                                 <span>Absent</span>
                               </button>
 
@@ -1019,10 +1075,10 @@ export default function AttendanceSheetPage() {
                                     ? 'bg-purple-600 text-white font-semibold shadow-xs'
                                     : 'text-muted-foreground hover:text-purple-600 hover:bg-secondary'
                                 }`}
-                                title="Mark as Not in Club for this meeting (Exempt from denominator)"
+                                title="Mark as Excused for this meeting (Exempt from denominator)"
                               >
                                 <Ban className="w-3 h-3" />
-                                <span className="hidden md:inline">Not in club</span>
+                                <span className="hidden md:inline">Excused</span>
                               </button>
                             </div>
                           )}
