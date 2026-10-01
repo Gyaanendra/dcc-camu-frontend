@@ -16,6 +16,7 @@ export default function AdminAnalyticsPage() {
   const [data, setData] = useState<any>(null);
   const [teams, setTeams] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
+  const [sessions, setSessions] = useState<any[]>([]);
   
   // Independent loading & error states for fast progressive loading
   const [isAnalyticsLoading, setIsAnalyticsLoading] = useState(true);
@@ -64,6 +65,15 @@ export default function AdminAnalyticsPage() {
       })
       .finally(() => {
         setIsUsersLoading(false);
+      });
+
+    // 4. Fetch attendance sheet for session details
+    api.getAttendanceSheet()
+      .then((res) => {
+        setSessions(res.sessions || []);
+      })
+      .catch((err) => {
+        console.error('Sheet sessions load error:', err);
       });
   };
 
@@ -212,6 +222,7 @@ export default function AdminAnalyticsPage() {
               <MemberDirectoryTable
                 members={directoryMembers}
                 teams={teams}
+                sessions={sessions}
                 onRefresh={loadData}
                 isLoading={isUsersLoading && !data?.memberAnalytics}
               />

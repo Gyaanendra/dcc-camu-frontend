@@ -2,21 +2,36 @@
 
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
+import { useTheme } from '@/context/ThemeContext';
 import { useRouter } from 'next/navigation';
-import { Lock, Mail, ArrowRight, Sparkles, Terminal, Flame, Code2 } from 'lucide-react';
+import {
+  Lock,
+  Mail,
+  ArrowRight,
+  Sun,
+  Moon,
+  Eye,
+  EyeOff,
+  ShieldCheck,
+  User,
+  Loader2,
+  Sparkles,
+  ExternalLink,
+} from 'lucide-react';
 import { toast } from 'sonner';
-import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { DCCLogo } from '@/components/ui/DCCLogo';
 
 export default function SigninPage() {
   const { login, user } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const router = useRouter();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -43,204 +58,250 @@ export default function SigninPage() {
     setIsSubmitting(true);
     try {
       await login(normalizedEmail, password);
+      toast.success('Welcome back to Club DCC!');
       router.push('/dashboard');
     } catch {
-      // Toast error handled in context
+      // Toast error handled in AuthContext
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  return (
-    <div className="min-h-screen relative flex flex-col justify-center items-center px-4 py-12 bg-background text-foreground overflow-hidden selection:bg-accent/20">
+  // Quick fill helper for demo accounts
+  const handleQuickFill = (demoEmail: string, roleName: string) => {
+    setEmail(demoEmail);
+    setPassword('user123');
+    toast.info(`Filled ${roleName} credentials (password: user123)`);
+  };
 
-      {/* ── BACKGROUND LAYER: Notion-style Grid & Subtle Orbs ── */}
+  return (
+    <div className="min-h-screen relative flex flex-col justify-between items-center bg-[#0d0b14] text-foreground transition-colors selection:bg-purple-600/30 overflow-x-hidden">
+      {/* ── Ambient Radial Lighting Background ───────────────────── */}
       <div
-        className="absolute inset-0 pointer-events-none opacity-[0.45] dark:opacity-[0.25]"
+        className="fixed inset-0 pointer-events-none opacity-40"
         style={{
-          backgroundImage: `radial-gradient(circle, currentColor 1px, transparent 1px)`,
+          backgroundImage:
+            'radial-gradient(circle at 50% 20%, rgba(108, 92, 231, 0.22) 0%, transparent 55%), radial-gradient(circle at 80% 80%, rgba(139, 92, 246, 0.12) 0%, transparent 50%)',
+          filter: 'blur(90px)',
+        }}
+      />
+      <div
+        className="fixed inset-0 pointer-events-none opacity-[0.035]"
+        style={{
+          backgroundImage:
+            'radial-gradient(circle, #ffffff 1px, transparent 1px)',
           backgroundSize: '28px 28px',
         }}
       />
 
-      {/* Ambient soft glow orbs */}
-      <div className="absolute -top-32 -left-32 w-96 h-96 rounded-full bg-accent/10 blur-3xl pointer-events-none" />
-      <div className="absolute -bottom-32 -right-32 w-96 h-96 rounded-full bg-amber-500/10 blur-3xl pointer-events-none" />
-      <div className="absolute top-1/3 -right-20 w-80 h-80 rounded-full bg-sky-500/10 blur-3xl pointer-events-none" />
-
-      {/* ── NOTIONIST / GEN-Z FLOATING SVG SHAPES & STICKERS ── */}
-
-      {/* Top Left: Terminal snippet card */}
-      <div className="absolute top-12 left-8 xl:left-16 hidden lg:block pointer-events-none select-none z-0">
-        <div className="p-3.5 rounded-2xl border border-border/80 bg-card/80 backdrop-blur-md shadow-xl -rotate-6 hover:rotate-0 transition-transform duration-300 pointer-events-auto">
-          <div className="flex items-center gap-1.5 pb-2 border-b border-border text-xs font-mono text-muted-foreground">
-            <span className="w-2 h-2 rounded-full bg-red-400/80" />
-            <span className="w-2 h-2 rounded-full bg-amber-400/80" />
-            <span className="w-2 h-2 rounded-full bg-emerald-400/80" />
-            <span className="ml-1.5 text-[11px] font-medium">dcc-portal.ts</span>
-          </div>
-          <div className="font-mono text-xs pt-2.5 space-y-1 text-foreground leading-relaxed">
-            <p><span className="text-accent font-semibold">import</span> &#123; createClub &#125; <span className="text-accent font-semibold">from</span> <span className="text-emerald-600 dark:text-emerald-400">&apos;@bennett/dcc&apos;</span>;</p>
-            <p><span className="text-accent font-semibold">const</span> session = <span className="text-accent font-semibold">await</span> dcc.<span className="text-sky-500">scanLiveQR</span>();</p>
-            <p className="text-muted-foreground text-[11px]">// 🚀 100% automated attendance</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Top Right: Pill Sticker with status */}
-      <div className="absolute top-16 right-8 xl:right-20 hidden md:flex items-center gap-2 px-4 py-2 rounded-full border border-border/80 bg-card/80 backdrop-blur-md shadow-lg rotate-3 hover:rotate-0 transition-transform duration-300 select-none z-0">
-        <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-ping" />
-        <span className="text-xs font-bold text-foreground tracking-tight">Developers &amp; Creators Club</span>
-        <span className="text-xs px-1.5 py-0.5 rounded-md bg-accent/15 text-accent font-mono font-bold">BU</span>
-      </div>
-
-      {/* Mid Left: Notion Star Sparkle SVG */}
-      <div className="absolute top-1/2 left-10 xl:left-24 -translate-y-1/2 hidden xl:block pointer-events-none select-none opacity-80">
-        <svg width="42" height="42" viewBox="0 0 42 42" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-accent animate-pulse">
-          <path d="M21 0C21 11.598 11.598 21 0 21C11.598 21 21 30.402 21 42C21 30.402 30.402 21 42 21C30.402 21 21 11.598 21 0Z" fill="currentColor" fillOpacity="0.85" />
-        </svg>
-      </div>
-
-      {/* Mid Right: Quirky Sticker Note */}
-      <div className="absolute top-1/2 right-8 xl:right-24 -translate-y-1/2 hidden xl:block pointer-events-none select-none z-0">
-        <div className="p-3 rounded-xl border border-amber-500/30 bg-amber-500/10 backdrop-blur-md shadow-md rotate-6 text-xs text-foreground font-medium pointer-events-auto hover:rotate-0 transition-transform">
-          <div className="flex items-center gap-1.5 font-bold text-amber-600 dark:text-amber-400">
-            <Flame className="w-3.5 h-3.5" />
-            <span>Streak Mode</span>
-          </div>
-          <p className="text-[11px] text-muted-foreground mt-1">Never miss a club session</p>
-        </div>
-      </div>
-
-      {/* Bottom Left: Gen-Z Tag */}
-      <div className="absolute bottom-12 left-10 xl:left-20 hidden lg:flex items-center gap-2 px-3.5 py-2 rounded-xl border border-border/80 bg-card/80 backdrop-blur-md shadow-md -rotate-2 select-none z-0">
-        <Code2 className="w-3.5 h-3.5 text-accent" />
-        <span className="text-xs font-mono font-medium text-foreground">Hack · Build · Ship</span>
-        <span className="text-xs">⚡</span>
-      </div>
-
-      {/* Bottom Right: Campus Badge */}
-      <div className="absolute bottom-14 right-10 xl:right-20 hidden lg:flex items-center gap-2 px-3.5 py-2 rounded-xl border border-border/80 bg-card/80 backdrop-blur-md shadow-md rotate-2 select-none z-0">
-        <span className="text-xs font-mono text-muted-foreground">Bennett Univ CAMU</span>
-        <span className="inline-flex h-1.5 w-1.5 rounded-full bg-accent" />
-        <span className="text-xs font-semibold text-foreground">v2.0</span>
-      </div>
-
-      {/* Hand-drawn SVG wavy doodles */}
-      <div className="absolute bottom-28 left-1/4 hidden md:block pointer-events-none opacity-30 dark:opacity-20">
-        <svg width="120" height="24" viewBox="0 0 120 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-          <path d="M4 12C14 4 24 20 34 12C44 4 54 20 64 12C74 4 84 20 94 12C104 4 114 20 116 12" />
-        </svg>
-      </div>
-
-      <div className="absolute top-24 right-1/4 hidden md:block pointer-events-none opacity-25 dark:opacity-15">
-        <svg width="80" height="40" viewBox="0 0 80 40" fill="none" stroke="currentColor" strokeWidth="2" strokeDasharray="4 4" strokeLinecap="round">
-          <path d="M5 35C25 5 55 5 75 35" />
-        </svg>
-      </div>
-
-      {/* ── LOGIN FORM CARD (CENTER) ── */}
-      <div className="w-full max-w-sm space-y-6 relative z-10 anim-fade-up">
-        {/* Brand mark */}
-        <div className="text-center space-y-3">
-          <div className="mx-auto relative group inline-block">
-            <div className="flex h-16 w-28 items-center justify-center rounded-2xl bg-card border border-border/80 shadow-xl ring-4 ring-accent/15 transition-transform group-hover:scale-105 px-3 py-2">
-              <DCCLogo className="h-10 w-auto object-contain" />
-            </div>
-            <span className="absolute -top-1 -right-1 flex h-3 w-3">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent opacity-75" />
-              <span className="relative inline-flex rounded-full h-3 w-3 bg-accent" />
-            </span>
-          </div>
-          <div>
-            <h1 className="text-[30px] font-black tracking-[-0.03em] text-foreground text-balance">
-              Club DCC
-            </h1>
-            <p className="text-xs font-medium text-muted-foreground mt-1 flex items-center justify-center gap-1.5">
-              <span>Bennett University</span>
-              <span>·</span>
-              <span>Developers &amp; Creators</span>
-            </p>
-          </div>
+      {/* ── Top Header Navigation Bar ────────────────────────────── */}
+      <header className="w-full max-w-6xl mx-auto flex items-center justify-between px-6 py-5 z-20">
+        <div className="flex items-center gap-2.5 text-xs font-mono text-white/60">
+          <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+          <span>Bennett University · Developers &amp; Creators Club</span>
         </div>
 
-        {/* Sign-in card */}
-        <Card className="p-6 space-y-5 border-border/90 shadow-xl backdrop-blur-sm bg-card/95 rounded-2xl">
-          <div className="flex items-center justify-between pb-2 border-b border-border">
-            <span className="text-xs font-semibold text-foreground flex items-center gap-1.5">
-              <Sparkles className="w-3.5 h-3.5 text-accent" />
-              Member Portal
-            </span>
-            <span className="text-[11px] font-mono text-muted-foreground">Sign In</span>
-          </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={toggleTheme}
+            aria-label="Toggle theme"
+            className="p-2 rounded-xl border border-white/10 bg-white/5 text-white/70 hover:text-white hover:bg-white/10 transition-all cursor-pointer shadow-xs backdrop-blur-md"
+          >
+            {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+          </button>
+        </div>
+      </header>
 
-          <form onSubmit={handleLoginSubmit} className="space-y-4">
-            {/* Email */}
-            <div className="space-y-1.5">
-              <Label htmlFor="login-email" className="text-xs font-semibold">
-                Bennett University Email
-              </Label>
-              <div className="relative">
-                <Mail className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
-                <Input
-                  id="login-email"
-                  type="email"
-                  placeholder="s24cseu0771@bennett.edu.in"
-                  value={email}
-                  onChange={e => setEmail(e.target.value.toLowerCase())}
-                  autoCapitalize="none"
-                  autoCorrect="off"
-                  spellCheck={false}
-                  className="pl-9 font-mono text-xs focus-orange h-10 rounded-xl"
-                  required
+      {/* ── Central Split Auth Showcase Card ─────────────────────── */}
+      <main className="w-full max-w-5xl px-4 py-4 sm:py-6 relative z-10 flex items-center justify-center my-auto">
+        <div className="w-full rounded-[28px] bg-[#181523]/90 border border-white/10 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.8)] backdrop-blur-2xl p-3 sm:p-3.5 flex flex-col md:flex-row overflow-hidden transition-all duration-300">
+          {/* ── Left Hero Panel (Visual Showcase) ─────────────────── */}
+          <div className="w-full md:w-[46%] lg:w-[48%] relative rounded-[22px] overflow-hidden min-h-[380px] md:min-h-[580px] flex flex-col justify-between p-6 sm:p-8 select-none border border-white/10 group">
+            {/* Background Image */}
+            <div
+              className="absolute inset-0 bg-cover bg-center transition-transform duration-700 ease-out group-hover:scale-105"
+              style={{ backgroundImage: `url('/login-hero.jpg')` }}
+            />
+            {/* Subtle Gradient Overlays */}
+            <div className="absolute inset-0 bg-gradient-to-t from-[#0e0c16]/95 via-[#0e0c16]/30 to-[#0e0c16]/40 pointer-events-none" />
+            <div className="absolute inset-0 bg-purple-950/20 mix-blend-overlay pointer-events-none" />
+
+            {/* Top Bar inside Image */}
+            <div className="relative z-10 flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <img
+                  src="/dcc-white.png"
+                  alt="DCC Logo"
+                  className="h-7 w-auto object-contain drop-shadow-md"
                 />
+                <span className="font-bold text-white tracking-wider text-sm">DCC</span>
+              </div>
+
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-white/90 text-xs font-medium shadow-xs">
+                <span>Bennett CAMU</span>
+                <ExternalLink className="w-3 h-3 text-white/70" />
               </div>
             </div>
 
-            {/* Password */}
-            <div className="space-y-1.5">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="login-password" className="text-xs font-semibold">
-                  Password
+            {/* Bottom Content inside Image */}
+            <div className="relative z-10 space-y-3 pt-12">
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight leading-snug drop-shadow-sm">
+                Capturing Moments,
+                <br />
+                Creating Memories
+              </h2>
+              <p className="text-xs text-white/70 max-w-xs leading-relaxed">
+                Empowering creators, developers, and leaders across Bennett University with real-time attendance and analytics.
+              </p>
+
+              {/* Aesthetic Slider Indicator */}
+              <div className="flex items-center gap-1.5 pt-2">
+                <span className="h-1 w-7 rounded-full bg-white transition-all shadow-xs" />
+                <span className="h-1 w-2 rounded-full bg-white/40 transition-all" />
+                <span className="h-1 w-2 rounded-full bg-white/40 transition-all" />
+              </div>
+            </div>
+          </div>
+
+          {/* ── Right Form Panel (Sign In) ────────────────────────── */}
+          <div className="w-full md:w-[54%] lg:w-[52%] flex flex-col justify-center px-6 sm:px-10 lg:px-12 py-8 sm:py-10">
+            {/* Header Titles */}
+            <div className="space-y-1.5 mb-7">
+              <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">
+                Sign in to DCC
+              </h1>
+              <p className="text-xs text-white/50">
+                Enter your Bennett University email and password to continue
+              </p>
+            </div>
+
+            {/* Login Form */}
+            <form onSubmit={handleLoginSubmit} className="space-y-4">
+              {/* University Email */}
+              <div className="space-y-1.5">
+                <Label htmlFor="login-email" className="text-xs font-semibold text-white/80">
+                  University Email
                 </Label>
-                <span className="text-[11px] text-muted-foreground">e.g. user123</span>
+                <div className="relative">
+                  <Mail className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-white/40 pointer-events-none" />
+                  <Input
+                    id="login-email"
+                    type="email"
+                    placeholder="name@bennett.edu.in"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value.toLowerCase())}
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    spellCheck={false}
+                    className="pl-10 h-11 bg-[#231f31] border-white/10 text-white placeholder:text-white/30 rounded-xl focus:border-purple-500 focus:ring-1 focus:ring-purple-500 text-xs font-mono transition-colors"
+                    required
+                  />
+                </div>
               </div>
-              <div className="relative">
-                <Lock className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
-                <Input
-                  id="login-password"
-                  type="password"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={e => setPassword(e.target.value)}
-                  className="pl-9 focus-orange h-10 rounded-xl"
-                  required
-                />
+
+              {/* Password */}
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="login-password" className="text-xs font-semibold text-white/80">
+                    Password
+                  </Label>
+                  <span className="text-[11px] font-mono text-purple-400/90">Default: user123</span>
+                </div>
+                <div className="relative">
+                  <Lock className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-white/40 pointer-events-none" />
+                  <Input
+                    id="login-password"
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="Enter your password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="pl-10 pr-10 h-11 bg-[#231f31] border-white/10 text-white placeholder:text-white/30 rounded-xl focus:border-purple-500 focus:ring-1 focus:ring-purple-500 text-xs transition-colors"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-white/40 hover:text-white transition-colors cursor-pointer"
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
               </div>
+
+              {/* Remember Me Checkbox */}
+              <div className="flex items-center justify-between text-xs pt-0.5">
+                <label className="flex items-center gap-2 cursor-pointer text-white/60 hover:text-white/90 select-none">
+                  <input
+                    type="checkbox"
+                    checked={rememberMe}
+                    onChange={(e) => setRememberMe(e.target.checked)}
+                    className="rounded border-white/20 bg-[#231f31] text-purple-600 focus:ring-purple-500 w-3.5 h-3.5 cursor-pointer accent-purple-600"
+                  />
+                  <span>Remember this device</span>
+                </label>
+                <span className="text-[11px] font-mono text-white/40">CAMU Authenticated</span>
+              </div>
+
+              {/* Submit CTA Button */}
+              <Button
+                type="submit"
+                id="login-submit"
+                disabled={isSubmitting}
+                className="w-full h-11 mt-1 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-semibold rounded-xl text-xs sm:text-sm shadow-lg shadow-purple-600/25 transition-all duration-200 cursor-pointer active:scale-[0.99] border-0"
+              >
+                {isSubmitting ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Authenticating...
+                  </span>
+                ) : (
+                  <span className="flex items-center justify-center gap-2">
+                    Sign in to Portal
+                    <ArrowRight className="w-4 h-4" />
+                  </span>
+                )}
+              </Button>
+            </form>
+
+            {/* Divider */}
+            <div className="relative my-6 flex items-center justify-center">
+              <div className="w-full border-t border-white/10" />
+              <span className="absolute bg-[#181523] px-3 text-[10px] text-white/40 uppercase tracking-wider font-mono">
+                Quick Demo Access
+              </span>
             </div>
 
-            {/* Submit */}
-            <Button
-              type="submit"
-              id="login-submit"
-              disabled={isSubmitting}
-              className="w-full h-10 font-bold focus-orange rounded-xl gap-2 shadow-md hover:shadow-lg transition-all"
-            >
-              <span>{isSubmitting ? 'Verifying credentials…' : 'Enter Club Portal'}</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </Button>
-          </form>
-        </Card>
+            {/* Quick Demo Access Buttons (styled like the Apple / Google buttons) */}
+            <div className="grid grid-cols-2 gap-2.5">
+              <button
+                type="button"
+                onClick={() => handleQuickFill('s24cseu0771@bennett.edu.in', 'Admin')}
+                className="flex items-center justify-center gap-2 h-10 px-3 rounded-xl border border-white/10 bg-[#231f31]/60 hover:bg-[#231f31] hover:border-purple-500/40 text-white/80 hover:text-white text-xs font-medium transition-all cursor-pointer"
+                title="Fill Admin test credentials"
+              >
+                <ShieldCheck className="w-3.5 h-3.5 text-purple-400" />
+                <span>Admin Demo</span>
+              </button>
 
-        <div className="text-center space-y-1">
-          <p className="text-xs text-muted-foreground">
-            Attendance &amp; Team Analytics · Club DCC Camu
-          </p>
-          <p className="text-[11px] font-mono text-muted-foreground/80">
-            Official Campus Club Portal · Bennett University
-          </p>
+              <button
+                type="button"
+                onClick={() => handleQuickFill('s24cseu0656@bennett.edu.in', 'Member')}
+                className="flex items-center justify-center gap-2 h-10 px-3 rounded-xl border border-white/10 bg-[#231f31]/60 hover:bg-[#231f31] hover:border-indigo-500/40 text-white/80 hover:text-white text-xs font-medium transition-all cursor-pointer"
+                title="Fill Member test credentials"
+              >
+                <User className="w-3.5 h-3.5 text-indigo-400" />
+                <span>Member Demo</span>
+              </button>
+            </div>
+          </div>
         </div>
-      </div>
+      </main>
+
+      {/* ── Minimalist Clean Footer ──────────────────────────────── */}
+      <footer className="w-full max-w-6xl mx-auto px-6 py-5 text-center text-xs text-white/40 z-20">
+        <p>© 2026 Club DCC · Bennett University Developers &amp; Creators Club</p>
+      </footer>
     </div>
   );
 }

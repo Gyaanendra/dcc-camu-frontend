@@ -309,7 +309,7 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({ activeSessionId,
       });
       setScanState('success');
       setA11yAnnouncement(`Success. ${res.user?.name} checked in as ${res.status}.`);
-      toast.success(`✓ ${res.user?.name} checked in!`);
+      toast.success(`${res.user?.name} checked in!`);
       if (onScanSuccess) onScanSuccess(res);
 
       // Start auto-advance countdown if enabled

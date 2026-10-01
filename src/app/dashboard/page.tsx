@@ -35,6 +35,11 @@ import {
   CalendarX2,
   Clock,
   MapPin,
+  Check,
+  Zap,
+  AlertTriangle,
+  XCircle,
+  CheckCircle2,
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -82,11 +87,21 @@ function getAcademicYear(rollNumber?: string | null): string {
   }
 }
 
-function isSessionApplicableToUser(session: any, user: any): boolean {
+function isSessionApplicableToUser(session: any, user: any, hasAttended: boolean = false): boolean {
   if (!session || !user) return false;
-  if (user.role === 'admin') return true;
   if (user.role === 'advisor') return false;
+  if (hasAttended) return true;
 
+  // 1. Check if meeting took place before member joined DCC CAMU
+  if (session.startTime && user.createdAt) {
+    const sessionTime = new Date(session.startTime).getTime();
+    const userJoinedTime = new Date(user.createdAt).getTime();
+    if (sessionTime < userJoinedTime - 60 * 1000) {
+      return false; // User had not joined yet
+    }
+  }
+
+  // 2. Academic year targeting
   const targetYears: string[] = Array.isArray(session.targetYears)
     ? session.targetYears
     : typeof session.targetYears === 'string' && session.targetYears.trim()
@@ -106,6 +121,7 @@ function isSessionApplicableToUser(session: any, user: any): boolean {
     }
   }
 
+  // 3. Heads-only meetings check
   if (session.targetAudience === 'heads_only') {
     const pos = (user.position || '').trim().toLowerCase();
     if (
@@ -117,14 +133,22 @@ function isSessionApplicableToUser(session: any, user: any): boolean {
     ) {
       return false;
     }
-    return /\b(head|sub[\s-]?head|lead|co[\s-]?lead|president|vp|vice[\s-]?president|secretary|treasurer|coordinator|convener|convenor|director)\b/i.test(pos);
+    const isHead = /\b(head|sub[\s-]?head|lead|co[\s-]?lead|president|vp|vice[\s-]?president|secretary|treasurer|coordinator|convener|convenor|director)\b/i.test(pos);
+    if (!isHead && user.role !== 'admin') {
+      return false;
+    }
   }
 
-  if (session.targetAudience === 'teams_only') {
+  // 4. Teams-only meetings check
+  if (session.targetAudience === 'teams_only' || (session.teamId && !session.targetAudience)) {
     const targetTeams = Array.isArray(session.targetTeamIds)
       ? session.targetTeamIds
       : (session.teamId ? [session.teamId] : []);
-    return Boolean(user.teamId && targetTeams.includes(user.teamId));
+    if (targetTeams.length > 0) {
+      if (!user.teamId || !targetTeams.includes(user.teamId)) {
+        return false;
+      }
+    }
   }
   return true;
 }
@@ -136,7 +160,7 @@ export default function DashboardPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isClosingSession, setIsClosingSession] = useState(false);
   const [qrOpen, setQrOpen] = useState(false);
-  const [statusFilter, setStatusFilter] = useState<'all' | 'present' | 'late'>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'present' | 'late' | 'absent'>('all');
 
   const loadUserData = async () => {
     setIsLoading(true);
@@ -174,7 +198,7 @@ export default function DashboardPage() {
   };
 
   const activeLiveSession = activeSessions.find(
-    (s) => s.isActive === 'true' && (user?.role === 'admin' || isSessionApplicableToUser(s, user))
+    (s) => s.isActive === 'true' && isSessionApplicableToUser(s, user, false)
   );
 
   const hour = new Date().getHours();
@@ -183,14 +207,71 @@ export default function DashboardPage() {
   const animatedAttendance = useCountUp(userStats?.stats?.attendancePercentage || 0);
   const dateLine = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
 
+  // Synthesize complete history: verified attended sessions + only real unexcused absent sessions
+  const fullAttendanceHistory = useMemo(() => {
+    const historyList = [...(userStats?.history || [])];
+
+    // Build sets of all attended titles & ids to guarantee zero false absent duplicates
+    const attendedTitles = new Set(
+      historyList
+        .filter((h: any) => h.status === 'present' || h.status === 'late')
+        .map((h: any) => (h.sessionTitle || '').trim().toLowerCase())
+        .filter(Boolean)
+    );
+    const attendedIds = new Set(
+      historyList
+        .filter((h: any) => h.status === 'present' || h.status === 'late' || h.sessionId)
+        .map((h: any) => h.sessionId || h.id)
+        .filter(Boolean)
+    );
+
+    const isAttended = (session: any) => {
+      if (session.id && attendedIds.has(session.id)) return true;
+      const title = (session.title || '').trim().toLowerCase();
+      if (title && attendedTitles.has(title)) return true;
+      return false;
+    };
+
+    // Official absent count from backend stats
+    const officialAbsentCount =
+      userStats?.stats?.absentCount ??
+      Math.max(0, (userStats?.stats?.totalSessions || 0) - (userStats?.stats?.attendedCount || 0));
+
+    // If official absent count is 0, user has missed 0 eligible meetings
+    const now = new Date();
+    const missedSessions: any[] = [];
+
+    if (officialAbsentCount > 0) {
+      for (const session of activeSessions) {
+        const isPastOrClosed = session.isActive !== 'true' || (session.startTime && new Date(session.startTime) < now);
+        if (isPastOrClosed && isSessionApplicableToUser(session, user, false)) {
+          if (!isAttended(session)) {
+            missedSessions.push({
+              id: `absent-${session.id}`,
+              sessionId: session.id,
+              sessionTitle: session.title,
+              location: session.location || 'DCC Hub',
+              scannedAt: session.startTime || session.createdAt || new Date().toISOString(),
+              status: 'absent',
+            });
+            if (missedSessions.length >= officialAbsentCount) break;
+          }
+        }
+      }
+    }
+
+    // Combine attended logs + verified missed sessions
+    const combined = [...historyList, ...missedSessions];
+
+    // Sort newest to oldest
+    return combined.sort((a, b) => new Date(b.scannedAt).getTime() - new Date(a.scannedAt).getTime());
+  }, [userStats, activeSessions, user]);
+
   // Filtered personal check-in history
   const filteredHistory = useMemo(() => {
-    const history: any[] = userStats?.history || [];
-    if (statusFilter === 'all') return history;
-    return history.filter((h) =>
-      statusFilter === 'late' ? h.status === 'late' : h.status !== 'late'
-    );
-  }, [userStats, statusFilter]);
+    if (statusFilter === 'all') return fullAttendanceHistory;
+    return fullAttendanceHistory.filter((h) => h.status === statusFilter);
+  }, [fullAttendanceHistory, statusFilter]);
 
   // Grouped by formatted date
   const groupedHistory = useMemo(() => {
@@ -210,6 +291,7 @@ export default function DashboardPage() {
   }, [filteredHistory]);
 
   const isExempt = userStats?.stats?.isExempt || user?.role === 'advisor';
+  const absentCount = userStats?.stats?.absentCount ?? Math.max(0, (userStats?.stats?.totalSessions || 0) - (userStats?.stats?.attendedCount || 0));
 
   return (
     <ProtectedRoute>
@@ -233,7 +315,7 @@ export default function DashboardPage() {
                       className="h-14 w-14 rounded-2xl border-2 border-background shadow-md ring-4 ring-accent/15"
                     />
                     <span className="absolute -bottom-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-emerald-500 border-2 border-card text-white text-[9px] font-bold">
-                      ✓
+                      <Check className="w-2.5 h-2.5 stroke-[3]" />
                     </span>
                   </div>
 
@@ -241,20 +323,22 @@ export default function DashboardPage() {
                     {/* Club Tag Pills */}
                     <div className="flex flex-wrap items-center gap-1.5 mb-1 text-[11px] font-medium">
                       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-accent/15 text-accent font-bold">
-                        ⚡ Club DCC
+                        <Zap className="w-3 h-3 text-accent fill-accent/30" />
+                        <span>Club DCC</span>
                       </span>
                       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-secondary border border-border text-muted-foreground font-mono">
                         Bennett Univ
                       </span>
                       {activeLiveSession && (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-semibold animate-pulse">
-                          ● Session Live
+                        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-semibold animate-pulse">
+                          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                          <span>Session Live</span>
                         </span>
                       )}
                     </div>
 
                     <h1 suppressHydrationWarning className="text-xl sm:text-2xl font-black text-foreground tracking-tight leading-tight truncate">
-                      {daypart}, {firstName}! 👋
+                      {daypart}, {firstName}!
                     </h1>
 
                     <p suppressHydrationWarning className="text-xs text-muted-foreground mt-0.5 truncate">
@@ -473,9 +557,27 @@ export default function DashboardPage() {
                     </div>
 
                     <div className="flex items-center justify-between text-[11px] text-muted-foreground font-mono">
-                      <span>{userStats?.stats?.attendedCount || 0} Attended</span>
-                      <span className={animatedAttendance >= 85 || isExempt ? 'text-emerald-600 dark:text-emerald-400 font-bold' : 'text-amber-500 font-bold'}>
-                        {isExempt ? '✓ Exempt Role' : animatedAttendance >= 85 ? '✓ On Target' : '⚠ Below 85% Threshold'}
+                      <span>{userStats?.stats?.attendedCount || 0} Attended · {absentCount} Absent</span>
+                      <span className={cn(
+                        'font-semibold inline-flex items-center gap-1',
+                        animatedAttendance >= 85 || isExempt ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-500'
+                      )}>
+                        {isExempt ? (
+                          <>
+                            <Check className="w-3 h-3 text-emerald-500" />
+                            <span>Exempt Role</span>
+                          </>
+                        ) : animatedAttendance >= 85 ? (
+                          <>
+                            <Check className="w-3 h-3 text-emerald-500" />
+                            <span>On Target</span>
+                          </>
+                        ) : (
+                          <>
+                            <AlertTriangle className="w-3 h-3 text-amber-500" />
+                            <span>Below 85%</span>
+                          </>
+                        )}
                       </span>
                     </div>
                   </Card>
@@ -565,7 +667,7 @@ export default function DashboardPage() {
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-border">
                       <div>
                         <h2 className="text-base font-bold text-foreground">Attendance History</h2>
-                        <p className="text-xs text-muted-foreground">Verified check-in timestamps and attendance status</p>
+                        <p className="text-xs text-muted-foreground">Verified check-in timestamps, present &amp; absent logs</p>
                       </div>
 
                       {/* Filter by status */}
@@ -581,10 +683,11 @@ export default function DashboardPage() {
                             <SelectItem value="all">All statuses</SelectItem>
                             <SelectItem value="present">Present</SelectItem>
                             <SelectItem value="late">Late</SelectItem>
+                            <SelectItem value="absent">Absent</SelectItem>
                           </SelectContent>
                         </Select>
                         <span className="font-mono text-xs tabular-nums text-muted-foreground">
-                          {filteredHistory.length} of {userStats?.history?.length || 0}
+                          {filteredHistory.length} of {fullAttendanceHistory.length}
                         </span>
                       </div>
                     </div>
@@ -596,7 +699,7 @@ export default function DashboardPage() {
                         description={
                           statusFilter === 'all'
                             ? 'Check into your first club session by scanning the organizer QR code or presenting your pass.'
-                            : 'Try adjusting the status filter to see other attendance records.'
+                            : `No sessions found with status "${statusFilter}". Try selecting "All statuses".`
                         }
                         action={
                           statusFilter === 'all' ? (
@@ -610,7 +713,7 @@ export default function DashboardPage() {
                         }
                       />
                     ) : (
-                      <div className="space-y-4">
+                      <div className="max-h-[460px] overflow-y-auto custom-scroll pr-1.5 space-y-4">
                         {groupedHistory.map(([dateLabel, records]) => (
                           <div key={dateLabel} className="space-y-2">
                             {/* Date Group Header */}
@@ -621,8 +724,11 @@ export default function DashboardPage() {
                             {/* Records for this date */}
                             <div className="divide-y divide-border/60 border border-border/60 rounded-xl overflow-hidden">
                               {records.map((record: any) => {
+                                const isPresent = record.status === 'present';
                                 const isLate = record.status === 'late';
-                                const checkInTime = new Date(record.scannedAt).toLocaleTimeString([], {
+                                const isAbsent = record.status === 'absent';
+                                const recordDate = new Date(record.scannedAt);
+                                const checkInTime = recordDate.toLocaleTimeString([], {
                                   hour: '2-digit',
                                   minute: '2-digit',
                                 });
@@ -636,7 +742,11 @@ export default function DashboardPage() {
                                       <span
                                         className={cn(
                                           'h-2.5 w-2.5 rounded-full shrink-0',
-                                          isLate ? 'bg-amber-500 ring-2 ring-amber-500/20' : 'bg-emerald-500 ring-2 ring-emerald-500/20'
+                                          isPresent
+                                            ? 'bg-emerald-500 ring-2 ring-emerald-500/20'
+                                            : isLate
+                                            ? 'bg-amber-500 ring-2 ring-amber-500/20'
+                                            : 'bg-rose-500 ring-2 ring-rose-500/20'
                                         )}
                                       />
                                       <div className="min-w-0">
@@ -651,21 +761,49 @@ export default function DashboardPage() {
                                             </span>
                                           )}
                                           <span>·</span>
-                                          <span className="flex items-center gap-1">
-                                            <Clock className="w-3 h-3 text-muted-foreground" />
-                                            {checkInTime} ({timeAgo(record.scannedAt)})
-                                          </span>
+                                          {isAbsent ? (
+                                            <span className="flex items-center gap-1 text-rose-500 font-medium">
+                                              <XCircle className="w-3 h-3" />
+                                              <span>Missed session ({timeAgo(record.scannedAt)})</span>
+                                            </span>
+                                          ) : (
+                                            <span className="flex items-center gap-1">
+                                              <Clock className="w-3 h-3 text-muted-foreground" />
+                                              <span>{checkInTime} ({timeAgo(record.scannedAt)})</span>
+                                            </span>
+                                          )}
                                         </div>
                                       </div>
                                     </div>
 
                                     <div className="flex items-center gap-3 shrink-0">
-                                      <Badge
-                                        variant={isLate ? 'warning' : 'success'}
-                                        className="capitalize text-[11px] font-semibold"
-                                      >
-                                        {isLate ? 'Late' : 'Present'}
-                                      </Badge>
+                                      {isPresent && (
+                                        <Badge
+                                          variant="success"
+                                          className="capitalize text-[11px] font-semibold gap-1"
+                                        >
+                                          <Check className="w-3 h-3" />
+                                          <span>Present</span>
+                                        </Badge>
+                                      )}
+                                      {isLate && (
+                                        <Badge
+                                          variant="warning"
+                                          className="capitalize text-[11px] font-semibold gap-1"
+                                        >
+                                          <Clock className="w-3 h-3" />
+                                          <span>Late</span>
+                                        </Badge>
+                                      )}
+                                      {isAbsent && (
+                                        <Badge
+                                          variant="destructive"
+                                          className="capitalize text-[11px] font-semibold gap-1"
+                                        >
+                                          <XCircle className="w-3 h-3" />
+                                          <span>Absent</span>
+                                        </Badge>
+                                      )}
                                     </div>
                                   </div>
                                 );

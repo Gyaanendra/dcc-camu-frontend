@@ -12,7 +12,7 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { api } from '@/lib/api';
-import { Calendar, MapPin, PowerOff, Play, RefreshCw, CalendarCheck, Users } from 'lucide-react';
+import { Calendar, MapPin, PowerOff, Play, RefreshCw, CalendarCheck, Users, Crown, GraduationCap } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -175,17 +175,20 @@ export default function AdminSessionsPage() {
                                 {s.type}
                               </Badge>
                               {s.targetAudience === 'heads_only' ? (
-                                <Badge variant="outline" className="bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30 text-[10px] px-1.5 py-0">
-                                  👑 Heads & Sub-Heads
+                                <Badge variant="outline" className="bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30 text-[10px] px-1.5 py-0 gap-1 inline-flex items-center">
+                                  <Crown className="w-3 h-3" />
+                                  <span>Heads &amp; Sub-Heads</span>
                                 </Badge>
                               ) : s.targetAudience === 'teams_only' ? (
-                                <Badge variant="outline" className="bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/30 text-[10px] px-1.5 py-0 truncate max-w-[130px]">
-                                  👥 {s.audienceLabel || 'Wings'}
+                                <Badge variant="outline" className="bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/30 text-[10px] px-1.5 py-0 truncate max-w-[130px] gap-1 inline-flex items-center">
+                                  <Users className="w-3 h-3" />
+                                  <span>{s.audienceLabel || 'Wings'}</span>
                                 </Badge>
                               ) : null}
                               {s.targetYears && s.targetYears.length > 0 && (
-                                <Badge variant="outline" className="bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/30 text-[10px] px-1.5 py-0">
-                                  🎓 {s.targetYears.join(', ')}
+                                <Badge variant="outline" className="bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/30 text-[10px] px-1.5 py-0 gap-1 inline-flex items-center">
+                                  <GraduationCap className="w-3 h-3" />
+                                  <span>{s.targetYears.join(', ')}</span>
                                 </Badge>
                               )}
                             </div>
@@ -234,18 +237,21 @@ export default function AdminSessionsPage() {
                         <div className="text-[15px] font-semibold text-foreground flex items-center gap-2 flex-wrap">
                           {selectedSession.title}
                           {selectedSession.targetAudience === 'heads_only' && (
-                            <Badge variant="outline" className="bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30 text-[11px]">
-                              👑 Heads & Sub-Heads
+                            <Badge variant="outline" className="bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30 text-[11px] gap-1 inline-flex items-center">
+                              <Crown className="w-3.5 h-3.5" />
+                              <span>Heads &amp; Sub-Heads</span>
                             </Badge>
                           )}
                           {selectedSession.targetAudience === 'teams_only' && (
-                            <Badge variant="outline" className="bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/30 text-[11px]">
-                              👥 {selectedSession.audienceLabel || 'Wings Restricted'}
+                            <Badge variant="outline" className="bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/30 text-[11px] gap-1 inline-flex items-center">
+                              <Users className="w-3.5 h-3.5" />
+                              <span>{selectedSession.audienceLabel || 'Wings Restricted'}</span>
                             </Badge>
                           )}
                           {selectedSession.targetYears && selectedSession.targetYears.length > 0 && (
-                            <Badge variant="outline" className="bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/30 text-[11px]">
-                              🎓 {selectedSession.targetYears.join(', ')}
+                            <Badge variant="outline" className="bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/30 text-[11px] gap-1 inline-flex items-center">
+                              <GraduationCap className="w-3.5 h-3.5" />
+                              <span>{selectedSession.targetYears.join(', ')}</span>
                             </Badge>
                           )}
                         </div>

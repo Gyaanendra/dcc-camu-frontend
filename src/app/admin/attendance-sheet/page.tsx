@@ -30,6 +30,7 @@ import {
   XCircle,
   Clock3,
   UserX,
+  Crown,
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -859,7 +860,7 @@ export default function AttendanceSheetPage() {
                         <SelectContent>
                           {sessions.map((s) => (
                             <SelectItem key={s.id} value={s.id}>
-                              {s.isActive === 'true' ? '🟢 ' : ''}
+                              {s.isActive === 'true' ? '[Live] ' : ''}
                               {s.title} ({fmtDate(s.startTime)})
                             </SelectItem>
                           ))}
@@ -874,8 +875,9 @@ export default function AttendanceSheetPage() {
                         </Badge>
                         <span className="font-mono">{fmtDate(selectedSession.startTime)} · {fmtTime(selectedSession.startTime)}</span>
                         {selectedSession.targetAudience === 'heads_only' && (
-                          <Badge variant="outline" className="bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20 text-[11px]">
-                            👑 Heads Only
+                          <Badge variant="outline" className="bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20 text-[11px] gap-1 inline-flex items-center">
+                            <Crown className="w-3 h-3" />
+                            <span>Heads Only</span>
                           </Badge>
                         )}
                       </div>

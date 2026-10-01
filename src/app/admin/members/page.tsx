@@ -20,14 +20,51 @@ export default function AdminMembersPage() {
   const isReadOnly = user?.role === 'advisor';
   const [users, setUsers] = useState<any[]>([]);
   const [teams, setTeams] = useState<any[]>([]);
+  const [sessions, setSessions] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   const loadData = async () => {
     setIsLoading(true);
     try {
-      const [usersRes, teamsRes] = await Promise.all([api.getUsers(), api.getTeams()]);
-      setUsers(usersRes.users || []);
-      setTeams(teamsRes.teams || []);
+      const [usersRes, teamsRes, analyticsRes, sheetRes] = await Promise.allSettled([
+        api.getUsers(),
+        api.getTeams(),
+        api.getAdminAnalytics(),
+        api.getAttendanceSheet(),
+      ]);
+
+      const rawUsers = usersRes.status === 'fulfilled' ? usersRes.value?.users || [] : [];
+      const teamsData = teamsRes.status === 'fulfilled' ? teamsRes.value?.teams || [] : [];
+      const analyticsMembers = analyticsRes.status === 'fulfilled' ? analyticsRes.value?.memberAnalytics || [] : [];
+      const sheetData = sheetRes.status === 'fulfilled' ? sheetRes.value : null;
+      const sheetMembers = sheetData?.members || [];
+      const loadedSessions = sheetData?.sessions || [];
+
+      setTeams(teamsData);
+      setSessions(loadedSessions);
+
+      const analyticsMap = new Map(analyticsMembers.map((m: any) => [m.id, m]));
+      const sheetMap = new Map(sheetMembers.map((m: any) => [m.id, m]));
+
+      const enriched = rawUsers.map((u: any) => {
+        const a: any = analyticsMap.get(u.id);
+        const s: any = sheetMap.get(u.id);
+        return {
+          ...u,
+          attendedSessions: a?.attendedSessions ?? s?.attended ?? u.totalAttended ?? 0,
+          totalAttended: a?.totalAttended ?? s?.attended ?? u.totalAttended ?? 0,
+          eligibleSessions: a?.eligibleSessions ?? s?.eligibleSessions ?? 0,
+          attendancePercentage: a?.attendancePercentage ?? s?.attendanceRate,
+          onTimeCount: a?.onTimeCount,
+          lateCount: a?.lateCount,
+          punctualityRate: a?.punctualityRate,
+          isAtRisk: a?.isAtRisk ?? (a?.attendancePercentage !== undefined ? a.attendancePercentage < 75 : false),
+          lastActive: a?.lastActive,
+          records: s?.records || undefined,
+        };
+      });
+
+      setUsers(enriched);
     } catch (e: any) {
       toast.error('Failed to load member directory');
     } finally {
@@ -89,7 +126,13 @@ export default function AdminMembersPage() {
               </div>
             </Card>
 
-            <MemberDirectoryTable members={users} teams={teams} onRefresh={loadData} isLoading={isLoading} />
+            <MemberDirectoryTable
+              members={users}
+              teams={teams}
+              sessions={sessions}
+              onRefresh={loadData}
+              isLoading={isLoading}
+            />
           </main>
         </div>
       </div>

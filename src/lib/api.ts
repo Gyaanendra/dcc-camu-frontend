@@ -114,7 +114,12 @@ class ApiClient {
 
       return data;
     } catch (error: any) {
-      console.error(`[API Error] ${options.method || 'GET'} ${url}:`, error.message);
+      const isExpectedAuthCheck =
+        endpoint === '/auth/me' &&
+        (error.message?.includes('No token provided') || error.message?.includes('Authentication required'));
+      if (!isExpectedAuthCheck) {
+        console.error(`[API Error] ${options.method || 'GET'} ${url}:`, error.message);
+      }
       throw error;
     }
   }

@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { api } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from 'sonner';
-import { Plus, GraduationCap } from 'lucide-react';
+import { Plus, GraduationCap, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -177,9 +177,9 @@ export const CreateSessionModal: React.FC<CreateSessionModalProps> = ({ teams, o
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">🌐 All Club Members</SelectItem>
-                  <SelectItem value="heads_only">👑 Heads & Sub-Heads Only</SelectItem>
-                  <SelectItem value="teams_only">👥 Specific Wing(s) Only</SelectItem>
+                  <SelectItem value="all">All Club Members</SelectItem>
+                  <SelectItem value="heads_only">Heads &amp; Sub-Heads Only</SelectItem>
+                  <SelectItem value="teams_only">Specific Wing(s) Only</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -203,13 +203,13 @@ export const CreateSessionModal: React.FC<CreateSessionModalProps> = ({ teams, o
               <button
                 type="button"
                 onClick={selectAllYears}
-                className={`text-xs px-2.5 py-1 rounded-full border transition-all cursor-pointer ${
+                className={`text-xs px-2.5 py-1 rounded-full border transition-all cursor-pointer flex items-center ${
                   selectedYears.length === 0 || selectedYears.length === 4
                     ? 'bg-primary text-primary-foreground border-primary font-medium shadow-xs'
                     : 'bg-background hover:bg-secondary text-foreground border-border'
                 }`}
               >
-                {(selectedYears.length === 0 || selectedYears.length === 4) && '✓ '}
+                {(selectedYears.length === 0 || selectedYears.length === 4) && <Check className="w-3 h-3 inline mr-1" />}
                 All Years
               </button>
 
@@ -220,14 +220,14 @@ export const CreateSessionModal: React.FC<CreateSessionModalProps> = ({ teams, o
                     key={y.id}
                     type="button"
                     onClick={() => toggleYearSelection(y.id)}
-                    className={`text-xs px-2.5 py-1 rounded-full border transition-all cursor-pointer ${
+                    className={`text-xs px-2.5 py-1 rounded-full border transition-all cursor-pointer flex items-center ${
                       isSelected
                         ? 'bg-primary text-primary-foreground border-primary font-medium shadow-xs'
                         : 'bg-background hover:bg-secondary text-foreground border-border'
                     }`}
                   >
-                    {isSelected && '✓ '}
-                    {y.label} <span className="opacity-70 text-[10px]">({y.sub})</span>
+                    {isSelected && <Check className="w-3 h-3 inline mr-1" />}
+                    {y.label} <span className="opacity-70 text-[10px] ml-1">({y.sub})</span>
                   </button>
                 );
               })}
@@ -253,13 +253,13 @@ export const CreateSessionModal: React.FC<CreateSessionModalProps> = ({ teams, o
                       key={t.id}
                       type="button"
                       onClick={() => toggleTeamSelection(t.id)}
-                      className={`text-xs px-2.5 py-1 rounded-full border transition-all cursor-pointer ${
+                      className={`text-xs px-2.5 py-1 rounded-full border transition-all cursor-pointer flex items-center ${
                         isSelected
                           ? 'bg-primary text-primary-foreground border-primary font-medium shadow-xs'
                           : 'bg-background hover:bg-secondary text-foreground border-border'
                       }`}
                     >
-                      {isSelected && '✓ '}
+                      {isSelected && <Check className="w-3 h-3 inline mr-1" />}
                       {t.name}
                     </button>
                   );

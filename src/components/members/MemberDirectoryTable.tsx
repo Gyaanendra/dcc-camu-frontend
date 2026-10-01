@@ -80,8 +80,10 @@ interface MemberDirectoryProps {
     punctualityRate?: number;
     isAtRisk?: boolean;
     lastActive?: string;
+    records?: Record<string, string | null>;
   }>;
   teams: Array<{ id: string; name: string }>;
+  sessions?: Array<any>;
   onRefresh?: () => void;
   isLoading?: boolean;
 }
@@ -89,7 +91,13 @@ interface MemberDirectoryProps {
 type SortField = 'name' | 'rollNumber' | 'position' | 'teamName' | 'role' | 'totalAttended' | 'year' | 'attendancePercentage';
 type SortDirection = 'asc' | 'desc';
 
-export const MemberDirectoryTable: React.FC<MemberDirectoryProps> = ({ members, teams, onRefresh, isLoading = false }) => {
+export const MemberDirectoryTable: React.FC<MemberDirectoryProps> = ({
+  members,
+  teams,
+  sessions = [],
+  onRefresh,
+  isLoading = false,
+}) => {
   const { user: currentUser } = useAuth();
   const isReadOnly = currentUser?.role === 'advisor';
 
@@ -453,8 +461,8 @@ export const MemberDirectoryTable: React.FC<MemberDirectoryProps> = ({ members, 
               <SelectItem value="ALL">All Check-ins</SelectItem>
               <SelectItem value="ACTIVE">Has Check-ins (≥1)</SelectItem>
               <SelectItem value="ZERO">0 Check-ins</SelectItem>
-              <SelectItem value="AT_RISK">⚠️ At-Risk (&lt;75%)</SelectItem>
-              <SelectItem value="LATE">⏰ Has Late (≥1)</SelectItem>
+              <SelectItem value="AT_RISK">At-Risk (&lt;75%)</SelectItem>
+              <SelectItem value="LATE">Has Late (≥1)</SelectItem>
             </SelectContent>
           </Select>
 
@@ -711,9 +719,19 @@ export const MemberDirectoryTable: React.FC<MemberDirectoryProps> = ({ members, 
               sortedAndFilteredMembers.map((member) => (
                 <TableRow key={member.id} className="group">
                   <TableCell>
-                    <div className="flex items-center gap-3">
-                      <MemberAvatar src={member.avatarUrl} name={member.name} className="h-9 w-9 border border-border hover:scale-110 transition-transform duration-200 shrink-0" />
-                      <div className="font-medium text-foreground truncate max-w-[200px] xl:max-w-none" title={member.name}>{member.name}</div>
+                    <div
+                      className="flex items-center gap-3 cursor-pointer group/member"
+                      onClick={() => setViewingMember(member)}
+                      title="Click to view detailed analytics & session breakdown"
+                    >
+                      <MemberAvatar
+                        src={member.avatarUrl}
+                        name={member.name}
+                        className="h-9 w-9 border border-border group-hover/member:ring-2 group-hover/member:ring-primary/40 group-hover/member:scale-105 transition-all duration-200 shrink-0"
+                      />
+                      <div className="font-medium text-foreground truncate max-w-[200px] xl:max-w-none group-hover/member:text-primary transition-colors" title={member.name}>
+                        {member.name}
+                      </div>
                     </div>
                   </TableCell>
                   <TableCell>
@@ -966,11 +984,14 @@ export const MemberDirectoryTable: React.FC<MemberDirectoryProps> = ({ members, 
         </DialogContent>
       </Dialog>
 
-      <MemberAnalyticsModal
-        member={viewingMember}
-        isOpen={!!viewingMember}
-        onClose={() => setViewingMember(null)}
-      />
+      {viewingMember && (
+        <MemberAnalyticsModal
+          member={viewingMember}
+          sessions={sessions}
+          isOpen={!!viewingMember}
+          onClose={() => setViewingMember(null)}
+        />
+      )}
     </div>
   );
 };
