@@ -18,9 +18,12 @@ import {
   Sun,
   Moon,
   ShieldCheck,
+  FileText,
+  ClipboardCheck,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { MemberAvatar } from '@/components/ui/member-avatar';
+import { DCCLogo } from '@/components/ui/DCCLogo';
 
 // ─── Mobile Sidebar Drawer ─────────────────────────────────────────────────
 // Visible only on <lg screens. Triggered by the hamburger in the Navbar.
@@ -47,7 +50,7 @@ export const MobileNav: React.FC = () => {
       ? []
       : [
           { name: 'Scan QR', href: '/scan', icon: QrCode },
-          { name: 'My attendance', href: '/my-attendance', icon: Award },
+          { name: 'OD requests', href: '/od-requests', icon: FileText },
         ]),
   ];
 
@@ -56,6 +59,7 @@ export const MobileNav: React.FC = () => {
     { name: 'Sessions', href: '/admin/sessions', icon: CalendarCheck },
     { name: 'Members', href: '/admin/members', icon: Users },
     { name: 'Attendance sheet', href: '/admin/attendance-sheet', icon: Table2 },
+    { name: 'OD approvals', href: '/admin/od-approvals', icon: ClipboardCheck },
   ];
 
   const rowClass = (active: boolean) =>
@@ -90,14 +94,8 @@ export const MobileNav: React.FC = () => {
 
             {/* Header */}
             <div className="flex items-center justify-between px-4 py-3 border-b border-border">
-              <Link href="/dashboard" onClick={close} className="flex items-center gap-2">
-                <div className="flex h-7 w-7 items-center justify-center rounded-md bg-foreground font-bold text-background text-xs">
-                  DCC
-                </div>
-                <div>
-                  <div className="text-[13px] font-semibold text-foreground">Club DCC Camu</div>
-                  <div className="text-xs text-muted-foreground">Bennett University</div>
-                </div>
+              <Link href="/dashboard" onClick={close} className="flex items-center min-w-0 py-0.5">
+                <DCCLogo className="h-7 w-auto object-contain" />
               </Link>
               <button
                 onClick={close}

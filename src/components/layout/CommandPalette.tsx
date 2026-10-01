@@ -12,6 +12,8 @@ import {
   CalendarCheck,
   Users,
   Table2,
+  FileText,
+  ClipboardCheck,
   Search,
   Moon,
   Sun,
@@ -43,13 +45,14 @@ interface NavEntry {
 }
 
 const ALL_ROUTES: NavEntry[] = [
-  { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+  { label: 'Dashboard & Attendance', href: '/dashboard', icon: LayoutDashboard },
   { label: 'Scan QR', href: '/scan', icon: QrCode },
-  { label: 'My attendance', href: '/my-attendance', icon: Award },
+  { label: 'OD requests', href: '/od-requests', icon: FileText },
   { label: 'Team analytics', href: '/admin/analytics', icon: BarChart3 },
   { label: 'Sessions', href: '/admin/sessions', icon: CalendarCheck },
   { label: 'Members', href: '/admin/members', icon: Users },
   { label: 'Attendance sheet', href: '/admin/attendance-sheet', icon: Table2 },
+  { label: 'OD approvals', href: '/admin/od-approvals', icon: ClipboardCheck },
 ];
 
 const routeByHref = new Map(ALL_ROUTES.map(r => [r.href, r]));
@@ -112,7 +115,7 @@ export const CommandPalette: React.FC = () => {
     if (!user) return [];
     return ALL_ROUTES.filter(r => {
       if (r.href.startsWith('/admin')) return canViewAdmin;
-      if (r.href === '/scan' || r.href === '/my-attendance') return !isAdvisor;
+      if (r.href === '/scan' || r.href === '/od-requests') return !isAdvisor;
       return true;
     });
   }, [user, canViewAdmin, isAdvisor]);

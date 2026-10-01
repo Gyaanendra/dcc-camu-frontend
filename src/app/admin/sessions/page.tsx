@@ -27,6 +27,9 @@ export default function AdminSessionsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
 
+  const [sessionSearch, setSessionSearch] = useState('');
+  const [attendeeSearch, setAttendeeSearch] = useState('');
+
   const loadData = async (focusSessionId?: string) => {
     setIsLoading(true);
     try {
@@ -61,6 +64,7 @@ export default function AdminSessionsPage() {
 
   const handleSelectSession = (s: any) => {
     setSelectedSession(s);
+    setAttendeeSearch('');
     loadSessionDetail(s.id);
   };
 
@@ -80,6 +84,17 @@ export default function AdminSessionsPage() {
       setIsUpdatingStatus(false);
     }
   };
+
+  const filteredSessions = sessions.filter((s) => {
+    if (!sessionSearch.trim()) return true;
+    const q = sessionSearch.toLowerCase();
+    return (
+      s.title?.toLowerCase().includes(q) ||
+      s.location?.toLowerCase().includes(q) ||
+      s.type?.toLowerCase().includes(q) ||
+      s.audienceLabel?.toLowerCase().includes(q)
+    );
+  });
 
   return (
     <ProtectedRoute requireAdmin>
@@ -101,7 +116,7 @@ export default function AdminSessionsPage() {
                     size="icon"
                     onClick={() => loadData()}
                     title="Refresh Sessions"
-                    className="focus-orange"
+                    className="focus-orange h-10 w-10 rounded-xl"
                   >
                     <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
                   </Button>
@@ -124,18 +139,27 @@ export default function AdminSessionsPage() {
             ) : (
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[calc(100vh-180px)] min-h-[520px]">
                 {/* Sessions List Column with Independent Scroll */}
-                <div className="flex flex-col h-full min-h-0">
-                  <div className="flex items-center justify-between gap-2 pb-3 border-b border-border shrink-0">
-                    <h2 className="text-xs font-medium text-muted-foreground">
-                      Sessions
-                    </h2>
-                    <span className="font-mono text-[12px] text-muted-foreground tabular-nums">
-                      {sessions.length} of {sessions.length}
-                    </span>
+                <div className="flex flex-col h-full min-h-0 bg-card rounded-xl border border-border p-3.5 shadow-xs">
+                  <div className="space-y-2 pb-3 border-b border-border shrink-0">
+                    <div className="flex items-center justify-between gap-2">
+                      <h2 className="text-xs font-bold text-foreground uppercase tracking-wider">
+                        Sessions
+                      </h2>
+                      <span className="font-mono text-[12px] text-muted-foreground tabular-nums">
+                        {filteredSessions.length} of {sessions.length}
+                      </span>
+                    </div>
+                    <input
+                      type="text"
+                      placeholder="Search sessions..."
+                      value={sessionSearch}
+                      onChange={(e) => setSessionSearch(e.target.value)}
+                      className="w-full h-8 px-2.5 rounded-lg border border-border bg-secondary/50 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                    />
                   </div>
-                  <div className="space-y-2 flex-1 overflow-y-auto pr-1.5 pt-3">
-                    {sessions.length > 0 ? (
-                      sessions.map((s) => (
+                  <div className="space-y-2 flex-1 overflow-y-auto custom-scroll pr-1.5 pt-3">
+                    {filteredSessions.length > 0 ? (
+                      filteredSessions.map((s) => (
                         <button
                           key={s.id}
                           onClick={() => handleSelectSession(s)}
@@ -272,50 +296,74 @@ export default function AdminSessionsPage() {
                     status={selectedSession.isActive === 'true' ? 'live' : 'idle'}
                   />
 
-                  {/* Real-time Attendees Feed */}
-                  <Card className="p-6 space-y-4">
-                    <div className="flex items-center justify-between pb-3 border-b border-border">
-                      <h3 className="text-sm font-bold text-foreground">Real-time Attendance Feed</h3>
-                      <Badge variant="success" className="tabular-nums">
-                        <span className="font-mono">{sessionDetail?.attendeeCount || 0} checked in</span>
-                      </Badge>
+                  {/* Real-time Attendees Feed with Dedicated Search & Custom Scrollbar */}
+                  <Card className="p-5 space-y-3.5 border-border rounded-xl">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-border">
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-sm font-bold text-foreground">Real-time Check-ins</h3>
+                        <Badge variant="success" className="tabular-nums font-mono text-xs">
+                          {sessionDetail?.attendeeCount || 0} Total
+                        </Badge>
+                      </div>
+
+                      {/* Attendee search bar */}
+                      <input
+                        type="text"
+                        placeholder="Search attendee by name or roll..."
+                        value={attendeeSearch}
+                        onChange={(e) => setAttendeeSearch(e.target.value)}
+                        className="h-8 px-2.5 rounded-lg border border-border bg-secondary/50 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary w-full sm:w-64"
+                      />
                     </div>
 
-                    {/* Attendance feed — scrollable internally */}
-                    <div className="space-y-2 max-h-[340px] overflow-y-auto pr-1">
-                      {sessionDetail?.attendees?.length > 0 ? (
-                        sessionDetail.attendees.map((a: any) => (
-                          <div
-                            key={a.id}
-                            className="flex items-center justify-between p-3 rounded-lg bg-secondary border border-border text-sm"
-                          >
-                            <div className="flex items-center gap-3">
-                              <div className="h-8 w-8 rounded-full bg-card border border-border flex items-center justify-center font-bold text-foreground text-sm">
-                                {a.name.charAt(0)}
-                              </div>
-                              <div>
-                                <div className="font-semibold text-foreground">{a.name}</div>
-                                <div className="font-mono text-[13px] text-muted-foreground max-w-[180px] truncate" title={a.rollNumber}>{a.rollNumber}</div>
-                              </div>
-                            </div>
+                    {/* Attendance feed — scrollable with custom-scroll */}
+                    <div className="space-y-2 max-h-[380px] overflow-y-auto custom-scroll pr-1.5">
+                      {(() => {
+                        const rawAttendees = sessionDetail?.attendees || [];
+                        const filteredAttendees = rawAttendees.filter((a: any) => {
+                          if (!attendeeSearch.trim()) return true;
+                          const q = attendeeSearch.toLowerCase();
+                          return a.name?.toLowerCase().includes(q) || a.rollNumber?.toLowerCase().includes(q);
+                        });
 
-                            <div className="text-right">
-                              <Badge variant={a.status === 'late' ? 'warning' : 'success'}>
-                                {a.status.charAt(0).toUpperCase() + a.status.slice(1)}
-                              </Badge>
-                              <div className="font-mono text-[13px] text-muted-foreground mt-1">
-                                {new Date(a.scannedAt).toLocaleTimeString()}
+                        if (filteredAttendees.length > 0) {
+                          return filteredAttendees.map((a: any) => (
+                            <div
+                              key={a.id}
+                              className="flex items-center justify-between p-3 rounded-xl bg-card border border-border hover:bg-secondary/40 transition-colors text-sm"
+                            >
+                              <div className="flex items-center gap-3 min-w-0">
+                                <div className="h-9 w-9 rounded-xl bg-secondary border border-border flex items-center justify-center font-bold text-foreground text-sm shrink-0">
+                                  {a.name?.charAt(0) || 'M'}
+                                </div>
+                                <div className="min-w-0">
+                                  <div className="font-semibold text-foreground truncate">{a.name}</div>
+                                  <div className="font-mono text-xs text-muted-foreground truncate" title={a.rollNumber}>
+                                    {a.rollNumber}
+                                  </div>
+                                </div>
+                              </div>
+
+                              <div className="text-right shrink-0">
+                                <Badge variant={a.status === 'late' ? 'warning' : 'success'} className="capitalize text-[11px]">
+                                  {a.status}
+                                </Badge>
+                                <div className="font-mono text-[11px] text-muted-foreground mt-0.5 tabular-nums">
+                                  {new Date(a.scannedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                </div>
                               </div>
                             </div>
-                          </div>
-                        ))
-                      ) : (
-                        <EmptyState
-                          icon={Users}
-                          title="No check-ins yet"
-                          description="No members have checked in for this session yet."
-                        />
-                      )}
+                          ));
+                        }
+
+                        return (
+                          <EmptyState
+                            icon={Users}
+                            title={attendeeSearch ? 'No matching check-ins' : 'No check-ins yet'}
+                            description={attendeeSearch ? 'Try a different name or roll number.' : 'No members have checked in for this session yet.'}
+                          />
+                        );
+                      })()}
                     </div>
                   </Card>
                 </>

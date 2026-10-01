@@ -9,6 +9,8 @@ import { openMobileNav } from '@/components/layout/MobileNav';
 import { openCommandPalette } from '@/components/layout/CommandPalette';
 import { Button } from '@/components/ui/button';
 import { MemberAvatar } from '@/components/ui/member-avatar';
+import { DCCLogo } from '@/components/ui/DCCLogo';
+import { cn } from '@/lib/utils';
 
 export interface Crumb {
   label: string;
@@ -30,8 +32,8 @@ export const Navbar: React.FC<{ crumbs?: Crumb[] }> = ({ crumbs }) => {
     <header className="sticky top-0 z-40 w-full border-b border-border bg-background transition-colors">
       <div className="w-full flex h-12 items-center justify-between gap-2 px-4 sm:px-6 lg:px-8">
 
-        {/* Left: hamburger (mobile) + brand + breadcrumbs */}
-        <div className="flex min-w-0 items-center gap-2">
+        {/* Left: hamburger (mobile) + brand (mobile only when logged in) + breadcrumbs */}
+        <div className="flex min-w-0 items-center gap-2.5">
           {user && (
             <button
               onClick={openMobileNav}
@@ -43,30 +45,31 @@ export const Navbar: React.FC<{ crumbs?: Crumb[] }> = ({ crumbs }) => {
             </button>
           )}
 
-          <Link href="/dashboard" className="flex shrink-0 items-center gap-2 group">
-            <div className="flex h-7 w-7 items-center justify-center rounded-md bg-foreground font-bold text-background text-xs tracking-tight transition-colors duration-150 group-hover:bg-accent group-hover:text-white">
-              DCC
-            </div>
-            <span className="font-semibold text-foreground text-[13px] tracking-tight leading-none">
-              Club DCC
-            </span>
+          {/* Brand mark on mobile, or when user has no sidebar */}
+          <Link
+            href="/dashboard"
+            className={cn(
+              "flex shrink-0 items-center gap-2 group",
+              user ? "lg:hidden" : ""
+            )}
+          >
+            <DCCLogo className="h-6 w-auto object-contain transition-transform duration-150 group-hover:scale-105" />
           </Link>
 
-          {/* Breadcrumb slot (page provides crumbs) */}
+          {/* Breadcrumb slot */}
           {crumbs && crumbs.length > 0 && (
-            <nav aria-label="Breadcrumb" className="hidden md:flex min-w-0 items-center gap-1 text-[13px]">
-              <ChevronRight className="w-3.5 h-3.5 shrink-0 text-muted-foreground" />
+            <nav aria-label="Breadcrumb" className="flex min-w-0 items-center gap-1.5 text-[13px]">
               {crumbs.map((crumb, i) => {
                 const last = i === crumbs.length - 1;
                 return (
-                  <span key={crumb.label} className="flex min-w-0 items-center gap-1">
-                    {i > 0 && <span className="text-muted-foreground">/</span>}
+                  <span key={crumb.label} className="flex min-w-0 items-center gap-1.5">
+                    {i > 0 && <span className="text-muted-foreground/60 text-xs">/</span>}
                     {crumb.href && !last ? (
                       <Link href={crumb.href} className="text-muted-foreground hover:text-foreground transition-colors duration-150 truncate">
                         {crumb.label}
                       </Link>
                     ) : (
-                      <span aria-current={last ? 'page' : undefined} className={last ? 'text-foreground font-medium truncate' : 'text-muted-foreground truncate'}>
+                      <span aria-current={last ? 'page' : undefined} className={last ? 'text-foreground font-semibold truncate' : 'text-muted-foreground truncate'}>
                         {crumb.label}
                       </span>
                     )}

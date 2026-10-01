@@ -4,6 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
+import { cn } from '@/lib/utils';
 import {
   LayoutDashboard,
   QrCode,
@@ -34,6 +35,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { MemberAvatar } from '@/components/ui/member-avatar';
 import { Button } from '@/components/ui/button';
+import { DCCLogo } from '@/components/ui/DCCLogo';
 
 export const Sidebar: React.FC = () => {
   const pathname = usePathname();
@@ -48,7 +50,6 @@ export const Sidebar: React.FC = () => {
       ? []
       : [
           { name: 'Scan QR', href: '/scan', icon: QrCode },
-          { name: 'My attendance', href: '/my-attendance', icon: Award },
           { name: 'OD requests', href: '/od-requests', icon: FileText },
         ]),
   ];
@@ -66,19 +67,14 @@ export const Sidebar: React.FC = () => {
   return (
     <ShadcnSidebar id="main-sidebar" aria-label="Main sidebar navigation">
       {/* Club workspace subheader */}
-      <SidebarHeader className="border-b border-sidebar-border/60 px-3 py-2.5">
-        <div className="flex items-center justify-between gap-2 px-1">
-          <div className="flex items-center gap-2 min-w-0">
-            <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded bg-accent/15 text-accent font-bold text-[10px]">
-              D
-            </div>
-            <span className="truncate text-xs font-semibold text-foreground tracking-tight">
-              DCC Portal
-            </span>
-          </div>
+      <SidebarHeader className="border-b border-sidebar-border/60 px-4 py-3">
+        <div className="flex items-center justify-between gap-3">
+          <Link href="/dashboard" className="flex items-center min-w-0 group py-0.5">
+            <DCCLogo className="h-7 w-auto object-contain transition-transform group-hover:scale-105" />
+          </Link>
           <Badge
             variant={isAdmin ? 'default' : 'secondary'}
-            className="text-[10px] px-1.5 py-0 uppercase tracking-wider font-semibold"
+            className="text-[10px] px-2 py-0.5 uppercase tracking-wider font-semibold shrink-0"
           >
             {user?.role || 'Member'}
           </Badge>
@@ -86,10 +82,12 @@ export const Sidebar: React.FC = () => {
       </SidebarHeader>
 
       {/* Independently scrollable nav items area */}
-      <SidebarContent>
+      <SidebarContent className="custom-scroll py-2">
         {/* User navigation */}
         <SidebarGroup>
-          <SidebarGroupLabel>Overview</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-[11px] font-semibold tracking-wider text-muted-foreground/70 uppercase px-3 py-1">
+            General
+          </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {userNav.map(item => {
@@ -102,10 +100,23 @@ export const Sidebar: React.FC = () => {
                       isActive={active}
                       id={`sidebar-${item.name.toLowerCase().replace(/\s+/g, '-')}`}
                       aria-current={active ? 'page' : undefined}
+                      className={cn(
+                        "relative transition-all duration-150 rounded-lg px-3 py-2 text-[13px]",
+                        active
+                          ? "bg-accent/10 text-accent font-semibold border-l-[3px] border-accent rounded-l-none"
+                          : "text-muted-foreground hover:text-foreground hover:bg-secondary/70"
+                      )}
                     >
-                      <Link href={item.href}>
-                        <Icon className={active ? 'text-accent' : 'text-muted-foreground'} />
-                        <span className="truncate">{item.name}</span>
+                      <Link href={item.href} className="flex items-center justify-between w-full">
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <Icon className={cn("w-4 h-4 shrink-0", active ? "text-accent" : "text-muted-foreground")} />
+                          <span className="truncate">{item.name}</span>
+                        </div>
+                        {item.name === 'OD requests' && (
+                          <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-full bg-secondary text-muted-foreground">
+                            CAMU
+                          </span>
+                        )}
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
@@ -117,10 +128,15 @@ export const Sidebar: React.FC = () => {
 
         {/* Admin navigation (advisors: view-only) */}
         {isViewer && (
-          <SidebarGroup>
-            <SidebarGroupLabel>
-              <ShieldCheck className="w-3 h-3 text-muted-foreground shrink-0" />
-              <span>{isAdmin ? 'Admin & Ops' : 'View only'}</span>
+          <SidebarGroup className="mt-2">
+            <SidebarGroupLabel className="text-[11px] font-semibold tracking-wider text-muted-foreground/70 uppercase px-3 py-1 flex items-center justify-between">
+              <span className="flex items-center gap-1.5">
+                <ShieldCheck className="w-3 h-3 text-muted-foreground shrink-0" />
+                <span>{isAdmin ? 'Admin & Ops' : 'Advisor View'}</span>
+              </span>
+              <span className="text-[10px] font-mono lowercase text-muted-foreground font-normal">
+                {isAdmin ? 'ops' : 'read'}
+              </span>
             </SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
@@ -134,10 +150,23 @@ export const Sidebar: React.FC = () => {
                         isActive={active}
                         id={`sidebar-admin-${item.name.toLowerCase().replace(/\s+/g, '-')}`}
                         aria-current={active ? 'page' : undefined}
+                        className={cn(
+                          "relative transition-all duration-150 rounded-lg px-3 py-2 text-[13px]",
+                          active
+                            ? "bg-accent/10 text-accent font-semibold border-l-[3px] border-accent rounded-l-none"
+                            : "text-muted-foreground hover:text-foreground hover:bg-secondary/70"
+                        )}
                       >
-                        <Link href={item.href}>
-                          <Icon className={active ? 'text-accent' : 'text-muted-foreground'} />
-                          <span className="truncate">{item.name}</span>
+                        <Link href={item.href} className="flex items-center justify-between w-full">
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <Icon className={cn("w-4 h-4 shrink-0", active ? "text-accent" : "text-muted-foreground")} />
+                            <span className="truncate">{item.name}</span>
+                          </div>
+                          {item.name === 'Sessions' && (
+                            <span className="text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-semibold">
+                              Live
+                            </span>
+                          )}
                         </Link>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
@@ -151,20 +180,20 @@ export const Sidebar: React.FC = () => {
 
       {/* User profile card — permanently pinned at bottom of viewport */}
       {user && (
-        <SidebarFooter>
-          <div className="flex items-center gap-2.5 p-1 rounded-lg hover:bg-sidebar-accent/60 transition-colors group">
+        <SidebarFooter className="border-t border-sidebar-border/60 p-2">
+          <div className="flex items-center gap-2.5 p-2 rounded-xl bg-secondary/40 hover:bg-secondary transition-colors group">
             <div className="relative shrink-0">
               <MemberAvatar
                 src={user.avatarUrl}
                 name={user.name}
                 className="h-8 w-8 rounded-lg border border-border shadow-xs group-hover:scale-105 transition-transform"
               />
-              <span className="absolute -bottom-0.5 -right-0.5 flex h-2 w-2">
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500 border border-card" />
+              <span className="absolute -bottom-0.5 -right-0.5 flex h-2.5 w-2.5">
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500 border-2 border-card" />
               </span>
             </div>
             <div className="min-w-0 flex-1">
-              <div className="text-xs font-semibold text-foreground truncate leading-tight">
+              <div className="text-xs font-bold text-foreground truncate leading-tight">
                 {user.name}
               </div>
               <div className="text-[11px] text-muted-foreground truncate leading-tight mt-0.5">
@@ -175,7 +204,7 @@ export const Sidebar: React.FC = () => {
               variant="ghost"
               size="icon"
               onClick={logout}
-              className="h-7 w-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10 shrink-0"
+              className="h-7 w-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10 shrink-0 rounded-lg"
               title="Sign out"
               aria-label="Sign out"
             >

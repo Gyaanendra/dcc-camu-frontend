@@ -38,21 +38,21 @@ export default function ScanPage() {
   return (
     <ProtectedRoute>
       <div className="min-h-screen flex flex-col bg-background text-foreground transition-colors">
-        <Navbar />
+        <Navbar crumbs={[{ label: 'Member' }, { label: 'Scan QR' }]} />
         <div className="flex flex-1 items-start">
           <Sidebar />
-          <main className="flex-1 min-w-0 p-4 sm:p-6 max-w-xl mx-auto w-full space-y-4">
+          <main className="flex-1 min-w-0 p-4 sm:p-6 max-w-xl mx-auto w-full space-y-5">
             {/* Focused header */}
-            <div className="flex items-start gap-3">
-              <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-secondary border border-border text-foreground">
-                <QrCode className="w-[18px] h-[18px]" />
+            <div className="flex items-start gap-3 p-4 rounded-xl border border-border bg-card shadow-xs">
+              <span className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary text-white shadow-xs">
+                <QrCode className="w-5 h-5" />
               </span>
               <div className="min-w-0 flex-1">
-                <h1 className="text-[28px] leading-[1.2] font-bold tracking-[-0.02em] text-foreground text-balance">
-                  Scan attendance
+                <h1 className="text-2xl font-bold tracking-tight text-foreground">
+                  Scan Attendance
                 </h1>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Point the camera at a member QR badge to check in.
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Point the camera at a session QR code or member QR badge to check in.
                 </p>
               </div>
               <Button
@@ -60,7 +60,7 @@ export default function ScanPage() {
                 size="icon"
                 onClick={fetchActiveSession}
                 title="Check for newly started sessions"
-                className="focus-orange shrink-0"
+                className="focus-orange shrink-0 h-9 w-9 rounded-xl"
               >
                 <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
               </Button>

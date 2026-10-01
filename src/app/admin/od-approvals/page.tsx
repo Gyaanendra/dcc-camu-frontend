@@ -62,9 +62,11 @@ export default function AdminODApprovalsPage() {
     try {
       setIsLoading(true);
       const data = await api.getAdminODs();
-      setOds(data?.odRequests || []);
+      const raw = Array.isArray(data) ? data : (data?.odRequests || data?.data || data?.ods || []);
+      setOds(Array.isArray(raw) ? raw : []);
     } catch (err: any) {
       toast.error('Failed to load OD records: ' + (err.message || 'Unknown error'));
+      setOds([]);
     } finally {
       setIsLoading(false);
     }
@@ -104,7 +106,8 @@ export default function AdminODApprovalsPage() {
     }
   };
 
-  const filteredOds = ods.filter((od) => {
+  const safeOds = Array.isArray(ods) ? ods : [];
+  const filteredOds = safeOds.filter((od) => {
     if (statusFilter !== 'all' && od.status !== statusFilter) return false;
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
@@ -116,77 +119,100 @@ export default function AdminODApprovalsPage() {
     return true;
   });
 
-  const pendingCount = ods.filter((o) => o.status === 'pending').length;
-  const approvedCount = ods.filter((o) => o.status === 'approved').length;
-  const rejectedCount = ods.filter((o) => o.status === 'rejected').length;
+  const totalOds = safeOds.length;
+  const pendingCount = safeOds.filter((o) => o.status === 'pending').length;
+  const approvedCount = safeOds.filter((o) => o.status === 'approved').length;
+  const rejectedCount = safeOds.filter((o) => o.status === 'rejected').length;
 
   return (
-    <ProtectedRoute>
+    <ProtectedRoute requireAdmin>
       <div className="min-h-screen flex flex-col bg-background text-foreground transition-colors">
-        <Navbar />
+        <Navbar crumbs={[{ label: 'Admin' }, { label: 'OD Approvals' }]} />
         <div className="flex flex-1 items-start">
           <Sidebar />
-          <main className="flex-1 min-w-0 p-4 sm:p-6 max-w-7xl mx-auto w-full space-y-5">
+          <main className="flex-1 min-w-0 p-4 sm:p-6 max-w-7xl mx-auto w-full space-y-6">
             <PageHeader
               icon={ClipboardCheck}
               title="OD Sanction & Approvals"
               description="Review and sanction Bennett University On Duty attendance requests submitted by club members"
+              crumbs={[{ label: 'Admin' }, { label: 'OD Approvals' }]}
             />
 
-            {/* Quick Metrics */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              <Card className="p-3.5 flex flex-col justify-between">
-                <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
+            {/* DESIGN.md KPI Grid with 1 Solid Orange Highlight Card */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
+              <Card className="p-4 flex flex-col justify-between border-border rounded-xl">
+                <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
                   Total Submissions
                 </span>
-                <span className="text-2xl font-bold text-foreground mt-1">{ods.length}</span>
-              </Card>
-
-              <Card className="p-3.5 flex flex-col justify-between border-amber-500/30 bg-amber-500/5">
-                <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-medium text-amber-500 uppercase tracking-wider">
-                    Needs Review
-                  </span>
-                  <Clock className="w-3.5 h-3.5 text-amber-500" />
+                <div className="flex items-baseline justify-between mt-2">
+                  <span className="text-3xl font-black text-foreground font-mono tabular-nums">{totalOds}</span>
+                  <span className="text-[11px] text-muted-foreground">recorded</span>
                 </div>
-                <span className="text-2xl font-bold text-amber-500 mt-1">{pendingCount}</span>
               </Card>
 
-              <Card className="p-3.5 flex flex-col justify-between border-emerald-500/30 bg-emerald-500/5">
+              {/* Highlight Card for Pending Approvals */}
+              <div className="card-highlight p-4 flex flex-col justify-between rounded-xl shadow-xs">
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-medium text-emerald-500 uppercase tracking-wider">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-white/90">
+                    Needs Action
+                  </span>
+                  <Clock className="w-4 h-4 text-white" />
+                </div>
+                <div className="flex items-baseline justify-between mt-2">
+                  <span className="text-3xl font-black text-white font-mono tabular-nums">{pendingCount}</span>
+                  <span className="text-[11px] text-white/80 font-medium">pending sanction</span>
+                </div>
+              </div>
+
+              <Card className="p-4 flex flex-col justify-between border-border rounded-xl">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
                     Sanctioned
                   </span>
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                  <CheckCircle2 className="w-4 h-4 text-emerald-500" />
                 </div>
-                <span className="text-2xl font-bold text-emerald-500 mt-1">{approvedCount}</span>
+                <div className="flex items-baseline justify-between mt-2">
+                  <span className="text-3xl font-black text-emerald-600 dark:text-emerald-400 font-mono tabular-nums">{approvedCount}</span>
+                  <span className="badge-delta-up">Sanctioned</span>
+                </div>
               </Card>
 
-              <Card className="p-3.5 flex flex-col justify-between border-destructive/30 bg-destructive/5">
+              <Card className="p-4 flex flex-col justify-between border-border rounded-xl">
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-medium text-destructive uppercase tracking-wider">
+                  <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
                     Declined
                   </span>
-                  <XCircle className="w-3.5 h-3.5 text-destructive" />
+                  <XCircle className="w-4 h-4 text-rose-500" />
                 </div>
-                <span className="text-2xl font-bold text-destructive mt-1">{rejectedCount}</span>
+                <div className="flex items-baseline justify-between mt-2">
+                  <span className="text-3xl font-black text-rose-600 dark:text-rose-400 font-mono tabular-nums">{rejectedCount}</span>
+                  <span className="badge-delta-down">Rejected</span>
+                </div>
               </Card>
             </div>
 
-            {/* Filters Bar */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-              <div className="flex items-center gap-2 border-b sm:border-b-0 border-border/60 pb-2 sm:pb-0">
-                {(['pending', 'approved', 'rejected', 'all'] as const).map((tab) => (
+            {/* Filter Chips Bar */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 border-b border-border pb-3">
+              <div className="flex items-center gap-2 overflow-x-auto">
+                {(
+                  [
+                    { key: 'pending', label: 'Needs Action', count: pendingCount },
+                    { key: 'approved', label: 'Sanctioned', count: approvedCount },
+                    { key: 'rejected', label: 'Declined', count: rejectedCount },
+                    { key: 'all', label: 'All Requests', count: totalOds },
+                  ] as const
+                ).map((tab) => (
                   <button
-                    key={tab}
-                    onClick={() => setStatusFilter(tab)}
-                    className={`text-xs px-3 py-1.5 rounded-lg capitalize font-medium transition-colors ${
-                      statusFilter === tab
-                        ? 'bg-accent/15 text-accent border border-accent/20'
-                        : 'text-muted-foreground hover:text-foreground hover:bg-muted/40'
+                    key={tab.key}
+                    onClick={() => setStatusFilter(tab.key)}
+                    className={`text-xs px-3.5 py-1.5 rounded-full font-medium transition-all duration-150 flex items-center gap-1.5 shrink-0 ${
+                      statusFilter === tab.key
+                        ? 'bg-foreground text-background font-bold shadow-xs'
+                        : 'text-muted-foreground hover:text-foreground hover:bg-secondary border border-border/80'
                     }`}
                   >
-                    {tab} {tab === 'pending' && pendingCount > 0 ? `(${pendingCount})` : ''}
+                    <span>{tab.label}</span>
+                    <span className="font-mono text-[11px] opacity-80 tabular-nums">({tab.count})</span>
                   </button>
                 ))}
               </div>

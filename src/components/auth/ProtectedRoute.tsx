@@ -7,6 +7,7 @@ import { ShieldAlert, ArrowLeft, RefreshCw } from 'lucide-react';
 import Link from 'next/link';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { DCCLogo } from '@/components/ui/DCCLogo';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -28,8 +29,8 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requir
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-background text-foreground">
         <div className="flex flex-col items-center space-y-4">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-foreground text-background font-extrabold text-base motion-safe:animate-pulse">
-            DCC
+          <div className="mx-auto flex h-14 w-28 items-center justify-center rounded-2xl bg-card border border-border/80 p-2 shadow-lg ring-4 ring-accent/15 motion-safe:animate-pulse">
+            <DCCLogo className="h-8 w-auto object-contain" />
           </div>
           <div className="flex items-center gap-2 text-sm font-mono text-muted-foreground">
             <RefreshCw className="w-3.5 h-3.5 animate-spin text-accent" />

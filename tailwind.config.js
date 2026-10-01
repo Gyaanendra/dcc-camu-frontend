@@ -11,6 +11,7 @@ module.exports = {
   		fontFamily: {
   			sans: [
   				'var(--font-sans)',
+  				'Satoshi',
   				'system-ui',
   				'-apple-system',
   				'sans-serif'

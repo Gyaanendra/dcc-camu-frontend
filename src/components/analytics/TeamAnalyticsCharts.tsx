@@ -194,39 +194,91 @@ export const TeamAnalyticsCharts: React.FC<TeamAnalyticsProps> = ({ teamAnalytic
 
   return (
     <div className="space-y-4">
-      {/* Quiet stat list */}
-      <Card className="px-5 py-4 grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-0 lg:divide-x lg:divide-border">
-        <div className="lg:pr-6">
-          <div className="text-xs text-muted-foreground">Total roster</div>
-          <div className="text-[20px] font-semibold tabular-nums text-foreground mt-0.5">
-            {summary?.totalUsers ?? summary?.totalMembers ?? 0}
+      {/* DESIGN.md 4-Card KPI Grid with 1 Solid Orange Highlight Card */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
+        {/* Highlight Card: Overall Attendance Rate */}
+        <div className="card-highlight p-5 flex flex-col justify-between rounded-xl shadow-xs">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-white/90">
+              Attendance Rate
+            </span>
+            <span className="px-2 py-0.5 rounded-full bg-white/20 text-white font-mono text-[10px] font-bold">
+              Benchmark
+            </span>
           </div>
-          <div className="text-xs text-muted-foreground mt-0.5 tabular-nums">
-            {summary?.totalMembers ?? 0} members · {summary?.totalAdmins ?? 0} admins · {summary?.totalAdvisors ?? 0} advisors
+          <div className="my-2">
+            <div className="text-3xl sm:text-4xl font-black text-white tabular-nums tracking-tight">
+              {summary?.overallAttendanceRate || 0}%
+            </div>
+          </div>
+          <div className="flex items-center justify-between text-xs text-white/85 font-mono pt-2 border-t border-white/20">
+            <span>Overall Club Average</span>
+            <span>CAMU Synced</span>
           </div>
         </div>
-        <div className="lg:px-6">
-          <div className="text-xs text-muted-foreground">Attendance rate</div>
-          <div className="text-[20px] font-semibold tabular-nums text-foreground mt-0.5">
-            {summary?.overallAttendanceRate || 0}%
+
+        {/* Card 2: Total Roster */}
+        <Card className="p-5 flex flex-col justify-between border-border rounded-xl">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              Total Roster
+            </span>
+            <span className="badge-delta-up">
+              <span>{summary?.totalMembers ?? 0} Active</span>
+            </span>
           </div>
-          <div className="text-xs text-muted-foreground mt-0.5">across all sessions</div>
-        </div>
-        <div className="lg:px-6">
-          <div className="text-xs text-muted-foreground">Sessions held</div>
-          <div className="text-[20px] font-semibold tabular-nums text-foreground mt-0.5">
-            {summary?.totalSessions || 0}
+          <div className="my-2">
+            <div className="text-3xl sm:text-4xl font-black text-foreground tabular-nums tracking-tight">
+              {summary?.totalUsers ?? summary?.totalMembers ?? 0}
+            </div>
           </div>
-          <div className="text-xs text-muted-foreground mt-0.5">recorded meetings</div>
-        </div>
-        <div className="lg:pl-6">
-          <div className="text-xs text-muted-foreground">Punctuality</div>
-          <div className="text-[20px] font-semibold tabular-nums text-foreground mt-0.5">
-            {punctualityPercent}%
+          <div className="text-xs text-muted-foreground pt-2 border-t border-border flex items-center justify-between">
+            <span className="truncate">{summary?.totalMembers ?? 0} Members · {summary?.totalAdmins ?? 0} Admins</span>
           </div>
-          <div className="text-xs text-muted-foreground mt-0.5">on-time arrival ratio</div>
-        </div>
-      </Card>
+        </Card>
+
+        {/* Card 3: Sessions Held */}
+        <Card className="p-5 flex flex-col justify-between border-border rounded-xl">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              Sessions Held
+            </span>
+            <span className="badge-delta-up">
+              <span>Recorded</span>
+            </span>
+          </div>
+          <div className="my-2">
+            <div className="text-3xl sm:text-4xl font-black text-foreground tabular-nums tracking-tight">
+              {summary?.totalSessions || 0}
+            </div>
+          </div>
+          <div className="text-xs text-muted-foreground pt-2 border-t border-border flex items-center justify-between">
+            <span>Official meetings</span>
+            <span className="font-mono text-xs">Logged</span>
+          </div>
+        </Card>
+
+        {/* Card 4: Punctuality */}
+        <Card className="p-5 flex flex-col justify-between border-border rounded-xl">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              Punctuality Ratio
+            </span>
+            <span className="badge-delta-up">
+              <span>{punctualityPercent}% On-Time</span>
+            </span>
+          </div>
+          <div className="my-2">
+            <div className="text-3xl sm:text-4xl font-black text-foreground tabular-nums tracking-tight">
+              {punctualityPercent}%
+            </div>
+          </div>
+          <div className="text-xs text-muted-foreground pt-2 border-t border-border flex items-center justify-between">
+            <span>Arrival discipline</span>
+            <span className="font-mono text-emerald-600 dark:text-emerald-400 font-semibold">{onTime} On-Time</span>
+          </div>
+        </Card>
+      </div>
 
       {/* Charts with view tabs */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">

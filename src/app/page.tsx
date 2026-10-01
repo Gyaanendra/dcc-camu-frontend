@@ -9,6 +9,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { DCCLogo } from '@/components/ui/DCCLogo';
 
 export default function SigninPage() {
   const { login, user } = useAuth();
@@ -143,8 +144,8 @@ export default function SigninPage() {
         {/* Brand mark */}
         <div className="text-center space-y-3">
           <div className="mx-auto relative group inline-block">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-foreground font-black text-background text-sm tracking-tight shadow-xl ring-4 ring-accent/20 transition-transform group-hover:scale-105">
-              DCC
+            <div className="flex h-16 w-28 items-center justify-center rounded-2xl bg-card border border-border/80 shadow-xl ring-4 ring-accent/15 transition-transform group-hover:scale-105 px-3 py-2">
+              <DCCLogo className="h-10 w-auto object-contain" />
             </div>
             <span className="absolute -top-1 -right-1 flex h-3 w-3">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent opacity-75" />

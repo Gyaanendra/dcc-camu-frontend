@@ -781,7 +781,7 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({ activeSessionId,
               Scan Next Attendee
             </Button>
             <Button asChild variant="outline" className="h-11 font-semibold">
-              <Link href="/my-attendance">
+              <Link href="/dashboard">
                 View Attendance
               </Link>
             </Button>
@@ -831,7 +831,7 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({ activeSessionId,
               Scan Next Attendee
             </Button>
             <Button asChild variant="outline" className="h-11 font-semibold">
-              <Link href="/my-attendance">
+              <Link href="/dashboard">
                 View Attendance
               </Link>
             </Button>

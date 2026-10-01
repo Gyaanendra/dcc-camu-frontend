@@ -63,10 +63,14 @@ export default function ODRequestsPage() {
         api.getMyODs(),
         api.getSessions().catch(() => ({ sessions: [] })),
       ]);
-      setOds(odData?.odRequests || []);
+      const rawList = Array.isArray(odData)
+        ? odData
+        : (odData?.odRequests || odData?.ods || odData?.data || []);
+      setOds(Array.isArray(rawList) ? rawList : []);
       setSessions(sessionData?.sessions || []);
     } catch (err: any) {
       toast.error('Failed to load OD requests: ' + (err.message || 'Unknown error'));
+      setOds([]);
     } finally {
       setIsLoading(false);
     }
@@ -81,29 +85,30 @@ export default function ODRequestsPage() {
     try {
       await api.deleteOD(id);
       toast.success('OD request cancelled');
-      setOds((prev) => prev.filter((o) => o.id !== id));
+      setOds((prev) => (Array.isArray(prev) ? prev.filter((o) => o.id !== id) : []));
     } catch (err: any) {
       toast.error(err.message || 'Failed to cancel request');
     }
   };
 
-  const filteredOds = ods.filter((o) => {
+  const safeOds = Array.isArray(ods) ? ods : [];
+  const filteredOds = safeOds.filter((o) => {
     if (statusFilter === 'all') return true;
     return o.status === statusFilter;
   });
 
-  const totalOds = ods.length;
-  const pendingCount = ods.filter((o) => o.status === 'pending').length;
-  const approvedCount = ods.filter((o) => o.status === 'approved').length;
-  const rejectedCount = ods.filter((o) => o.status === 'rejected').length;
+  const totalOds = safeOds.length;
+  const pendingCount = safeOds.filter((o) => o.status === 'pending').length;
+  const approvedCount = safeOds.filter((o) => o.status === 'approved').length;
+  const rejectedCount = safeOds.filter((o) => o.status === 'rejected').length;
 
   return (
     <ProtectedRoute>
       <div className="min-h-screen flex flex-col bg-background text-foreground transition-colors">
-        <Navbar />
+        <Navbar crumbs={[{ label: 'Member' }, { label: 'OD Requests' }]} />
         <div className="flex flex-1 items-start">
           <Sidebar />
-          <main className="flex-1 min-w-0 p-4 sm:p-6 max-w-6xl mx-auto w-full space-y-5">
+          <main className="flex-1 min-w-0 p-4 sm:p-6 max-w-6xl mx-auto w-full space-y-6">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <PageHeader
                 icon={FileText}
@@ -112,66 +117,87 @@ export default function ODRequestsPage() {
               />
               <Button
                 onClick={() => setIsModalOpen(true)}
-                className="bg-accent text-accent-foreground hover:bg-accent/90 gap-1.5 shadow-sm text-xs h-9 shrink-0"
+                className="bg-primary text-primary-foreground hover:bg-primary-active gap-2 shadow-xs text-xs h-10 px-4 rounded-xl font-bold shrink-0 focus-orange"
               >
                 <Plus className="w-4 h-4" />
-                <span>Submit OD</span>
+                <span>Submit New OD</span>
               </Button>
             </div>
 
-            {/* Quick Metrics Bar */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              <Card className="p-3.5 flex flex-col justify-between">
-                <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
+            {/* DESIGN.md KPI Grid with 1 Highlight Card */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
+              <Card className="p-4 flex flex-col justify-between border-border rounded-xl">
+                <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
                   Total Requests
                 </span>
-                <span className="text-2xl font-bold text-foreground mt-1">{totalOds}</span>
+                <div className="flex items-baseline justify-between mt-2">
+                  <span className="text-3xl font-black text-foreground font-mono tabular-nums">{totalOds}</span>
+                  <span className="text-[11px] text-muted-foreground">recorded</span>
+                </div>
               </Card>
 
-              <Card className="p-3.5 flex flex-col justify-between border-amber-500/30 bg-amber-500/5">
+              {/* Highlight Card for pending review if pending, otherwise accent card */}
+              <div className="card-highlight p-4 flex flex-col justify-between rounded-xl shadow-xs">
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-medium text-amber-500 uppercase tracking-wider">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-white/90">
                     Pending Review
                   </span>
-                  <Clock className="w-3.5 h-3.5 text-amber-500" />
+                  <Clock className="w-4 h-4 text-white" />
                 </div>
-                <span className="text-2xl font-bold text-amber-500 mt-1">{pendingCount}</span>
+                <div className="flex items-baseline justify-between mt-2">
+                  <span className="text-3xl font-black text-white font-mono tabular-nums">{pendingCount}</span>
+                  <span className="text-[11px] text-white/80 font-medium">awaiting admin</span>
+                </div>
+              </div>
+
+              <Card className="p-4 flex flex-col justify-between border-border rounded-xl">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                    Sanctioned
+                  </span>
+                  <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                </div>
+                <div className="flex items-baseline justify-between mt-2">
+                  <span className="text-3xl font-black text-emerald-600 dark:text-emerald-400 font-mono tabular-nums">{approvedCount}</span>
+                  <span className="badge-delta-up">Approved</span>
+                </div>
               </Card>
 
-              <Card className="p-3.5 flex flex-col justify-between border-emerald-500/30 bg-emerald-500/5">
+              <Card className="p-4 flex flex-col justify-between border-border rounded-xl">
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-medium text-emerald-500 uppercase tracking-wider">
-                    Approved
+                  <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                    Declined
                   </span>
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                  <XCircle className="w-4 h-4 text-rose-500" />
                 </div>
-                <span className="text-2xl font-bold text-emerald-500 mt-1">{approvedCount}</span>
-              </Card>
-
-              <Card className="p-3.5 flex flex-col justify-between border-destructive/30 bg-destructive/5">
-                <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-medium text-destructive uppercase tracking-wider">
-                    Rejected
-                  </span>
-                  <XCircle className="w-3.5 h-3.5 text-destructive" />
+                <div className="flex items-baseline justify-between mt-2">
+                  <span className="text-3xl font-black text-rose-600 dark:text-rose-400 font-mono tabular-nums">{rejectedCount}</span>
+                  <span className="badge-delta-down">Rejected</span>
                 </div>
-                <span className="text-2xl font-bold text-destructive mt-1">{rejectedCount}</span>
               </Card>
             </div>
 
-            {/* Filter Tabs */}
-            <div className="flex items-center gap-2 border-b border-border/60 pb-2">
-              {(['all', 'pending', 'approved', 'rejected'] as const).map((tab) => (
+            {/* Filter Chips Bar (from DESIGN.md) */}
+            <div className="flex items-center gap-2 border-b border-border pb-3 overflow-x-auto">
+              {(
+                [
+                  { key: 'all', label: 'All Requests', count: totalOds },
+                  { key: 'pending', label: 'Pending', count: pendingCount },
+                  { key: 'approved', label: 'Approved', count: approvedCount },
+                  { key: 'rejected', label: 'Rejected', count: rejectedCount },
+                ] as const
+              ).map((tab) => (
                 <button
-                  key={tab}
-                  onClick={() => setStatusFilter(tab)}
-                  className={`text-xs px-3 py-1.5 rounded-lg capitalize font-medium transition-colors ${
-                    statusFilter === tab
-                      ? 'bg-accent/15 text-accent border border-accent/20'
-                      : 'text-muted-foreground hover:text-foreground hover:bg-muted/40'
+                  key={tab.key}
+                  onClick={() => setStatusFilter(tab.key)}
+                  className={`text-xs px-3.5 py-1.5 rounded-full font-medium transition-all duration-150 flex items-center gap-1.5 shrink-0 ${
+                    statusFilter === tab.key
+                      ? 'bg-foreground text-background font-bold shadow-xs'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-secondary border border-border/80'
                   }`}
                 >
-                  {tab}
+                  <span>{tab.label}</span>
+                  <span className="font-mono text-[11px] opacity-80 tabular-nums">({tab.count})</span>
                 </button>
               ))}
             </div>
