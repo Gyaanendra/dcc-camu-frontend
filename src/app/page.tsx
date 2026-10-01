@@ -15,7 +15,6 @@ import {
   ShieldCheck,
   User,
   Loader2,
-  Sparkles,
   ExternalLink,
 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -75,13 +74,13 @@ export default function SigninPage() {
   };
 
   return (
-    <div className="min-h-screen relative flex flex-col justify-between items-center bg-[#0d0b14] text-foreground transition-colors selection:bg-purple-600/30 overflow-x-hidden">
-      {/* ── Ambient Radial Lighting Background ───────────────────── */}
+    <div className="min-h-screen relative flex flex-col justify-between items-center bg-[#0c0a0f] text-foreground transition-colors selection:bg-orange-500/30 overflow-x-hidden">
+      {/* ── Ambient Radial Lighting Background (Warm Orange/Amber Brand Hue) ── */}
       <div
-        className="fixed inset-0 pointer-events-none opacity-40"
+        className="fixed inset-0 pointer-events-none opacity-45"
         style={{
           backgroundImage:
-            'radial-gradient(circle at 50% 20%, rgba(108, 92, 231, 0.22) 0%, transparent 55%), radial-gradient(circle at 80% 80%, rgba(139, 92, 246, 0.12) 0%, transparent 50%)',
+            'radial-gradient(circle at 50% 18%, rgba(249, 115, 22, 0.22) 0%, transparent 55%), radial-gradient(circle at 82% 82%, rgba(234, 88, 12, 0.15) 0%, transparent 50%)',
           filter: 'blur(90px)',
         }}
       />
@@ -114,17 +113,17 @@ export default function SigninPage() {
 
       {/* ── Central Split Auth Showcase Card ─────────────────────── */}
       <main className="w-full max-w-5xl px-4 py-4 sm:py-6 relative z-10 flex items-center justify-center my-auto">
-        <div className="w-full rounded-[28px] bg-[#181523]/90 border border-white/10 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.8)] backdrop-blur-2xl p-3 sm:p-3.5 flex flex-col md:flex-row overflow-hidden transition-all duration-300">
-          {/* ── Left Hero Panel (Visual Showcase) ─────────────────── */}
+        <div className="w-full rounded-[28px] bg-[#16131c]/90 border border-white/10 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.85)] backdrop-blur-2xl p-3 sm:p-3.5 flex flex-col md:flex-row overflow-hidden transition-all duration-300">
+          {/* ── Left Hero Panel (Visual Sunset Dunes Showcase) ─────── */}
           <div className="w-full md:w-[46%] lg:w-[48%] relative rounded-[22px] overflow-hidden min-h-[380px] md:min-h-[580px] flex flex-col justify-between p-6 sm:p-8 select-none border border-white/10 group">
-            {/* Background Image */}
+            {/* Background Image: Sunset Dunes */}
             <div
               className="absolute inset-0 bg-cover bg-center transition-transform duration-700 ease-out group-hover:scale-105"
               style={{ backgroundImage: `url('/login-hero.jpg')` }}
             />
             {/* Subtle Gradient Overlays */}
-            <div className="absolute inset-0 bg-gradient-to-t from-[#0e0c16]/95 via-[#0e0c16]/30 to-[#0e0c16]/40 pointer-events-none" />
-            <div className="absolute inset-0 bg-purple-950/20 mix-blend-overlay pointer-events-none" />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#0c0a0f]/95 via-[#0c0a0f]/30 to-[#0c0a0f]/40 pointer-events-none" />
+            <div className="absolute inset-0 bg-orange-950/15 mix-blend-overlay pointer-events-none" />
 
             {/* Top Bar inside Image */}
             <div className="relative z-10 flex items-center justify-between">
@@ -150,13 +149,13 @@ export default function SigninPage() {
                 <br />
                 Creating Memories
               </h2>
-              <p className="text-xs text-white/70 max-w-xs leading-relaxed">
-                Empowering creators, developers, and leaders across Bennett University with real-time attendance and analytics.
+              <p className="text-xs text-white/75 max-w-xs leading-relaxed">
+                Empowering creators, developers, and leaders across Bennett University with real-time attendance and wing analytics.
               </p>
 
               {/* Aesthetic Slider Indicator */}
               <div className="flex items-center gap-1.5 pt-2">
-                <span className="h-1 w-7 rounded-full bg-white transition-all shadow-xs" />
+                <span className="h-1 w-7 rounded-full bg-orange-500 transition-all shadow-xs" />
                 <span className="h-1 w-2 rounded-full bg-white/40 transition-all" />
                 <span className="h-1 w-2 rounded-full bg-white/40 transition-all" />
               </div>
@@ -193,7 +192,7 @@ export default function SigninPage() {
                     autoCapitalize="none"
                     autoCorrect="off"
                     spellCheck={false}
-                    className="pl-10 h-11 bg-[#231f31] border-white/10 text-white placeholder:text-white/30 rounded-xl focus:border-purple-500 focus:ring-1 focus:ring-purple-500 text-xs font-mono transition-colors"
+                    className="pl-10 h-11 bg-[#201c27] border-white/10 text-white placeholder:text-white/30 rounded-xl focus:border-orange-500 focus:ring-1 focus:ring-orange-500 text-xs font-mono transition-colors"
                     required
                   />
                 </div>
@@ -205,7 +204,7 @@ export default function SigninPage() {
                   <Label htmlFor="login-password" className="text-xs font-semibold text-white/80">
                     Password
                   </Label>
-                  <span className="text-[11px] font-mono text-purple-400/90">Default: user123</span>
+                  <span className="text-[11px] font-mono text-orange-400/90">Default: user123</span>
                 </div>
                 <div className="relative">
                   <Lock className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-white/40 pointer-events-none" />
@@ -215,7 +214,7 @@ export default function SigninPage() {
                     placeholder="Enter your password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="pl-10 pr-10 h-11 bg-[#231f31] border-white/10 text-white placeholder:text-white/30 rounded-xl focus:border-purple-500 focus:ring-1 focus:ring-purple-500 text-xs transition-colors"
+                    className="pl-10 pr-10 h-11 bg-[#201c27] border-white/10 text-white placeholder:text-white/30 rounded-xl focus:border-orange-500 focus:ring-1 focus:ring-orange-500 text-xs transition-colors"
                     required
                   />
                   <button
@@ -236,19 +235,19 @@ export default function SigninPage() {
                     type="checkbox"
                     checked={rememberMe}
                     onChange={(e) => setRememberMe(e.target.checked)}
-                    className="rounded border-white/20 bg-[#231f31] text-purple-600 focus:ring-purple-500 w-3.5 h-3.5 cursor-pointer accent-purple-600"
+                    className="rounded border-white/20 bg-[#201c27] text-orange-500 focus:ring-orange-500 w-3.5 h-3.5 cursor-pointer accent-orange-500"
                   />
                   <span>Remember this device</span>
                 </label>
                 <span className="text-[11px] font-mono text-white/40">CAMU Authenticated</span>
               </div>
 
-              {/* Submit CTA Button */}
+              {/* Submit CTA Button (Brand Orange to Amber Gradient) */}
               <Button
                 type="submit"
                 id="login-submit"
                 disabled={isSubmitting}
-                className="w-full h-11 mt-1 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-semibold rounded-xl text-xs sm:text-sm shadow-lg shadow-purple-600/25 transition-all duration-200 cursor-pointer active:scale-[0.99] border-0"
+                className="w-full h-11 mt-1 bg-gradient-to-r from-orange-500 via-orange-600 to-amber-600 hover:from-orange-400 hover:via-orange-500 hover:to-amber-500 text-white font-semibold rounded-xl text-xs sm:text-sm shadow-lg shadow-orange-500/25 transition-all duration-200 cursor-pointer active:scale-[0.99] border-0"
               >
                 {isSubmitting ? (
                   <span className="flex items-center justify-center gap-2">
@@ -267,30 +266,30 @@ export default function SigninPage() {
             {/* Divider */}
             <div className="relative my-6 flex items-center justify-center">
               <div className="w-full border-t border-white/10" />
-              <span className="absolute bg-[#181523] px-3 text-[10px] text-white/40 uppercase tracking-wider font-mono">
+              <span className="absolute bg-[#16131c] px-3 text-[10px] text-white/40 uppercase tracking-wider font-mono">
                 Quick Demo Access
               </span>
             </div>
 
-            {/* Quick Demo Access Buttons (styled like the Apple / Google buttons) */}
+            {/* Quick Demo Access Buttons */}
             <div className="grid grid-cols-2 gap-2.5">
               <button
                 type="button"
                 onClick={() => handleQuickFill('s24cseu0771@bennett.edu.in', 'Admin')}
-                className="flex items-center justify-center gap-2 h-10 px-3 rounded-xl border border-white/10 bg-[#231f31]/60 hover:bg-[#231f31] hover:border-purple-500/40 text-white/80 hover:text-white text-xs font-medium transition-all cursor-pointer"
+                className="flex items-center justify-center gap-2 h-10 px-3 rounded-xl border border-white/10 bg-[#201c27]/60 hover:bg-[#201c27] hover:border-orange-500/40 text-white/80 hover:text-white text-xs font-medium transition-all cursor-pointer"
                 title="Fill Admin test credentials"
               >
-                <ShieldCheck className="w-3.5 h-3.5 text-purple-400" />
+                <ShieldCheck className="w-3.5 h-3.5 text-orange-400" />
                 <span>Admin Demo</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => handleQuickFill('s24cseu0656@bennett.edu.in', 'Member')}
-                className="flex items-center justify-center gap-2 h-10 px-3 rounded-xl border border-white/10 bg-[#231f31]/60 hover:bg-[#231f31] hover:border-indigo-500/40 text-white/80 hover:text-white text-xs font-medium transition-all cursor-pointer"
+                className="flex items-center justify-center gap-2 h-10 px-3 rounded-xl border border-white/10 bg-[#201c27]/60 hover:bg-[#201c27] hover:border-amber-500/40 text-white/80 hover:text-white text-xs font-medium transition-all cursor-pointer"
                 title="Fill Member test credentials"
               >
-                <User className="w-3.5 h-3.5 text-indigo-400" />
+                <User className="w-3.5 h-3.5 text-amber-400" />
                 <span>Member Demo</span>
               </button>
             </div>

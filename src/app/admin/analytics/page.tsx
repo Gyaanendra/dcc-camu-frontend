@@ -5,10 +5,9 @@ import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { Navbar } from '@/components/layout/Navbar';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { PageHeader } from '@/components/layout/PageHeader';
-import { TeamAnalyticsCharts } from '@/components/analytics/TeamAnalyticsCharts';
-import { MemberDirectoryTable } from '@/components/members/MemberDirectoryTable';
+import { TeamPerformanceDashboard } from '@/components/analytics/TeamPerformanceDashboard';
 import { api } from '@/lib/api';
-import { Download, RefreshCw, BarChart3, AlertCircle, Sparkles } from 'lucide-react';
+import { Download, RefreshCw, BarChart3, AlertCircle, Building } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 
@@ -17,7 +16,7 @@ export default function AdminAnalyticsPage() {
   const [teams, setTeams] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
   const [sessions, setSessions] = useState<any[]>([]);
-  
+
   // Independent loading & error states for fast progressive loading
   const [isAnalyticsLoading, setIsAnalyticsLoading] = useState(true);
   const [isTeamsLoading, setIsTeamsLoading] = useState(true);
@@ -81,7 +80,7 @@ export default function AdminAnalyticsPage() {
     loadData();
   }, []);
 
-  // Merge computed analytics members with user profiles
+  // Directory members list from analytics engine or raw users
   const directoryMembers = useMemo(() => {
     if (data?.memberAnalytics && Array.isArray(data.memberAnalytics) && data.memberAnalytics.length > 0) {
       return data.memberAnalytics;
@@ -93,36 +92,41 @@ export default function AdminAnalyticsPage() {
 
   const handleExportCSV = () => {
     const list = directoryMembers.length > 0 ? directoryMembers : users;
-    if (!list.length) return;
+    if (!list.length) {
+      toast.error('No analytics data available to export');
+      return;
+    }
 
     const headers = [
-      'Name',
+      'Wing Name',
+      'Wing Code',
+      'Member Name',
       'Email',
       'Roll Number',
       'Academic Year',
       'Position',
-      'Wing',
       'Role',
+      'Attendance %',
       'Attended Sessions',
       'Eligible Sessions',
-      'Attendance %',
-      'On-Time Check-ins',
-      'Late Check-ins',
+      'On-Time Scans',
+      'Late Arrivals',
       'Punctuality %',
-      'At Risk (<75%)',
+      'At-Risk (<75%)',
     ];
 
     const rows = list.map((u: any) => [
+      `"${u.teamName || 'Unassigned'}"`,
+      `"${u.teamCode || 'N/A'}"`,
       `"${u.name}"`,
       `"${u.email}"`,
       `"${u.rollNumber}"`,
       `"${u.academicYear || ''}"`,
       `"${u.position || 'Member'}"`,
-      `"${u.teamName}"`,
       `"${u.role}"`,
+      u.attendancePercentage !== undefined ? `${u.attendancePercentage}%` : 'N/A',
       u.attendedSessions ?? u.totalAttended ?? 0,
       u.eligibleSessions ?? 'N/A',
-      u.attendancePercentage !== undefined ? `${u.attendancePercentage}%` : 'N/A',
       u.onTimeCount ?? 'N/A',
       u.lateCount ?? 0,
       u.punctualityRate !== undefined ? `${u.punctualityRate}%` : 'N/A',
@@ -135,30 +139,30 @@ export default function AdminAnalyticsPage() {
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement('a');
     link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `DCC_Comprehensive_Analytics_${Date.now()}.csv`);
+    link.setAttribute('download', `DCC_Wing_Performance_Report_${Date.now()}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    toast.success('Comprehensive attendance CSV report downloaded');
+    toast.success('Wing performance CSV report downloaded');
   };
 
   return (
     <ProtectedRoute requireAdmin>
       <div className="min-h-screen flex flex-col bg-background text-foreground transition-colors">
-        <Navbar crumbs={[{ label: 'Admin' }, { label: 'Analytics' }]} />
+        <Navbar crumbs={[{ label: 'Admin' }, { label: 'Team Analytics' }]} />
         <div className="flex flex-1 items-start">
           <Sidebar />
-          <main className="flex-1 min-w-0 p-4 sm:p-6 max-w-7xl mx-auto w-full space-y-5">
+          <main className="flex-1 min-w-0 p-4 sm:p-6 lg:p-8 max-w-[99%] mx-auto w-full space-y-6">
             <PageHeader
-              icon={BarChart3}
-              title="Team & Member Analytics"
-              description="Live performance, punctuality, and individual member insights calculated from club sessions"
-              crumbs={[{ label: 'Admin' }, { label: 'Analytics' }]}
+              icon={Building}
+              title="Wing & Team Performance Analytics"
+              description="Comprehensive performance diagnostics, attendance quorum benchmarks, punctuality, and member health across all club wings"
+              crumbs={[{ label: 'Admin' }, { label: 'Team Analytics' }]}
               actions={
                 <div className="flex items-center gap-2">
-                  <Button variant="secondary" onClick={handleExportCSV} className="text-xs h-9 gap-1.5">
+                  <Button variant="secondary" onClick={handleExportCSV} className="text-xs h-9 gap-1.5 shadow-xs">
                     <Download className="w-3.5 h-3.5 text-muted-foreground" />
-                    <span>Export CSV</span>
+                    <span>Export Wing Report</span>
                   </Button>
                   <Button
                     variant="outline"
@@ -191,9 +195,10 @@ export default function AdminAnalyticsPage() {
               </div>
             )}
 
-            {/* Charts Section */}
-            <TeamAnalyticsCharts
+            {/* Redesigned Complete Team Performance Analytics Dashboard */}
+            <TeamPerformanceDashboard
               teamAnalytics={data?.teamAnalytics || []}
+              memberAnalytics={data?.memberAnalytics || []}
               summary={
                 data?.summary || {
                   totalMembers: 0,
@@ -203,30 +208,9 @@ export default function AdminAnalyticsPage() {
                   lateCount: 0,
                 }
               }
+              sessions={sessions}
               isLoading={isAnalyticsLoading}
             />
-
-            {/* In-depth Member Directory & Performance Breakdown */}
-            <div className="space-y-3 pt-2">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-sm font-bold text-foreground">
-                    Member Performance & Directory
-                  </h2>
-                  <p className="text-xs text-muted-foreground">
-                    Includes individual attendance %, late arrivals, and at-risk monitoring. Click Eye icon to view detailed metrics.
-                  </p>
-                </div>
-              </div>
-
-              <MemberDirectoryTable
-                members={directoryMembers}
-                teams={teams}
-                sessions={sessions}
-                onRefresh={loadData}
-                isLoading={isUsersLoading && !data?.memberAnalytics}
-              />
-            </div>
           </main>
         </div>
       </div>
