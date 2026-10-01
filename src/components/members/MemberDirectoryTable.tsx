@@ -56,6 +56,7 @@ import {
   ACADEMIC_YEAR_OPTIONS,
   AcademicYear,
 } from '@/lib/academic-year';
+import { MemberAnalyticsModal } from '@/components/analytics/MemberAnalyticsModal';
 
 interface MemberDirectoryProps {
   members: Array<{
@@ -68,16 +69,24 @@ interface MemberDirectoryProps {
     role: 'admin' | 'advisor' | 'user';
     teamId: string | null;
     teamName: string;
-    teamCode: string;
+    teamCode?: string;
     totalAttended: number;
     avatarUrl?: string;
+    attendedSessions?: number;
+    onTimeCount?: number;
+    lateCount?: number;
+    eligibleSessions?: number;
+    attendancePercentage?: number;
+    punctualityRate?: number;
+    isAtRisk?: boolean;
+    lastActive?: string;
   }>;
   teams: Array<{ id: string; name: string }>;
   onRefresh?: () => void;
   isLoading?: boolean;
 }
 
-type SortField = 'name' | 'rollNumber' | 'position' | 'teamName' | 'role' | 'totalAttended' | 'year';
+type SortField = 'name' | 'rollNumber' | 'position' | 'teamName' | 'role' | 'totalAttended' | 'year' | 'attendancePercentage';
 type SortDirection = 'asc' | 'desc';
 
 export const MemberDirectoryTable: React.FC<MemberDirectoryProps> = ({ members, teams, onRefresh, isLoading = false }) => {
@@ -89,11 +98,14 @@ export const MemberDirectoryTable: React.FC<MemberDirectoryProps> = ({ members, 
   const [selectedRoleFilter, setSelectedRoleFilter] = useState<'ALL' | 'admin' | 'advisor' | 'user'>('ALL');
   const [selectedTeamFilter, setSelectedTeamFilter] = useState('ALL');
   const [selectedYearFilter, setSelectedYearFilter] = useState<'ALL' | AcademicYear>('ALL');
-  const [attendanceFilter, setAttendanceFilter] = useState<'ALL' | 'ACTIVE' | 'ZERO'>('ALL');
+  const [attendanceFilter, setAttendanceFilter] = useState<'ALL' | 'ACTIVE' | 'ZERO' | 'AT_RISK' | 'LATE'>('ALL');
 
   // Sorting
   const [sortField, setSortField] = useState<SortField>('name');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
+
+  // Member detail modal
+  const [viewingMember, setViewingMember] = useState<any | null>(null);
 
   // Edit / Avatar re-roll states
   const [editingUser, setEditingUser] = useState<any>(null);
@@ -131,8 +143,14 @@ export const MemberDirectoryTable: React.FC<MemberDirectoryProps> = ({ members, 
         attendanceFilter === 'ALL'
           ? true
           : attendanceFilter === 'ACTIVE'
-          ? m.totalAttended > 0
-          : m.totalAttended === 0;
+          ? ((m.totalAttended ?? m.attendedSessions ?? 0) > 0)
+          : attendanceFilter === 'ZERO'
+          ? ((m.totalAttended ?? m.attendedSessions ?? 0) === 0)
+          : attendanceFilter === 'AT_RISK'
+          ? (m.isAtRisk || (m.attendancePercentage !== undefined && m.attendancePercentage < 75 && m.role !== 'advisor'))
+          : attendanceFilter === 'LATE'
+          ? ((m.lateCount ?? 0) > 0)
+          : true;
 
       return matchesSearch && matchesRole && matchesTeam && matchesYear && matchesAttendance;
     });
@@ -156,7 +174,11 @@ export const MemberDirectoryTable: React.FC<MemberDirectoryProps> = ({ members, 
         const roleRank: Record<string, number> = { admin: 1, advisor: 2, user: 3 };
         comparison = (roleRank[a.role] || 99) - (roleRank[b.role] || 99);
       } else if (sortField === 'totalAttended') {
-        comparison = a.totalAttended - b.totalAttended;
+        const aCount = a.totalAttended ?? a.attendedSessions ?? 0;
+        const bCount = b.totalAttended ?? b.attendedSessions ?? 0;
+        comparison = aCount - bCount;
+      } else if (sortField === 'attendancePercentage') {
+        comparison = (a.attendancePercentage ?? 0) - (b.attendancePercentage ?? 0);
       }
 
       return sortDirection === 'asc' ? comparison : -comparison;
@@ -424,13 +446,15 @@ export const MemberDirectoryTable: React.FC<MemberDirectoryProps> = ({ members, 
             value={attendanceFilter}
             onValueChange={(val) => setAttendanceFilter(val as any)}
           >
-            <SelectTrigger className="w-[145px] text-xs h-9">
+            <SelectTrigger className="w-[155px] text-xs h-9">
               <SelectValue placeholder="All Check-ins" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="ALL">All Check-ins</SelectItem>
               <SelectItem value="ACTIVE">Has Check-ins (≥1)</SelectItem>
               <SelectItem value="ZERO">0 Check-ins</SelectItem>
+              <SelectItem value="AT_RISK">⚠️ At-Risk (&lt;75%)</SelectItem>
+              <SelectItem value="LATE">⏰ Has Late (≥1)</SelectItem>
             </SelectContent>
           </Select>
 
@@ -733,34 +757,69 @@ export const MemberDirectoryTable: React.FC<MemberDirectoryProps> = ({ members, 
                         Exempt
                       </Badge>
                     ) : (
-                      <>{member.totalAttended} check-ins</>
+                      <div className="space-y-0.5">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span>{member.totalAttended ?? member.attendedSessions ?? 0}</span>
+                          <span className="text-[11px] font-normal text-muted-foreground">check-ins</span>
+                          {member.attendancePercentage !== undefined && (
+                            <Badge
+                              variant="outline"
+                              className={`text-[10px] px-1.5 py-0 tabular-nums font-semibold ${
+                                member.attendancePercentage >= 75
+                                  ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/30'
+                                  : member.attendancePercentage >= 60
+                                  ? 'bg-amber-500/10 text-amber-500 border-amber-500/30'
+                                  : 'bg-destructive/10 text-destructive border-destructive/30'
+                              }`}
+                            >
+                              {member.attendancePercentage}%
+                            </Badge>
+                          )}
+                        </div>
+                        {member.lateCount !== undefined && member.lateCount > 0 && (
+                          <div className="text-[10px] text-amber-500 font-medium">
+                            {member.lateCount} late
+                          </div>
+                        )}
+                      </div>
                     )}
                   </TableCell>
-                  {!isReadOnly && (
-                    <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-1.5 opacity-100 transition-opacity lg:opacity-0 lg:group-hover:opacity-100 lg:group-focus-within:opacity-100">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                          onClick={() => handleRerollAvatar(member.id, member.name)}
-                          disabled={rerollingId === member.id}
-                          title="Re-roll funky Notionist avatar"
-                        >
-                          <Dices className={`w-3.5 h-3.5 ${rerollingId === member.id ? 'animate-spin' : ''}`} />
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          className="h-8 w-8"
-                          onClick={() => handleOpenEdit(member)}
-                          title="Edit Member"
-                        >
-                          <Edit2 className="w-3.5 h-3.5" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  )}
+                  <TableCell className="text-right">
+                    <div className="flex items-center justify-end gap-1.5 opacity-100 transition-opacity lg:opacity-0 lg:group-hover:opacity-100 lg:group-focus-within:opacity-100">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                        onClick={() => setViewingMember(member)}
+                        title="View Detailed Analytics"
+                      >
+                        <Eye className="w-3.5 h-3.5" />
+                      </Button>
+                      {!isReadOnly && (
+                        <>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                            onClick={() => handleRerollAvatar(member.id, member.name)}
+                            disabled={rerollingId === member.id}
+                            title="Re-roll funky Notionist avatar"
+                          >
+                            <Dices className={`w-3.5 h-3.5 ${rerollingId === member.id ? 'animate-spin' : ''}`} />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={() => handleOpenEdit(member)}
+                            title="Edit Member"
+                          >
+                            <Edit2 className="w-3.5 h-3.5" />
+                          </Button>
+                        </>
+                      )}
+                    </div>
+                  </TableCell>
                 </TableRow>
               ))
             )}
@@ -906,6 +965,12 @@ export const MemberDirectoryTable: React.FC<MemberDirectoryProps> = ({ members, 
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <MemberAnalyticsModal
+        member={viewingMember}
+        isOpen={!!viewingMember}
+        onClose={() => setViewingMember(null)}
+      />
     </div>
   );
 };

@@ -32,10 +32,10 @@ interface QRScannerModalProps {
   onScanSuccess?: (data: any) => void;
 }
 
-type ScanState = 'scanning' | 'processing' | 'success' | 'error';
+type ScanState = 'scanning' | 'processing' | 'success' | 'already_checked_in' | 'error';
 
 interface ScanResult {
-  type: 'success' | 'error';
+  type: 'success' | 'already_checked_in' | 'error';
   name?: string;
   rollNumber?: string;
   avatarUrl?: string;
@@ -316,20 +316,43 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({ activeSessionId,
       setAutoAdvanceTimer(4);
       setIsTimerPaused(false);
     } catch (err: any) {
-      playAudio('error');
-      setScanResult({
-        type: 'error',
-        message: err.message || 'Failed to record attendance.',
-        isEnded: err.isEnded,
-      });
-      setScanState('error');
-      setA11yAnnouncement(`Error. ${err.message || 'Failed to record attendance.'}`);
+      const isAlready =
+        err?.alreadyCheckedIn === true ||
+        (typeof err?.message === 'string' && err.message.toLowerCase().includes('already checked in'));
+
+      if (isAlready) {
+        playAudio('success');
+        setScanResult({
+          type: 'already_checked_in',
+          name: err?.user?.name,
+          rollNumber: err?.user?.rollNumber,
+          avatarUrl: err?.user?.avatarUrl,
+          message: err.message || 'You have already checked in for this session.',
+          time: err?.record?.scannedAt
+            ? new Date(err.record.scannedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            : undefined,
+        });
+        setScanState('already_checked_in');
+        setA11yAnnouncement('Already checked in for this session.');
+        toast.info(err.message || 'Already checked in for this session');
+        setAutoAdvanceTimer(4);
+        setIsTimerPaused(false);
+      } else {
+        playAudio('error');
+        setScanResult({
+          type: 'error',
+          message: err.message || 'Failed to record attendance.',
+          isEnded: err.isEnded,
+        });
+        setScanState('error');
+        setA11yAnnouncement(`Error. ${err.message || 'Failed to record attendance.'}`);
+      }
     }
   };
 
   // ─── Continuous Scanning Auto-Advance Timer ───────────────────────────────
   useEffect(() => {
-    if (scanState === 'success' && autoAdvance && !isTimerPaused) {
+    if ((scanState === 'success' || scanState === 'already_checked_in') && autoAdvance && !isTimerPaused) {
       countdownIntervalRef.current = setInterval(() => {
         setAutoAdvanceTimer(prev => {
           if (prev <= 1) {
@@ -753,6 +776,56 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({ activeSessionId,
               id="scan-again-btn"
               autoFocus
               className="flex-1 h-11 font-bold gap-2 focus-orange"
+            >
+              <RotateCcw className="w-4 h-4" />
+              Scan Next Attendee
+            </Button>
+            <Button asChild variant="outline" className="h-11 font-semibold">
+              <Link href="/my-attendance">
+                View Attendance
+              </Link>
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* ── ALREADY CHECKED IN STATE (Calm Blue Tone) ── */}
+      {scanState === 'already_checked_in' && scanResult && (
+        <div className="flex flex-col items-center gap-4 px-6 py-7 text-center">
+          <div className="relative">
+            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-sky-500/10 border-2 border-sky-500/30 text-sky-600 dark:text-sky-400 shadow-md">
+              <CheckCircle2 className="w-8 h-8 stroke-[2.2]" />
+            </div>
+            <span className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-sky-500 border-2 border-card text-white shadow-xs">
+              <Clock className="w-3.5 h-3.5" />
+            </span>
+          </div>
+
+          <div>
+            <h3 className="text-lg font-bold text-foreground leading-tight">Already Checked In</h3>
+            <p className="text-xs text-muted-foreground mt-1 max-w-xs leading-relaxed font-medium">
+              {scanResult.message}
+            </p>
+          </div>
+
+          <span className="px-3.5 py-1 rounded-full text-xs font-bold border bg-sky-500/10 text-sky-700 dark:text-sky-400 border-sky-500/30">
+            Attendance Already Recorded
+          </span>
+
+          {scanResult.time && (
+            <div className="p-3 rounded-lg bg-secondary/50 border border-border w-full max-w-xs text-center">
+              <p className="text-[11px] font-medium text-muted-foreground">Original Check-in Time</p>
+              <p className="text-xs font-mono font-semibold text-foreground mt-0.5">{scanResult.time}</p>
+            </div>
+          )}
+
+          {/* Action Buttons */}
+          <div className="flex flex-col sm:flex-row gap-2 w-full pt-1">
+            <Button
+              onClick={handleScanAgain}
+              id="scan-again-btn"
+              autoFocus
+              className="flex-1 h-11 font-bold gap-2 bg-sky-600 hover:bg-sky-500 text-white focus-orange"
             >
               <RotateCcw className="w-4 h-4" />
               Scan Next Attendee

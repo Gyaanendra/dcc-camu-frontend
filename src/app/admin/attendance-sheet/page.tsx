@@ -113,6 +113,13 @@ export default function AttendanceSheetPage() {
   // View mode: Matrix Grid or By-Session (Mobile-First Card Mode)
   const [viewMode, setViewMode] = useState<'matrix' | 'session'>('matrix');
 
+  // Smaller screens default to Mobile-First By-Session Card View
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+      setViewMode('session');
+    }
+  }, []);
+
   // Filters
   const [teamFilter, setTeamFilter] = useState('ALL');
   const [yearFilter, setYearFilter] = useState('ALL');

@@ -27,16 +27,17 @@ export default function AdminSessionsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
 
-  const loadData = async () => {
+  const loadData = async (focusSessionId?: string) => {
     setIsLoading(true);
     try {
       const [sessionsRes, teamsRes] = await Promise.all([api.getSessions(), api.getTeams()]);
-      setSessions(sessionsRes.sessions || []);
+      const loaded = sessionsRes.sessions || [];
+      setSessions(loaded);
       setTeams(teamsRes.teams || []);
 
-      if (sessionsRes.sessions?.length > 0) {
-        const currentId = selectedSession?.id || sessionsRes.sessions[0].id;
-        const matching = sessionsRes.sessions.find((s: any) => s.id === currentId) || sessionsRes.sessions[0];
+      if (loaded.length > 0) {
+        const targetId = focusSessionId || selectedSession?.id || loaded[0].id;
+        const matching = loaded.find((s: any) => s.id === targetId) || loaded[0];
         setSelectedSession(matching);
         loadSessionDetail(matching.id);
       }
@@ -94,11 +95,11 @@ export default function AdminSessionsPage() {
               description={isReadOnly ? 'View-only access — session controls are disabled for advisors' : 'Schedule sessions, project dynamic QR codes, and monitor live check-ins'}
               actions={
                 <>
-                  <CreateSessionModal teams={teams} onCreated={loadData} />
+                  <CreateSessionModal teams={teams} onCreated={(s?: any) => loadData(s?.id)} />
                   <Button
                     variant="outline"
                     size="icon"
-                    onClick={loadData}
+                    onClick={() => loadData()}
                     title="Refresh Sessions"
                     className="focus-orange"
                   >
@@ -121,10 +122,10 @@ export default function AdminSessionsPage() {
                 </div>
               </div>
             ) : (
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Sessions List */}
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between gap-2 pb-3 border-b border-border">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[calc(100vh-180px)] min-h-[520px]">
+                {/* Sessions List Column with Independent Scroll */}
+                <div className="flex flex-col h-full min-h-0">
+                  <div className="flex items-center justify-between gap-2 pb-3 border-b border-border shrink-0">
                     <h2 className="text-xs font-medium text-muted-foreground">
                       Sessions
                     </h2>
@@ -132,7 +133,7 @@ export default function AdminSessionsPage() {
                       {sessions.length} of {sessions.length}
                     </span>
                   </div>
-                  <div className="space-y-2 max-h-[600px] overflow-y-auto pr-1">
+                  <div className="space-y-2 flex-1 overflow-y-auto pr-1.5 pt-3">
                     {sessions.length > 0 ? (
                       sessions.map((s) => (
                         <button

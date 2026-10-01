@@ -26,7 +26,7 @@ import {
 
 interface CreateSessionModalProps {
   teams: Array<{ id: string; name: string }>;
-  onCreated?: () => void;
+  onCreated?: (newSession?: any) => void;
 }
 
 const AVAILABLE_YEARS = [
@@ -88,7 +88,7 @@ export const CreateSessionModal: React.FC<CreateSessionModalProps> = ({ teams, o
     try {
       const yearPayload = selectedYears.length === 0 || selectedYears.length === 4 ? [] : selectedYears;
 
-      await api.createSession({
+      const res = await api.createSession({
         title: title.trim(),
         type,
         description: description.trim(),
@@ -115,7 +115,7 @@ export const CreateSessionModal: React.FC<CreateSessionModalProps> = ({ teams, o
       setTargetAudience('all');
       setSelectedTeamIds([]);
       setSelectedYears([]);
-      if (onCreated) onCreated();
+      if (onCreated) onCreated(res?.session);
     } catch (error: any) {
       toast.error(error.message || 'Failed to create session');
     } finally {

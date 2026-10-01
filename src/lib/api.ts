@@ -370,6 +370,48 @@ class ApiClient {
       method: 'DELETE',
     });
   }
+
+  // On Duty (OD) Endpoints
+  async submitOD(odData: {
+    date: string;
+    reason: string;
+    sessionId?: string | null;
+    lectures: Array<{
+      timeSlot: string;
+      subjectName: string;
+      subjectCode: string;
+      classType: 'lecture' | 'practical' | 'tutorial';
+      facultyName: string;
+      room?: string;
+      remarks?: string;
+    }>;
+  }) {
+    return this.request('/od', {
+      method: 'POST',
+      body: JSON.stringify(odData),
+    });
+  }
+
+  async getMyODs() {
+    return this.cachedGet('/od/my');
+  }
+
+  async getAdminODs() {
+    return this.cachedGet('/od');
+  }
+
+  async updateODStatus(id: string, data: { status: 'approved' | 'rejected'; adminNotes?: string }) {
+    return this.request(`/od/${id}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async deleteOD(id: string) {
+    return this.request(`/od/${id}`, {
+      method: 'DELETE',
+    });
+  }
 }
 
 export const api = new ApiClient();

@@ -15,6 +15,8 @@ import {
   ShieldCheck,
   LogOut,
   Sparkles,
+  FileText,
+  ClipboardCheck,
 } from 'lucide-react';
 import {
   Sidebar as ShadcnSidebar,
@@ -47,6 +49,7 @@ export const Sidebar: React.FC = () => {
       : [
           { name: 'Scan QR', href: '/scan', icon: QrCode },
           { name: 'My attendance', href: '/my-attendance', icon: Award },
+          { name: 'OD requests', href: '/od-requests', icon: FileText },
         ]),
   ];
 
@@ -55,6 +58,7 @@ export const Sidebar: React.FC = () => {
     { name: 'Sessions', href: '/admin/sessions', icon: CalendarCheck },
     { name: 'Members', href: '/admin/members', icon: Users },
     { name: 'Attendance sheet', href: '/admin/attendance-sheet', icon: Table2 },
+    { name: 'OD approvals', href: '/admin/od-approvals', icon: ClipboardCheck },
   ];
 
   const isActive = (path: string) => pathname === path;
