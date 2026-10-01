@@ -63,7 +63,7 @@ export default function ODRequestsPage() {
         api.getMyODs(),
         api.getSessions().catch(() => ({ sessions: [] })),
       ]);
-      setOds(odData || []);
+      setOds(odData?.odRequests || []);
       setSessions(sessionData?.sessions || []);
     } catch (err: any) {
       toast.error('Failed to load OD requests: ' + (err.message || 'Unknown error'));

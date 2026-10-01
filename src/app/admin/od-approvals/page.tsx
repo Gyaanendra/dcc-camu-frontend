@@ -62,7 +62,7 @@ export default function AdminODApprovalsPage() {
     try {
       setIsLoading(true);
       const data = await api.getAdminODs();
-      setOds(data || []);
+      setOds(data?.odRequests || []);
     } catch (err: any) {
       toast.error('Failed to load OD records: ' + (err.message || 'Unknown error'));
     } finally {
@@ -79,7 +79,7 @@ export default function AdminODApprovalsPage() {
       isOpen: true,
       odId: od.id,
       status,
-      memberName: od.user?.name || 'Member',
+      memberName: od.memberName || 'Member',
       notes: status === 'approved' ? 'Approved for CAMU credit sanction.' : '',
       isSubmitting: false,
     });
@@ -108,8 +108,8 @@ export default function AdminODApprovalsPage() {
     if (statusFilter !== 'all' && od.status !== statusFilter) return false;
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
-      const name = (od.user?.name || '').toLowerCase();
-      const roll = (od.user?.rollNumber || '').toLowerCase();
+      const name = (od.memberName || '').toLowerCase();
+      const roll = (od.memberRollNumber || '').toLowerCase();
       const reason = (od.reason || '').toLowerCase();
       return name.includes(q) || roll.includes(q) || reason.includes(q);
     }
@@ -234,20 +234,20 @@ export default function AdminODApprovalsPage() {
                       <div className="p-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                         <div className="flex items-start gap-3 min-w-0">
                           <MemberAvatar
-                            src={od.user?.avatarUrl}
-                            name={od.user?.name || 'Member'}
+                            src={od.avatarUrl}
+                            name={od.memberName || 'Member'}
                             className="h-10 w-10 rounded-lg shrink-0 border border-border"
                           />
                           <div className="space-y-1 min-w-0">
                             <div className="flex items-center gap-2 flex-wrap">
                               <span className="font-semibold text-sm text-foreground">
-                                {od.user?.name}
+                                {od.memberName}
                               </span>
                               <span className="text-xs text-muted-foreground">
-                                ({od.user?.rollNumber})
+                                ({od.memberRollNumber})
                               </span>
                               <Badge variant="secondary" className="text-[10px]">
-                                {od.user?.teamName || 'Member'}
+                                {od.teamName || 'Member'}
                               </Badge>
                               <Badge
                                 variant="outline"
@@ -281,10 +281,10 @@ export default function AdminODApprovalsPage() {
                               <span>
                                 {lecturesCount} {lecturesCount === 1 ? 'Period' : 'Periods'} Missed
                               </span>
-                              {od.session && (
+                              {od.sessionTitle && (
                                 <>
                                   <span>•</span>
-                                  <span>Event: {od.session.title}</span>
+                                  <span>Event: {od.sessionTitle}</span>
                                 </>
                               )}
                             </div>
