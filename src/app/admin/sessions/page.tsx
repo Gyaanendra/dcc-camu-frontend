@@ -198,7 +198,7 @@ export default function AdminSessionsPage() {
                 </div>
 
             {/* Selected Session QR Broadcast & Attendees Feed */}
-            <div className="lg:col-span-2 space-y-6">
+            <div className="lg:col-span-2 flex flex-col gap-4 min-h-0 h-full overflow-y-auto pr-1">
               {selectedSession ? (
                 <>
                   <Card className={`flex flex-col sm:flex-row items-center justify-between gap-3 p-4 ${selectedSession.isActive === 'true' ? 'border-emerald-500/40 dark:border-emerald-500/30' : ''}`}>
@@ -281,7 +281,8 @@ export default function AdminSessionsPage() {
                       </Badge>
                     </div>
 
-                    <div className="space-y-2">
+                    {/* Attendance feed — scrollable internally */}
+                    <div className="space-y-2 max-h-[340px] overflow-y-auto pr-1">
                       {sessionDetail?.attendees?.length > 0 ? (
                         sessionDetail.attendees.map((a: any) => (
                           <div

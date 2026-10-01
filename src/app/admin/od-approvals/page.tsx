@@ -31,8 +31,6 @@ import {
   Calendar,
   ChevronDown,
   ChevronUp,
-  MessageSquare,
-  Sparkles,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
