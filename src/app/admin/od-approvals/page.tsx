@@ -31,8 +31,10 @@ import {
   Calendar,
   ChevronDown,
   ChevronUp,
+  Download,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { ODExportModal } from '@/components/export/ODExportModal';
 
 export default function AdminODApprovalsPage() {
   const [ods, setOds] = useState<any[]>([]);
@@ -40,6 +42,7 @@ export default function AdminODApprovalsPage() {
   const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('pending');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [exportModalOpen, setExportModalOpen] = useState<boolean>(false);
 
   // Review Dialog State
   const [reviewDialog, setReviewDialog] = useState<{
@@ -136,6 +139,18 @@ export default function AdminODApprovalsPage() {
               title="OD Sanction & Approvals"
               description="Review and sanction Bennett University On Duty attendance requests submitted by club members"
               crumbs={[{ label: 'Admin' }, { label: 'OD Approvals' }]}
+              actions={
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setExportModalOpen(true)}
+                  title="Export OD requests to CSV"
+                  className="h-8 gap-1.5 text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 hover:bg-blue-500/10 border-blue-500/30"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">Export CSV</span>
+                </Button>
+              }
             />
 
             {/* DESIGN.md KPI Grid with 1 Solid Orange Highlight Card */}
@@ -484,6 +499,12 @@ export default function AdminODApprovalsPage() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+        {/* OD Export Modal */}
+        <ODExportModal
+          open={exportModalOpen}
+          onOpenChange={setExportModalOpen}
+          defaultStatus={statusFilter}
+        />
       </div>
     </ProtectedRoute>
   );

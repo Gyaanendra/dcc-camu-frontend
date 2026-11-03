@@ -18,6 +18,7 @@ import {
   Sparkles,
   FileText,
   ClipboardCheck,
+  Database,
 } from 'lucide-react';
 import {
   Sidebar as ShadcnSidebar,
@@ -60,6 +61,7 @@ export const Sidebar: React.FC = () => {
     { name: 'Members', href: '/admin/members', icon: Users },
     { name: 'Attendance sheet', href: '/admin/attendance-sheet', icon: Table2 },
     { name: 'OD approvals', href: '/admin/od-approvals', icon: ClipboardCheck },
+    ...(isAdmin ? [{ name: 'Database', href: '/admin/database', icon: Database }] : []),
   ];
 
   const isActive = (path: string) => pathname === path;

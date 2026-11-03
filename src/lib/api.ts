@@ -417,6 +417,70 @@ class ApiClient {
       method: 'DELETE',
     });
   }
+
+  // Database Explorer (Admin Only)
+  async getDatabaseTables() {
+    return this.request('/database/tables');
+  }
+
+  async getTableRows(table: string, params?: { page?: number; limit?: number; search?: string; sort?: string; order?: 'asc' | 'desc' }) {
+    const qs = new URLSearchParams();
+    if (params?.page) qs.set('page', String(params.page));
+    if (params?.limit) qs.set('limit', String(params.limit));
+    if (params?.search) qs.set('search', params.search);
+    if (params?.sort) qs.set('sort', params.sort);
+    if (params?.order) qs.set('order', params.order);
+    const query = qs.toString() ? `?${qs.toString()}` : '';
+    return this.request(`/database/tables/${table}${query}`);
+  }
+
+  async updateTableRow(table: string, id: string, data: Record<string, any>) {
+    return this.request(`/database/tables/${table}/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async deleteTableRow(table: string, id: string) {
+    return this.request(`/database/tables/${table}/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
+  // CSV Export Download Helper
+  async downloadCsv(path: string, defaultFilename: string) {
+    const token = this.getToken();
+    const headers: Record<string, string> = {};
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+
+    const res = await fetch(`${API_BASE}${path}`, {
+      method: 'GET',
+      credentials: 'include',
+      headers,
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ error: 'Export failed' }));
+      throw new Error(err.error || 'Failed to download CSV');
+    }
+
+    const blob = await res.blob();
+    const disposition = res.headers.get('Content-Disposition');
+    let filename = defaultFilename;
+    if (disposition && disposition.includes('filename=')) {
+      const match = disposition.match(/filename="?([^"]+)"?/);
+      if (match && match[1]) filename = match[1];
+    }
+
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+  }
 }
 
 export const api = new ApiClient();

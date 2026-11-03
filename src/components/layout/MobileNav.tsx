@@ -20,6 +20,7 @@ import {
   ShieldCheck,
   FileText,
   ClipboardCheck,
+  Database,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { MemberAvatar } from '@/components/ui/member-avatar';
@@ -60,6 +61,7 @@ export const MobileNav: React.FC = () => {
     { name: 'Members', href: '/admin/members', icon: Users },
     { name: 'Attendance sheet', href: '/admin/attendance-sheet', icon: Table2 },
     { name: 'OD approvals', href: '/admin/od-approvals', icon: ClipboardCheck },
+    ...(isAdmin ? [{ name: 'Database', href: '/admin/database', icon: Database }] : []),
   ];
 
   const rowClass = (active: boolean) =>

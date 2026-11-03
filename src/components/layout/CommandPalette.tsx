@@ -14,6 +14,7 @@ import {
   Table2,
   FileText,
   ClipboardCheck,
+  Database,
   Search,
   Moon,
   Sun,
@@ -53,6 +54,7 @@ const ALL_ROUTES: NavEntry[] = [
   { label: 'Members', href: '/admin/members', icon: Users },
   { label: 'Attendance sheet', href: '/admin/attendance-sheet', icon: Table2 },
   { label: 'OD approvals', href: '/admin/od-approvals', icon: ClipboardCheck },
+  { label: 'Database Explorer', href: '/admin/database', icon: Database },
 ];
 
 const routeByHref = new Map(ALL_ROUTES.map(r => [r.href, r]));

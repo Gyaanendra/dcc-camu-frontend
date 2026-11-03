@@ -11,9 +11,11 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { api } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from 'sonner';
+import { AttendanceExportModal } from '@/components/export/AttendanceExportModal';
 import {
   Table2,
   RefreshCw,
+  Download,
   Check,
   Clock,
   Minus,
@@ -132,6 +134,9 @@ export default function AttendanceSheetPage() {
   const [sessionStatusFilter, setSessionStatusFilter] = useState<
     'ALL' | 'present' | 'late' | 'absent' | 'not_in_club'
   >('ALL');
+
+  // Export CSV Modal state
+  const [exportModalOpen, setExportModalOpen] = useState(false);
 
   // `${memberId}:${sessionId}` in-flight toggle
   const [updatingCell, setUpdatingCell] = useState<string | null>(null);
@@ -400,6 +405,17 @@ export default function AttendanceSheetPage() {
                       <span className="hidden sm:inline">By Session</span>
                     </button>
                   </div>
+
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setExportModalOpen(true)}
+                    title="Export attendance to CSV"
+                    className="h-8 gap-1.5 text-xs text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 hover:bg-emerald-500/10 border-emerald-500/30"
+                  >
+                    <Download className="w-3.5 h-3.5" />
+                    <span className="hidden sm:inline">Export CSV</span>
+                  </Button>
 
                   <Button
                     variant="outline"
@@ -1098,6 +1114,13 @@ export default function AttendanceSheetPage() {
                 </div>
               </div>
             )}
+
+            {/* Attendance CSV Export Dialog */}
+            <AttendanceExportModal
+              open={exportModalOpen}
+              onOpenChange={setExportModalOpen}
+              defaultSessionId={selectedSessionId || undefined}
+            />
           </main>
         </div>
       </div>
