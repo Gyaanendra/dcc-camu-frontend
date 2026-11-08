@@ -15,6 +15,8 @@ import {
   FileText,
   ClipboardCheck,
   Database,
+  Layers,
+  UserCheck,
   Search,
   Moon,
   Sun,
@@ -48,11 +50,13 @@ interface NavEntry {
 const ALL_ROUTES: NavEntry[] = [
   { label: 'Dashboard & Attendance', href: '/dashboard', icon: LayoutDashboard },
   { label: 'Scan QR', href: '/scan', icon: QrCode },
+  { label: 'Micro Attendance', href: '/micro-attendance', icon: UserCheck },
   { label: 'OD requests', href: '/od-requests', icon: FileText },
   { label: 'Team analytics', href: '/admin/analytics', icon: BarChart3 },
   { label: 'Sessions', href: '/admin/sessions', icon: CalendarCheck },
   { label: 'Members', href: '/admin/members', icon: Users },
   { label: 'Attendance sheet', href: '/admin/attendance-sheet', icon: Table2 },
+  { label: 'Micro Management', href: '/admin/micro-management', icon: Layers },
   { label: 'OD approvals', href: '/admin/od-approvals', icon: ClipboardCheck },
   { label: 'Database Explorer', href: '/admin/database', icon: Database },
 ];

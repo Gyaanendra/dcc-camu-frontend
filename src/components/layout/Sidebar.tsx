@@ -19,6 +19,8 @@ import {
   FileText,
   ClipboardCheck,
   Database,
+  Layers,
+  UserCheck,
 } from 'lucide-react';
 import {
   Sidebar as ShadcnSidebar,
@@ -51,6 +53,7 @@ export const Sidebar: React.FC = () => {
       ? []
       : [
           { name: 'Scan QR', href: '/scan', icon: QrCode },
+          { name: 'Micro Attendance', href: '/micro-attendance', icon: UserCheck },
           { name: 'OD requests', href: '/od-requests', icon: FileText },
         ]),
   ];
@@ -60,6 +63,7 @@ export const Sidebar: React.FC = () => {
     { name: 'Sessions', href: '/admin/sessions', icon: CalendarCheck },
     { name: 'Members', href: '/admin/members', icon: Users },
     { name: 'Attendance sheet', href: '/admin/attendance-sheet', icon: Table2 },
+    { name: 'Micro Management', href: '/admin/micro-management', icon: Layers },
     { name: 'OD approvals', href: '/admin/od-approvals', icon: ClipboardCheck },
     ...(isAdmin ? [{ name: 'Database', href: '/admin/database', icon: Database }] : []),
   ];

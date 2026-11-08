@@ -481,6 +481,135 @@ class ApiClient {
     document.body.removeChild(a);
     window.URL.revokeObjectURL(url);
   }
+
+  // Micro Management & Summit Endpoints
+  async getMicroEvents() {
+    return this.request('/micro/events');
+  }
+
+  async getMicroEvent(eventId: string) {
+    return this.request(`/micro/events/${eventId}`);
+  }
+
+  async createMicroEvent(data: { title: string; code: string; description?: string; startDate?: string; endDate?: string; status?: string }) {
+    return this.request('/micro/events', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updateMicroEvent(eventId: string, data: Partial<{ title: string; code: string; description?: string; startDate?: string; endDate?: string; status?: string }>) {
+    return this.request(`/micro/events/${eventId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async deleteMicroEvent(eventId: string) {
+    return this.request(`/micro/events/${eventId}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async createMicroSession(eventId: string, data: { title: string; location?: string; startTime: string; endTime: string; isActive?: boolean }) {
+    return this.request(`/micro/events/${eventId}/sessions`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updateMicroSession(sessionId: string, data: Partial<{ title: string; location?: string; startTime: string; endTime: string; isActive?: boolean }>) {
+    return this.request(`/micro/sessions/${sessionId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async deleteMicroSession(sessionId: string) {
+    return this.request(`/micro/sessions/${sessionId}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async getMicroTeams(eventId: string) {
+    return this.request(`/micro/events/${eventId}/teams`);
+  }
+
+  async createMicroTeam(eventId: string, data: { name: string; code: string; leaderId?: string | null; isLeadershipManaged?: boolean; description?: string; memberIds?: string[]; sessionIds?: string[] }) {
+    return this.request(`/micro/events/${eventId}/teams`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updateMicroTeam(teamId: string, data: Partial<{ name: string; code: string; leaderId?: string | null; isLeadershipManaged?: boolean; description?: string }>) {
+    return this.request(`/micro/teams/${teamId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async deleteMicroTeam(teamId: string) {
+    return this.request(`/micro/teams/${teamId}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async addMicroTeamMembers(teamId: string, members: Array<{ userId: string; roleInTeam?: 'leader' | 'member' | 'volunteer' }>) {
+    return this.request(`/micro/teams/${teamId}/members`, {
+      method: 'POST',
+      body: JSON.stringify({ members }),
+    });
+  }
+
+  async removeMicroTeamMember(teamId: string, userId: string) {
+    return this.request(`/micro/teams/${teamId}/members/${userId}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async assignMicroTeamSessions(teamId: string, sessionIds: string[]) {
+    return this.request(`/micro/teams/${teamId}/sessions`, {
+      method: 'POST',
+      body: JSON.stringify({ sessionIds }),
+    });
+  }
+
+  async autoDistributeMicroTeams(eventId: string, options?: { teamPrefix?: string; teamSize?: number; userIds?: string[] }) {
+    return this.request(`/micro/events/${eventId}/auto-distribute`, {
+      method: 'POST',
+      body: JSON.stringify(options || {}),
+    });
+  }
+
+  // POC & Leadership Check-in
+  async getMyMicroTeams(params?: { eventId?: string; sessionId?: string }) {
+    const qs = new URLSearchParams();
+    if (params?.eventId) qs.set('eventId', params.eventId);
+    if (params?.sessionId) qs.set('sessionId', params.sessionId);
+    const query = qs.toString() ? `?${qs.toString()}` : '';
+    return this.request(`/micro/my-teams${query}`);
+  }
+
+  async submitMicroAttendanceBatch(data: {
+    sessionId: string;
+    microTeamId: string;
+    records: Array<{ userId: string; status: 'present' | 'late' | 'absent' | 'excused'; notes?: string }>;
+  }) {
+    return this.request('/micro/attendance/batch', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  // Leadership Dashboard & Reports
+  async getMicroDashboard(eventId: string) {
+    return this.request(`/micro/events/${eventId}/dashboard`);
+  }
+
+  async downloadMicroAttendanceCsv(eventId: string, defaultFilename = 'micro_attendance.csv') {
+    return this.downloadCsv(`/micro/events/${eventId}/export/csv`, defaultFilename);
+  }
 }
 
 export const api = new ApiClient();
